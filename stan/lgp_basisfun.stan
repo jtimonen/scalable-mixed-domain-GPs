@@ -15,6 +15,14 @@
 
 functions{
 
+  vector diagSPD_EQ(real alpha, real rho, real L, int M) {
+    return sqrt((alpha^2) * sqrt(2*pi()) * rho * exp(-0.5*(rho*pi()/2/L)^2 * linspaced_vector(M, 1, M)^2));
+  }
+
+  matrix PHI_EQ(int N, int M, real L, vector x) {
+    return sin(diag_post_multiply(rep_matrix(pi()/(2*L) * (x+L), M), linspaced_vector(M, 1, M)))/sqrt(L);
+  }
+
   // Log prior density to be added to target
   real STAN_log_prior(real x, data int[] types, data real[] p) {
     real log_prior = 0;
@@ -228,11 +236,14 @@ transformed data{
   );
   vector[num_obs] delta_vec = rep_vector(delta, num_obs);
   
-  // Compute L for each continuous covariate
+  // Compute L and PHI for each continuous covariate
   real L_bf[num_cov_cont];
+  matrix[num_obs, M_bf] PHI[num_cov_cont];
   for(j in 1:num_cov_cont) {
     L_bf[j] = c_bf*max(x_cont[j]);
+    PHI[j] = PHI_EQ(num_obs, M_bf, L_bf[j], x_cont[j]);
   }
+  
 }
 
 parameters {
