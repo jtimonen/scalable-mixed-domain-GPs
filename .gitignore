@@ -14,5 +14,6 @@
 *.html
 *_cache/
 *_files/
+*.out
 
 .Rproj.user
