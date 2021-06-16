@@ -46,53 +46,46 @@ data {
   
   // Inputs related to basis function approximation
   real<lower=0> c_bf;   // factor c to determine domain width L
+  real<lower=0> L_bf;    // domain width
   int<lower=1> M_bf;    // number of basis functions
 }
 
 transformed data{
   
+  // Precompute fixed kernel matrices
+  vector[num_obs] m0 = rep_vector(0.0, num_obs);
+  matrix[num_obs, num_obs] K_const[num_comps] = STAN_kernel_const_all(
+    num_obs, num_obs, x_cat, x_cat, x_cat_num_levels, components
+  );
+  vector[num_obs] delta_vec = rep_vector(delta, num_obs);
+
   // Constant kernel matrix ranks and eigenvalues
   int ranks[num_comps] = STAN_ranks(components, x_cat_num_levels);
   int R = sum(ranks);
-  int RM = R * num_basisfun;
-
-  // Compute L and PHI for each component
-  real L_bf[num_comps];
-  matrix[num_obs, M_bf] PHI[num_comps];
-  for(j in 1:num_comps) {
-    int idx_cont = components[j, 9];
-    print("idx_cont=", idx_cont);
-    //L_bf[j] = c_bf*max(x_cont[idx_cont]);
-    //PHI[j] = PHI_EQ(num_obs, M_bf, L_bf[j], x_cont[idx_cont]);
-  }
-  
+  int RM = R * M_bf;
+  vector[R] bfa_delta = STAN_delta_matrix(K_const, ranks, components);
+  matrix[num_obs, R] bfa_theta = STAN_theta_matrix(K_const, ranks, components);
 }
 
 parameters {
   real<lower=1e-12> alpha[num_comps]; // component magnitudes
   real<lower=1e-12> ell[num_ell]; // lengthscales
   real<lower=1e-12> sigma[1]; // noise std
-  vector[M_bf] xi[num_components]; # basis function coefficients
 }
 
-
-transformed parameters {
-  // Compute spectral densities
-  vector[num_obs] f[num_comps];
-  for (j in 1:num_comps){
-    vector[M_bf] diagSPD_j = diagSPD_EQ(alpha[j], ell[j], L_bf[j], M_);
-    f[j] = PHI_[j] * (diagSPD_j .* beta_f)
-  }
-}
 
 model {
-      
-  // Likelihood
-  vector[num_obs] f_sum = rep_vector(0.0, num_obs);
-  for(j in 1:num_comps){
-    f_sum += f[j];
-  }
-  y_norm ~ normal(f_sum, sigma[1]);
+
+  // Compute Phi and Lambda
+  vector[M_bf] bfa_lambda[num_comps] = STAN_lambda_matrix(ell, 
+      M_bf, L_bf, components);
+  matrix[num_obs, M_bf] bfa_phi[num_comps] = STAN_phi_matrix(
+      x_cont, M_bf, L_bf, components);
+  vector[RM] bfa_D = STAN_D_matrix(alpha, bfa_lambda, bfa_delta, ranks); // beta?
+  matrix[num_obs, RM] bfa_V = STAN_V_matrix(bfa_phi, bfa_theta, ranks);
+
+  // Approximate likelihood
+  target += STAN_multi_normal_bfa_logpdf(y_norm, bfa_V, bfa_D, sigma[1]);
   
   // Priors
   for(j in 1:num_comps){
