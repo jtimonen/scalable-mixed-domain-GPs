@@ -1,6 +1,6 @@
 # Requirements
 library(lgpr)
-library(cmdstanr)
+library(rstan)
 library(ggplot2)
 library(ggpubr)
 
@@ -18,7 +18,6 @@ sd <- simulate_data(
   lengthscales = c(1, 0.5, 0.5), t_jitter = 0.5
 )
 dat <- sd@data
-print(dim(dat))
 
 # Create model
 model <- create_model(y ~ age + age | z, dat)
@@ -28,15 +27,18 @@ M_bf <- 25
 L_bf <- 3.0
 stan_data <- setup_basisfun(model, M_bf = M_bf, L_bf = L_bf)
 N <- stan_data$num_obs
+cat("num_obs =", N, "\n")
 
 # Sample model 1
-m1 <- cmdstan_model("stan/lgp_covariance.stan", include_paths = "stan")
-f1 <- m1$sample(stan_data, chains = 4, refresh = 500)
+m1 <- stan_model("stan/lgp_covariance.stan")
+f1 <- sampling(m1, stan_data, chains = CHAINS)
 
 # Sample model 2
-m2 <- cmdstan_model("stan/lgp_basisfun.stan", include_paths = "stan")
-f2 <- m2$sample(stan_data, chains = 4, refresh = 500)
+m2 <- stan_model("stan/lgp_basisfun.stan")
+f2 <- sampling(m2, stan_data, chains = CHAINS)
 
 # Comparison plot
 ag_name <- paste0("M=", M_bf, ", L=", L_bf)
 plt <- plot_params_comparison(f1, f2, ag_name, N)
+
+ggsave("compare.pdf", plot=plt, width=9, height=5)

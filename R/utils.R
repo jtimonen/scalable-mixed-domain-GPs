@@ -12,8 +12,7 @@ check_version <- function(pkg_name) {
 
 # Get draws of a parameter
 get_draws <- function(fit, name) {
-  df <- as.data.frame(fit$draws(variables = name))
-  as.vector(as.matrix(df))
+  rstan::extract(fit, pars=name)[[name]]
 }
 
 # Helper function
@@ -53,10 +52,14 @@ compare_param <- function(fit, fit_approx, name, ag_name = "approx") {
   return(plt)
 }
 
+get_chain_times <- function(fit) {
+  as.vector(rowSums(get_elapsed_time(fit)))
+}
+
 # Compare runtimes of chains
 compare_runtime <- function(fit, fit_approx, ag_name = "approx") {
-  t <- fit$time()$chains$total
-  t_approx <- fit_approx$time()$chains$total
+  t <- get_chain_times(fit)
+  t_approx <- get_chain_times(fit_approx)
   m <- round(mean(t), 2)
   m_approx <- round(mean(t_approx), 1)
   RED <- "\u001b[31m"
