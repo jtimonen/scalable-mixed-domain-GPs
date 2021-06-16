@@ -10,8 +10,18 @@ for (f in dir("R")) {
   source(path)
 }
 
+# Simulate data
+sd <- simulate_data(
+  N = 6, t_data = seq(1, 5, by = 0.1),
+  relevances = c(0, 1, 1),
+  covariates = c(2),
+  lengthscales = c(1, 0.5, 0.5), t_jitter = 0.5
+)
+dat <- sd@data
+print(dim(dat))
+
 # Create model
-model <- create_model(y ~ age + age | sex, testdata_002)
+model <- create_model(y ~ age + age | z, dat)
 
 # Create Stan input
 M_bf <- 25
