@@ -1,6 +1,6 @@
 /*
   Author: Juho Timonen
-    
+  
   This is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -14,27 +14,6 @@
 */
 
 functions{
-
-  // Compute total signal by summing components
-  vector STAN_vectorsum(vector[] vecs, data int L){
-    int num_vecs = size(vecs);
-    vector[L] s = rep_vector(0, L);
-    for (j in 1:num_vecs){
-      s += vecs[j];
-    }
-    return(s);
-  }
-  
-  // Sum an array of matrices
-  matrix STAN_matrix_array_sum(matrix[] K){
-    int n1 = rows(K[1]);
-    int n2 = cols(K[1]);
-    matrix[n1, n2] K_sum = K[1];
-    for(j in 2:size(K)){
-      K_sum += K[j];
-    }
-    return(K_sum);
-  }
 
   // Log prior density to be added to target
   real STAN_log_prior(real x, data int[] types, data real[] p) {
@@ -80,7 +59,7 @@ functions{
     return(K);
   }
   
-  // Categorical kernel
+  // Binary mask kernel
   matrix STAN_kernel_cat(data int[] x1, data int[] x2) {
     int n1 = size(x1);
     int n2 = size(x2);
@@ -223,7 +202,7 @@ data {
   int<lower=0> x_cat_num_levels[num_cov_cat];
   real delta; // jitter to ensure pos. def. kernel matrices
 
-  // Covariates and response variable
+  // Categorical and continuous covariates, and target variable y
   vector[num_obs] x_cont[num_cov_cont];
   int x_cat[num_cov_cat, num_obs];
   vector[num_obs] y_norm;
@@ -235,6 +214,10 @@ data {
   real hyper_ell[num_ell, 3];
   int<lower=0> prior_sigma[1, 2];
   real hyper_sigma[1, 3];
+  
+  // Inputs related to basis function approximation
+  real<lower=0> c_bf;   // factor c to determine domain width L
+  int<lower=1> M_bf;    // number of basis functions
 }
 
 transformed data{
@@ -244,6 +227,12 @@ transformed data{
     num_obs, num_obs, x_cat, x_cat, x_cat_num_levels, components
   );
   vector[num_obs] delta_vec = rep_vector(delta, num_obs);
+  
+  // Compute L for each continuous covariate
+  real L_bf[num_cov_cont];
+  for(j in 1:num_cov_cont) {
+    L_bf[j] = c_bf*max(x_cont[j]);
+  }
 }
 
 parameters {
@@ -273,3 +262,4 @@ model {
   }
   target += STAN_log_prior(sigma[1], prior_sigma[1], hyper_sigma[1]);
 }
+
