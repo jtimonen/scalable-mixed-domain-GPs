@@ -9,10 +9,11 @@ for (f in dir("R")) {
   path <- file.path("R", f)
   source(path)
 }
+CHAINS <- 4
 
 # Simulate data
 sd <- simulate_data(
-  N = 6, t_data = seq(1, 5, by = 0.05),
+  N = 6, t_data = seq(1, 5, by = 0.005),
   relevances = c(0, 1, 1),
   covariates = c(2),
   lengthscales = c(1, 0.5, 0.5), t_jitter = 0.5
