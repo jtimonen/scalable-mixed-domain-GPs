@@ -65,7 +65,7 @@ compare_runtime <- function(fit, fit_approx, ag_name = "approx") {
   RED <- "\u001b[31m"
   GREEN <- "\u001b[32m"
   if (m_approx > m) {
-    C1 <- GREEN
+    C2 <- GREEN
     C1 <- RED
   } else {
     C1 <- RED
