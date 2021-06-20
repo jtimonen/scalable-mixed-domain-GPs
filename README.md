@@ -15,10 +15,10 @@ for (f in dir("R")) {
 }
 CHAINS <- 4
 
-# Create model
+# Create model using lgpr
 model <- create_model(y ~ age + age | sex, testdata_002)
 
-# Create Stan input
+# Create additional Stan input
 M_bf <- 25
 L_bf <- 3.0
 stan_data <- setup_basisfun(model, M_bf = M_bf, L_bf = L_bf)
