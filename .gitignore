@@ -7,7 +7,6 @@
 *.so
 *.dll
 *.exe
-*.exe
 *.so
 *.o
 *.dll
@@ -17,3 +16,5 @@
 *.out
 
 .Rproj.user
+
+stan/*.rds
