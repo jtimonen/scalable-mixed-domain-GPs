@@ -12,7 +12,7 @@ check_version <- function(pkg_name) {
 
 # Get draws of a parameter
 get_draws <- function(fit, name) {
-  rstan::extract(fit, pars=name)[[name]]
+  rstan::extract(fit, pars = name)[[name]]
 }
 
 # Helper function

@@ -33,4 +33,3 @@ f2 <- sampling(m2, stan_data, chains = CHAINS)
 # Comparison plot
 ag_name <- paste0("M=", M_bf, ", L=", L_bf)
 plot_params_comparison(f1, f2, ag_name, N)
-

@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-args <- commandArgs(trailingOnly=TRUE)
+args <- commandArgs(trailingOnly = TRUE)
 idx <- as.numeric(args[1])
 M <- as.numeric(args[2])
 
@@ -14,7 +14,7 @@ for (f in dir("R")) {
   path <- file.path("R", f)
   source(path)
 }
-CHAINS <- 4 
+CHAINS <- 4
 n_per_N <- 4 + idx * 10
 
 # Simulate data
@@ -38,8 +38,8 @@ cat("M=", M, ", ")
 cat("num_obs=", N, "\n")
 
 # Sample model 1
-#m1 <- stan_model("stan/lgp_covariance.stan")
-#f1 <- sampling(m1, stan_data, chains = CHAINS)
+# m1 <- stan_model("stan/lgp_covariance.stan")
+# f1 <- sampling(m1, stan_data, chains = CHAINS)
 
 # Sample model 2
 m2 <- stan_model("stan/lgp_basisfun.stan")
@@ -47,13 +47,13 @@ f2 <- sampling(m2, stan_data, chains = CHAINS, refresh = 500)
 
 times <- as.vector(rowSums(rstan::get_elapsed_time(f2)))
 print(times)
-fn <- paste0("out/times_", M, "_", idx, ".txt") 
+fn <- paste0("out/times_", M, "_", idx, ".txt")
 x <- c(N, times)
-write.csv(x, file=fn, row.names=FALSE)
+write.csv(x, file = fn, row.names = FALSE)
 
 
 # Comparison plot
-#ag_name <- paste0("M=", M_bf, ", L=", L_bf)
-#plt <- plot_params_comparison(f1, f2, ag_name, N)
+# ag_name <- paste0("M=", M_bf, ", L=", L_bf)
+# plt <- plot_params_comparison(f1, f2, ag_name, N)
 
-#ggsave("compare.pdf", plot=plt, width=9, height=5)
+# ggsave("compare.pdf", plot=plt, width=9, height=5)
