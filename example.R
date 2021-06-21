@@ -14,7 +14,7 @@ for (f in dir("R")) {
 CHAINS <- 4
 
 # Simulate data using lgpr
-n_per_N <- 53
+n_per_N <- 13
 sd <- simulate_data(
   N = 6, t_data = seq(1, 5, length.out = n_per_N),
   relevances = c(0, 1, 1),
@@ -25,7 +25,7 @@ dat <- sd@data
 
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | id, dat)
+model <- create_model(y ~ age + age | z + age | id, dat)
 
 # Create additional Stan input
 M_bf <- 25

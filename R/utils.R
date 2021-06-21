@@ -65,15 +65,16 @@ compare_runtime <- function(fit, fit_approx, ag_name = "approx") {
   RED <- "\u001b[31m"
   GREEN <- "\u001b[32m"
   if (m_approx > m) {
-    C2 <- GREEN
-    C1 <- RED
+    C_approx <- RED
+    C_exact <- GREEN
   } else {
-    C1 <- RED
-    C2 <- GREEN
+    C_approx <- GREEN
+    C_exact <- RED
   }
   NC <- "\u001b[0m"
-  str <- paste0(C1, m, NC, " vs. ", C2, m_approx, NC, " s\n")
-  cat("Average chain runtimes (exact vs. approx):", str)
+  s1 <- paste0(C_exact, m, " (exact)", NC)
+  s2 <- paste0(C_approx, m_approx, " (approx)", NC)
+  cat("Average chain runtimes (s): ", s1, " vs. ", s2, "\n", sep="")
   g <- rep("exact", length(t))
   g_approx <- rep(ag_name, length(t_approx))
   runtime <- c(t, t_approx)
