@@ -74,7 +74,7 @@ compare_runtime <- function(fit, fit_approx, ag_name = "approx") {
   NC <- "\u001b[0m"
   s1 <- paste0(C_exact, m, " (exact)", NC)
   s2 <- paste0(C_approx, m_approx, " (approx)", NC)
-  cat("Average chain runtimes (s): ", s1, " vs. ", s2, "\n", sep="")
+  cat("Average chain runtimes (s): ", s1, " vs. ", s2, "\n", sep = "")
   g <- rep("exact", length(t))
   g_approx <- rep(ag_name, length(t_approx))
   runtime <- c(t, t_approx)
@@ -104,4 +104,13 @@ plot_params_comparison <- function(fit, fit_approx, ag_name = "approx", N = 0) {
   r <- compare_runtime_plot(fit, fit_approx, ag_name = ag_name, N = N)
   plots <- ggarrange(a1, a2, e1, e2, s1, r, labels = "auto")
   return(plots)
+}
+
+# Create kernel computer  from model and parameter fit
+create_kc <- function(model, stan_fit, x = NULL, reduce = NULL) {
+  m <- model
+  sf <- stan_fit
+  STREAM <- rstan::get_stream()
+  kc <- lgpr:::create_kernel_computer(m, sf, x, reduce, NULL, FALSE, STREAM)
+  return(kc)
 }
