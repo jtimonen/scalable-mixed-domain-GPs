@@ -106,11 +106,3 @@ plot_params_comparison <- function(fit, fit_approx, ag_name = "approx", N = 0) {
   return(plots)
 }
 
-# Create kernel computer  from model and parameter fit
-create_kc <- function(model, stan_fit, x = NULL, reduce = NULL) {
-  m <- model
-  sf <- stan_fit
-  STREAM <- rstan::get_stream()
-  kc <- lgpr:::create_kernel_computer(m, sf, x, reduce, NULL, FALSE, STREAM)
-  return(kc)
-}

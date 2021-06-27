@@ -173,7 +173,7 @@ matrix STAN_theta_matrix(data matrix[] K_const, data int[] ranks,
     if (idx_cat > 0) {
       matrix[n,n] v = eigenvectors_sym(K_const[j]); // eigenvecs in asc. order
       Theta[:, idx:(idx+r-1)] = v[:, (n-r+1):n]; // take only last r vecs
-      //print("THETA, j = ", j, ", wrote to Delta[",idx,":",idx+r-1,"]");
+      //print("THETA, j = ", j, ", wrote to Theta[",idx,":",idx+r-1,"]");
     }
     idx = idx + r;
   }

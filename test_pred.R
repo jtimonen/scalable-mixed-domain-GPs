@@ -35,8 +35,15 @@ N <- stan_data$num_obs
 cat("N =", N, "\n")
 
 # Sample model
-m1 <- stan_model("stan/lgp_covariance.stan")
-f1 <- sampling(m1, stan_data, chains = CHAINS, refresh = 500)
+#m1 <- stan_model("stan/lgp_covariance.stan")
+#f1 <- sampling(m1, stan_data, chains = CHAINS, refresh = 500)
 
 # Predict exactly
-kc <- create_kc(model, f1)
+st <- proc.time()
+fp1 <-  fp_exact(model, f1)
+t1 <- as.numeric((proc.time() - st)[3])
+cat("Took \u001b[34;1m", t1, "\u001b[0m seconds.\n", sep="")
+
+# Predict approximately
+fp2 <- fp_approx(model, f1, stan_data)
+
