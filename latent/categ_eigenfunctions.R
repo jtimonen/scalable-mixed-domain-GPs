@@ -24,7 +24,7 @@ dat <- sd@data
 
 
 # Create model using lgpr
-model <- create_model(y ~ zs(z) + gp(age)*zs(id), dat, sample_f = TRUE)
+model <- create_model(y ~ zs(z) + gp(age) * zs(id), dat, sample_f = TRUE)
 
 # Source all R files
 for (f in dir("R")) {
@@ -39,10 +39,10 @@ stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
 
 
 # Function
-create_C_matrix_zs <- function(num_cat){
+create_C_matrix_zs <- function(num_cat) {
   z <- seq_len(num_cat)
   lgpr:::STAN_kernel_const(z, z, 0, num_cat, get_stream())
 }
 
 NC <- 5
-V <- eigen(create_C_matrix_zs(NC), symmetric=T)$vectors
+V <- eigen(create_C_matrix_zs(NC), symmetric = T)$vectors

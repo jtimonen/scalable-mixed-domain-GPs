@@ -27,7 +27,6 @@ stan_input_approx_precomp <- function(stan_input) {
     C_decs <- decompose_C_matrices(C_mats)
     validate_stan_input_approx(C_decs, C_mats) # extra computation
     si_add <- vectorize_C_decs(C_decs)
-
   } else {
     si_add <- c()
   }
@@ -103,7 +102,7 @@ vectorize_C_decs <- function(C_decs) {
 create_C_inds <- function(C_sizes) {
   num_cc <- length(C_sizes)
   cs <- cumsum(C_sizes)
-  i_start <- c(1, cs+1)[1:num_cc]
+  i_start <- c(1, cs + 1)[1:num_cc]
   i_end <- cs
   cbind(i_start, i_end)
 }
@@ -115,14 +114,8 @@ validate_stan_input_approx <- function(C_decs, C_mats) {
   J <- length(C_mats)
   for (j in seq_len(J)) {
     cat("\n----------------- j =", j, "------------------\n")
-    print(C_mats[[j]])
     V <- C_vecs[[j]]
-    print(round(V, 7))
-    rs <- 
-    cat("rowsums = [", round(rowSums(V), 7), "]\n")
-    cat("colsums = [", round(colSums(V), 7), "]\n")
     D <- diag(C_vals[[j]])
-    print(round(C_vals[[j]], 7))
     C_rec <- V %*% D %*% t(V)
     diff <- as.vector(C_mats[[j]] - C_rec)
     mae <- max(abs(diff))
@@ -133,4 +126,3 @@ validate_stan_input_approx <- function(C_decs, C_mats) {
     }
   }
 }
-

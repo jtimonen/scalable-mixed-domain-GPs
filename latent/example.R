@@ -37,4 +37,3 @@ CHAINS <- 4
 num_bf <- 25
 scale_bf <- 1.5
 stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
-
