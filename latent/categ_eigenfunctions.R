@@ -15,7 +15,7 @@ rstan_options(auto_write = TRUE)
 # Simulate data using lgpr
 n_per_N <- 13
 sd <- simulate_data(
-  N = 6, t_data = seq(1, 5, length.out = n_per_N),
+  N = 4, t_data = seq(1, 5, length.out = n_per_N),
   relevances = c(0, 1, 1),
   covariates = c(2),
   lengthscales = c(1, 0.5, 0.5), t_jitter = 0.5
@@ -24,17 +24,25 @@ dat <- sd@data
 
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE)
+model <- create_model(y ~ zs(z) + gp(age)*zs(id), dat, sample_f = TRUE)
 
 # Source all R files
 for (f in dir("R")) {
   path <- file.path("R", f)
   source(path)
 }
-CHAINS <- 4
 
 # Create additional Stan input
 num_bf <- 25
 scale_bf <- 1.5
 stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
 
+
+# Function
+create_C_matrix_zs <- function(num_cat){
+  z <- seq_len(num_cat)
+  lgpr:::STAN_kernel_const(z, z, 0, num_cat, get_stream())
+}
+
+NC <- 5
+V <- eigen(create_C_matrix_zs(NC), symmetric=T)$vectors

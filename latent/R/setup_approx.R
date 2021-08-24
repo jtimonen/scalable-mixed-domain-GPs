@@ -10,7 +10,7 @@ setup_approx <- function(model, num_bf, scale_bf) {
 
 dollar <- function(x, field) {
   a <- x[[field]]
-  if(is.null(a)) {
+  if (is.null(a)) {
     stop(field, " was NULL")
   }
   a
@@ -21,17 +21,13 @@ stan_input_approx_precomp <- function(stan_input) {
   num_bf <- dollar(stan_input, "num_bf")
   if (any(num_bf > 0)) {
     comps <- dollar(stan_input, "components")
-    
+
     # Categorical decomposition stuff
     C_mats <- create_C_matrices(stan_input)
     C_decs <- decompose_C_matrices(C_mats)
     validate_stan_input_approx(C_decs, C_mats) # extra computation
     si_add <- vectorize_C_decs(C_decs)
-    
-    # Basis function stuff
-    J <- nrow(comps)
-    num_xi <- num_bf * J
-    si_add <- c(si_add, list(num_xi = num_xi))
+
   } else {
     si_add <- c()
   }
@@ -41,13 +37,13 @@ stan_input_approx_precomp <- function(stan_input) {
 # Compute the C x C matrix for each term
 create_C_matrices <- function(si) {
   STREAM <- get_stream()
-  comp <- dollar(si, "components")
-  Z <- dollar(si, "x_cat")
-  Z_M <- dollar(si, "x_cat_num_levels")
+  comp <- dollar(si, "components") # changes in 2.0
+  Z <- dollar(si, "x_cat") # changes in 2.0
+  Z_M <- dollar(si, "x_cat_num_levels") # changes in 2.0
   C_matrices <- list()
   J <- nrow(comp)
-  iz <- comp[, 1]
-  kz <- comp[, 2]
+  iz <- comp[, 8] # changes in 2.0
+  kz <- comp[, 2] # changes in 2.0
   for (j in seq_len(J)) {
     idx <- iz[j]
     if (idx != 0) {
@@ -91,15 +87,26 @@ vectorize_C_decs <- function(C_decs) {
     C_eigvals <- c(C_eigvals, D[[j]])
     C_eigvecs <- c(C_eigvecs, V_j)
   }
+  C_sizes <- dollar(C_decs, "sizes")
+  cat("C_sizes = [", paste(C_sizes, collapse = ", "), "]\n", sep = "")
+  C_inds <- create_C_inds(C_sizes)
   list(
     C_eigvals = C_eigvals,
     C_eigvecs = C_eigvecs,
-    C_sizes = dollar(C_decs, "sizes"),
+    C_sizes = C_sizes,
     len_eigvals = length(C_eigvals),
-    len_eigvecs = length(C_eigvecs)
+    len_eigvecs = length(C_eigvecs),
+    C_inds = C_inds
   )
 }
 
+create_C_inds <- function(C_sizes) {
+  num_cc <- length(C_sizes)
+  cs <- cumsum(C_sizes)
+  i_start <- c(1, cs+1)[1:num_cc]
+  i_end <- cs
+  cbind(i_start, i_end)
+}
 
 # Validation
 validate_stan_input_approx <- function(C_decs, C_mats) {
@@ -107,8 +114,15 @@ validate_stan_input_approx <- function(C_decs, C_mats) {
   C_vecs <- dollar(C_decs, "vectors")
   J <- length(C_mats)
   for (j in seq_len(J)) {
+    cat("\n----------------- j =", j, "------------------\n")
+    print(C_mats[[j]])
     V <- C_vecs[[j]]
+    print(round(V, 7))
+    rs <- 
+    cat("rowsums = [", round(rowSums(V), 7), "]\n")
+    cat("colsums = [", round(colSums(V), 7), "]\n")
     D <- diag(C_vals[[j]])
+    print(round(C_vals[[j]], 7))
     C_rec <- V %*% D %*% t(V)
     diff <- as.vector(C_mats[[j]] - C_rec)
     mae <- max(abs(diff))

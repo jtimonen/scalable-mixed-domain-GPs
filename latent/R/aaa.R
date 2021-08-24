@@ -16,15 +16,14 @@
 #' @slot STREAM external pointer (for calling 'Stan' functions)
 #' @param object The object for which to call a class method.
 ApproximateKernelComputer <- setClass("ApproximateKernelComputer",
-                           representation = representation(
-                             input = "list",
-                             K_input = "list",
-                             Ks_input = "list",
-                             Kss_input = "list",
-                             comp_names = "character",
-                             full_covariance = "logical",
-                             STREAM = "externalptr",
-                             no_separate_output_points = "logical"
-                           )
+  representation = representation(
+    input = "list",
+    K_input = "list",
+    Ks_input = "list",
+    Kss_input = "list",
+    comp_names = "character",
+    full_covariance = "logical",
+    STREAM = "externalptr",
+    no_separate_output_points = "logical"
+  )
 )
-

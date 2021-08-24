@@ -105,4 +105,3 @@ plot_params_comparison <- function(fit, fit_approx, ag_name = "approx", N = 0) {
   plots <- ggarrange(a1, a2, e1, e2, s1, r, labels = "auto")
   return(plots)
 }
-
