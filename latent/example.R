@@ -11,12 +11,6 @@ library(ggpubr)
 rstan_options(javascript = FALSE)
 rstan_options(auto_write = TRUE)
 
-# Source all R files
-for (f in dir("R")) {
-  path <- file.path("R", f)
-  source(path)
-}
-CHAINS <- 4
 
 # Simulate data using lgpr
 n_per_N <- 13
@@ -32,10 +26,17 @@ dat <- sd@data
 # Create model using lgpr
 model <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE)
 
+# Source all R files
+for (f in dir("R")) {
+  path <- file.path("R", f)
+  source(path)
+}
+CHAINS <- 4
+
 # Create additional Stan input
-M_bf <- 25
-L_bf <- 3.0
-stan_data <- setup_basisfun(model, M_bf = M_bf, L_bf = L_bf)
+num_bf <- 25
+scale_bf <- 1.5
+stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
 N <- stan_data$num_obs
 cat("N =", N, "\n")
 
