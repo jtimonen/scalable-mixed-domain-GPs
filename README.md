@@ -1,5 +1,15 @@
 # lgpr-basisfun
 
+## Requirements
+Requires `lgpr` version 1.1.x (preferably 1.1.4), which can be installed from CRAN.
+
+```R
+install.packages("lgpr")
+if(packageVersion("lgpr") != "1.1.4") {
+    stop("lgpr 1.1.4 is required!")
+}
+```
+
 Example:
 ```R
 # Requirements

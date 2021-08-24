@@ -1,5 +1,10 @@
-# Requirements
+# lgpr
 library(lgpr)
+if(packageVersion("lgpr") != "1.1.4") {
+  stop("lgpr 1.1.4 is required!")
+}
+
+# Other requirements
 library(rstan)
 library(ggplot2)
 library(ggpubr)
@@ -25,7 +30,7 @@ dat <- sd@data
 
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | z + age | id, dat)
+model <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE)
 
 # Create additional Stan input
 M_bf <- 25
@@ -35,11 +40,11 @@ N <- stan_data$num_obs
 cat("N =", N, "\n")
 
 # Sample model 1
-m1 <- stan_model("stan/lgp_covariance.stan")
+m1 <- stan_model("stan/lgp_latent_covariance.stan")
 f1 <- sampling(m1, stan_data, chains = CHAINS, refresh = 500)
 
 # Sample model 2
-m2 <- stan_model("stan/lgp_basisfun.stan")
+m2 <- stan_model("stan/lgp_latent_basisfun.stan")
 f2 <- sampling(m2, stan_data, chains = CHAINS, refresh = 500)
 
 # Comparison plot
