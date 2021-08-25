@@ -10,8 +10,8 @@ vector STAN_phi(vector x, int m, data real L){
 vector STAN_diag_spd_eq(real alpha, real ell, data int M, data real L){
   vector[M] Lambda;
   for(m in 1:M) {
-    real v = alpha^2 * sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * m^2);
-    Lambda[m] = sqrt(v);
+    real v = sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * m^2);
+    Lambda[m] = alpha*sqrt(v+1e-9);
   }
   return(Lambda);
 }

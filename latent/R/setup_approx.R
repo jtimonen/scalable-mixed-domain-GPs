@@ -3,8 +3,8 @@ setup_approx <- function(model, num_bf, scale_bf) {
   stopifnot(is(model, "lgpmodel"))
   si <- model@stan_input
   si_bf <- list(num_bf = num_bf, scale_bf = scale_bf)
-  si <- c(si, si_bf)
-  stan_input_approx_precomp(si)
+  si_precomp <- stan_input_approx_precomp(c(si, si_bf))
+  c(si_bf, si_precomp)
 }
 
 dollar <- function(x, field) {
