@@ -88,7 +88,6 @@ validate_stan_input_approx <- function(C_decs, C_mats) {
   C_vecs <- dollar(C_decs, "vectors")
   J <- length(C_mats)
   for (j in seq_len(J)) {
-    cat("\n----------------- j =", j, "------------------\n")
     V <- C_vecs[[j]]
     D <- diag(C_vals[[j]])
     C_rec <- V %*% D %*% t(V)

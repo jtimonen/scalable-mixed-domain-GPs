@@ -39,5 +39,9 @@ scale_bf <- 1.5
 stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
 
 # Create model and sample
-sm <- stan_model("stan/lgp_latent_basisfun.stan")
-fit <- sampling(sm, data = stan_data, iter = 2)
+sm1 <- stan_model("stan/lgp_latent_basisfun.stan")
+f1 <- sampling(sm1, data = stan_data, iter = 200)
+
+# Create model and sample
+sm2 <- stan_model("stan/lgp_latent_covariance.stan")
+f2 <- sampling(sm2, data = stan_data, iter = 200)

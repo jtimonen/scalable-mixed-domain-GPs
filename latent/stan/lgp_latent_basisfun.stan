@@ -69,15 +69,15 @@ data {
 transformed data{
   int idx_z2 = components[2, 8];
   int idx_z3 = components[3, 8];
-  vector[num_obs] PHI_mats[num_cov_cont, num_bf];
-  vector[num_obs] VP2[C2_num];
-  vector[num_obs] VP3[C3_num];
+  matrix[num_obs, num_bf] PHI_mats[num_cov_cont];
+  matrix[num_obs, C2_num] VP2;
+  matrix[num_obs, C3_num] VP3;
   
   // PHI
   real L = 1.0 * scale_bf;
   for(ix in 1:num_cov_cont) {
     for(m in 1:num_bf) {
-      PHI_mats[ix,m] = STAN_phi(x_cont[ix], m, L);
+      PHI_mats[ix][:,m] = STAN_phi(x_cont[ix], m, L);
     }
   }
   
@@ -85,7 +85,7 @@ transformed data{
   for(n in 1:num_obs) {
     int z2 = x_cat[idx_z2, n];
     for(c in 1:C2_num) {
-      VP2[c][n] = sqrt(C2_vals[c]) * C2_vecs[z2,c];
+      VP2[n,c] = sqrt(C2_vals[c]) * C2_vecs[z2,c];
     }
   }
   
@@ -93,7 +93,7 @@ transformed data{
   for(n in 1:num_obs) {
     int z3 = x_cat[idx_z3, n];
     for(c in 1:C3_num) {
-      VP3[c][n] = sqrt(C3_vals[c]) * C3_vecs[z3,c];
+      VP3[n,c] = sqrt(C3_vals[c]) * C3_vecs[z3,c];
     }
   }
 }
@@ -105,57 +105,53 @@ parameters {
   real<lower=1e-12> phi[obs_model==3];
   real<lower=1e-12, upper=1-1e-12> gamma[obs_model==5];
   
-  //vector[num_bf] xi[num_comps, len_eigvals]; // basis function multipliers
+  vector[num_bf] xi_1[1];
+  vector[num_bf] xi_2[C2_num];
+  vector[num_bf] xi_3[C3_num];
 }
 
 transformed parameters {
   vector[num_obs] f_latent[num_comps];
   {
-    matrix[num_obs, num_bf] PSI[num_comps];
-    int idx_ell = 0;
-    int idx_alpha = 0;
-  
-    // Loop through components
-    for(j in 1:num_comps){
-      
-      // 1. Initialize with constant part of PSI
-      matrix[num_obs, num_bf] PSI_j = rep_matrix(1.0, num_obs, num_bf);
-      
-      // 2. Get component properties
-      int opts[9] = components[j];
-      int ctype = opts[1]; // changes in 2.0
-      int idx_cont = opts[9]; // changes in 2.0
-      
-      // 3. Pick the possible continuous covariate of this component
-      //if (ctype > 0) {
-      //  PSI_j = PSI_j .* PHI[idx_cont];
-      //}
-      
-      // 4. Pick the possible categorical covariate of this component
-      //if (ctype != 1) {
-      //  PSI_j = PSI_j .* PHI[idx_cont];
-      //}
-      f_latent[j] = rep_vector(+.1, num_obs);
-      
+    // Compute diagonals of lambda matrices
+    vector[num_bf] d1 = STAN_lambda_matrix(ell[1], num_bf, L);
+    vector[num_bf] d2 = STAN_lambda_matrix(ell[2], num_bf, L);
+    vector[num_bf] d3 = STAN_lambda_matrix(ell[3], num_bf, L);
+
+    // Build the three components
+    f_latent[1] = PHI_mats[1] * (d1 .* xi_1[1]);   // (N,M) x (M)
+    f_latent[2] = rep_vector(0, num_obs);
+    f_latent[3] = rep_vector(0, num_obs);
+    for(m in 1:num_bf){
+      vector[num_obs] phi_m = PHI_mats[1][:,m];
+      real d_m = sqrt(d2[m]);
+      for(c in 1:C2_num) {
+        vector[num_obs] v_c = VP2[:,c];
+        f_latent[2] += d_m * xi_2[c][m] * phi_m .* v_c;
+      }
     }
-    
-    //for(j in 1:num_comps){
-    //  f_latent[j] = intercept + PHI_f * (diagSPD_f .* beta_f);
-    //}
+    for(m in 1:num_bf){
+      vector[num_obs] phi_m = PHI_mats[1][:,m];
+      real d_m = sqrt(d3[m]);
+      for(c in 1:C3_num) {
+        vector[num_obs] v_c = VP3[:,c];
+        f_latent[3] += d_m * xi_3[c][m] * phi_m .* v_c;
+      }
+    }
   }
 }
 
 model {
-  //xi ~ normal(0, 1);
   vector[num_obs] f_sum = STAN_vectorsum(f_latent, num_obs) + c_hat;
   
-  print("oooooooooooooooooooooo")
-  print(PHI_mats);
-  print("====")
-  print(VP2);
-  print("====")
-  print(VP3);
-  print("ooooooooooooooooooooooo")
+  // Multiplier priors
+  xi_1[1] ~ normal(0, 1);
+  for(c in 1:C2_num) {
+    xi_2[c] ~ normal(0, 1);
+  }
+  for(c in 1:C3_num) {
+    xi_3[c] ~ normal(0, 1);
+  }
   
   // Parameter priors
   for(j in 1:num_comps){
