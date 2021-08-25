@@ -113,11 +113,12 @@ parameters {
 transformed parameters {
   vector[num_obs] f_latent[num_comps];
   {
+    
     // Compute diagonals of lambda matrices
-    vector[num_bf] d1 = alpha[1]*STAN_lambda_matrix(ell[1], num_bf, L);
-    vector[num_bf] d2 = alpha[2]*STAN_lambda_matrix(ell[2], num_bf, L);
-    vector[num_bf] d3 = alpha[3]*STAN_lambda_matrix(ell[3], num_bf, L);
-
+    vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1],  num_bf, L);
+    vector[num_bf] d2 = STAN_diag_spd_eq(alpha[2], ell[2],  num_bf, L);
+    vector[num_bf] d3 = STAN_diag_spd_eq(alpha[3], ell[3],  num_bf, L);
+    
     // Build the three components
     f_latent[1] = PHI_mats[1] * (d1 .* xi_1[1]);   // (N,M) x (M)
     f_latent[2] = rep_vector(0, num_obs);
