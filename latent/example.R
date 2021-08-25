@@ -13,7 +13,7 @@ rstan_options(auto_write = TRUE)
 
 
 # Simulate data using lgpr
-n_per_N <- 13
+n_per_N <- 14
 sd <- simulate_data(
   N = 6, t_data = seq(1, 5, length.out = n_per_N),
   relevances = c(0, 1, 1),
@@ -32,8 +32,8 @@ for (f in dir("R")) {
 }
 
 # Create additional Stan input
-num_bf <- 30
-scale_bf <- 1.5
+num_bf <- 40
+scale_bf <- 5.0
 stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
 
 # Create model and sample
@@ -49,14 +49,15 @@ N <- stan_data$num_obs
 plt <- plot_params_comparison(f2, f1, ag_name = "approx", N = N)
 
 # Compare functions
-fl_1 <- apply(extract(f1, pars="f_latent")$f_latent,c(2,3), mean)
-fl_2 <- apply(extract(f2, pars="f_latent")$f_latent,c(2,3), mean)
+f1 <- extract(f1, pars="f_latent")$f_latent
+f2 <- extract(f2, pars="f_latent")$f_latent
+fl_1 <- apply(f1,c(2,3), mean)
+fl_2 <- apply(f2,c(2,3), mean)
 df1 <- data.frame(t(fl_1))
-colnames(df1) <- c("f1", "f2", "f3")
-df1 <- cbind(model@data, df1)
-
 df2 <- data.frame(t(fl_2))
+colnames(df1) <- c("f1", "f2", "f3")
 colnames(df2) <- c("f1", "f2", "f3")
+df1 <- cbind(model@data, df1)
 df2 <- cbind(model@data, df2)
 
 type <- as.factor(rep(c("approx", "exact"), each=N))
