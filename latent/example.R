@@ -23,7 +23,8 @@ sd <- simulate_data(
 dat <- sd@data
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE)
+m1 <- create_model(y ~ age, dat, sample_f = TRUE)
+m2 <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE)
 
 # Source all R files
 for (f in dir("R")) {
@@ -33,11 +34,12 @@ for (f in dir("R")) {
 
 # Create additional Stan input
 num_bf <- 40
-scale_bf <- 5.0
-stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
+scale_bf <- 10.0
+si_add <- setup_approx(m2, num_bf = num_bf, scale_bf = scale_bf)
+stan_data <- c(m1@stan_input, si_add)
 
 # Create model and sample
-sm1 <- stan_model("stan/lgp_latent_basisfun.stan")
+sm1 <- stan_model("stan/lgp_latent_basisfun_onecomp.stan")
 f1 <- sampling(sm1, data = stan_data, cores = 4)
 
 # Create model and sample

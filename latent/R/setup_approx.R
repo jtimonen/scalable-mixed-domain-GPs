@@ -4,8 +4,7 @@ setup_approx <- function(model, num_bf, scale_bf) {
   si <- model@stan_input
   si_bf <- list(num_bf = num_bf, scale_bf = scale_bf)
   si <- c(si, si_bf)
-  si_add <- stan_input_approx_precomp(si)
-  c(si, si_add)
+  stan_input_approx_precomp(si)
 }
 
 dollar <- function(x, field) {
