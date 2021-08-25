@@ -57,39 +57,43 @@ data {
   int<lower=1> num_bf;    // number of basis functions
   
   // Categorical decomposition stuff
-  int<lower=1> len_eigvals;
-  int<lower=1> len_eigvecs;
-  int<lower=0> C_sizes[num_comps];
-  vector<lower=0>[len_eigvals] C_eigvals;
-  vector[len_eigvecs] C_eigvecs;
-  int<lower=0> C_inds[num_comps, 2];
+  int<lower=1> C2_num;
+  int<lower=1> C3_num;
+  matrix[C2_num, C2_num] C2_vecs;
+  matrix[C3_num, C3_num] C3_vecs;
+  vector[C2_num] C2_vals;
+  vector[C3_num] C3_vals;
   
 }
 
 transformed data{
-  vector[N] PHI[num_cov_cont, num_bf];
-  matrix[N] VAR_PHI[len_eigvals];
-  int idx_cc = 0;
+  int idx_z2 = components[2, 8];
+  int idx_z3 = components[3, 8];
+  vector[num_obs] PHI_mats[num_cov_cont, num_bf];
+  vector[num_obs] VP2[C2_num];
+  vector[num_obs] VP3[C3_num];
   
   // PHI
   real L = 1.0 * scale_bf;
   for(ix in 1:num_cov_cont) {
     for(m in 1:num_bf) {
-      PHI[ix,m] = STAN_phi(x_cont[ix], m, L);
+      PHI_mats[ix,m] = STAN_phi(x_cont[ix], m, L);
     }
   }
   
-  // VAR_PHI
-  for(j in 1:num_comps) {
-    int i1;
-    int i2;
-    if(components[j,1] != 1) {
-      idx_cc += 1;
-      int i1 = C_inds[j, 1];
-      int i2 = C_inds[j, 2];
+  // VAR_PHI 2
+  for(n in 1:num_obs) {
+    int z2 = x_cat[idx_z2, n];
+    for(c in 1:C2_num) {
+      VP2[c][n] = sqrt(C2_vals[c]) * C2_vecs[z2,c];
     }
-    for(m in 1:num_bf) {
-      PHI[ix,m] = STAN_phi(x_cont[ix], m, L);
+  }
+  
+  // VAR_PHI 3
+  for(n in 1:num_obs) {
+    int z3 = x_cat[idx_z3, n];
+    for(c in 1:C3_num) {
+      VP3[c][n] = sqrt(C3_vals[c]) * C3_vecs[z3,c];
     }
   }
 }
@@ -101,54 +105,57 @@ parameters {
   real<lower=1e-12> phi[obs_model==3];
   real<lower=1e-12, upper=1-1e-12> gamma[obs_model==5];
   
-  vector[num_bf] xi[num_comps, len_eigvals]; // basis function multipliers
+  //vector[num_bf] xi[num_comps, len_eigvals]; // basis function multipliers
 }
 
 transformed parameters {
   vector[num_obs] f_latent[num_comps];
   {
-    matrix[N, num_bf] PSI[num_comps];
+    matrix[num_obs, num_bf] PSI[num_comps];
     int idx_ell = 0;
     int idx_alpha = 0;
   
     // Loop through components
     for(j in 1:num_comps){
       
-
-      
       // 1. Initialize with constant part of PSI
-      matrix[N, num_bf] PSI_j = rep_matrix(1.0, N, num_bf);
+      matrix[num_obs, num_bf] PSI_j = rep_matrix(1.0, num_obs, num_bf);
       
       // 2. Get component properties
       int opts[9] = components[j];
-      int ctype = opts[1]; # changes in 2.0
-      int idx_cont = opts[9]; # changes in 2.0
+      int ctype = opts[1]; // changes in 2.0
+      int idx_cont = opts[9]; // changes in 2.0
       
       // 3. Pick the possible continuous covariate of this component
-      if (ctype > 0) {
-        PSI_j = PSI_j .* PHI[idx_cont];
-      }
+      //if (ctype > 0) {
+      //  PSI_j = PSI_j .* PHI[idx_cont];
+      //}
       
       // 4. Pick the possible categorical covariate of this component
-      if (ctype != 1) {
-        PSI_j = PSI_j .* PHI[idx_cont];
-      }
+      //if (ctype != 1) {
+      //  PSI_j = PSI_j .* PHI[idx_cont];
+      //}
+      f_latent[j] = rep_vector(+.1, num_obs);
       
-      KX[j] = K; // store kernel matrix
     }
-    return(KX);
     
-    for(j in 1:num_comps){
-      f_latent[j] = intercept + PHI_f * (diagSPD_f .* beta_f);
-    }
+    //for(j in 1:num_comps){
+    //  f_latent[j] = intercept + PHI_f * (diagSPD_f .* beta_f);
+    //}
   }
 }
 
 model {
-  xi ~ normal(0, 1);
-
+  //xi ~ normal(0, 1);
   vector[num_obs] f_sum = STAN_vectorsum(f_latent, num_obs) + c_hat;
-  for(j in 1:num_comps){ target += normal_lpdf(eta[j] | 0, 1);}
+  
+  print("oooooooooooooooooooooo")
+  print(PHI_mats);
+  print("====")
+  print(VP2);
+  print("====")
+  print(VP3);
+  print("ooooooooooooooooooooooo")
   
   // Parameter priors
   for(j in 1:num_comps){

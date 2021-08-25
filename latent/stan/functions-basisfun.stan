@@ -1,13 +1,3 @@
-// Evaluate m'th eigenfunction of the categorical kernel
-vector STAN_varphi(int z[], int m, data vector C_eigvals, data vector C_eigvecs,
-    data int[,] C_inds){
-  int i1 = C_inds[m, 1];
-  real ev 
-  real B = pi()*m/(2.0*L);
-  return(A*sin(B*(x+L)));
-}
-
-
 // Evaluate m'th eigenfunction of the Dirichlet boundary value problem
 // - x = points where to evaluate the function
 // - m = index of the function

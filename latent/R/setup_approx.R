@@ -26,7 +26,17 @@ stan_input_approx_precomp <- function(stan_input) {
     C_mats <- create_C_matrices(stan_input)
     C_decs <- decompose_C_matrices(C_mats)
     validate_stan_input_approx(C_decs, C_mats) # extra computation
-    si_add <- vectorize_C_decs(C_decs)
+    si_add <- list(
+      C2_vecs = C_decs$vectors[[2]],
+      C2_vals = C_decs$values[[2]],
+      C3_vecs = C_decs$vectors[[3]],
+      C3_vals = C_decs$values[[3]]
+    )
+    si_add_add <- list(
+      C2_num = length(si_add$C2_vals),
+      C3_num = length(si_add$C3_vals)
+    )
+    si_add <- c(si_add, si_add_add)
   } else {
     si_add <- c()
   }
@@ -70,41 +80,6 @@ decompose_C_matrices <- function(C_matrices) {
     SIZES[j] <- length(VALS[[j]])
   }
   list(values = VALS, vectors = VECS, sizes = SIZES)
-}
-
-
-# Vectorize
-vectorize_C_decs <- function(C_decs) {
-  D <- dollar(C_decs, "values")
-  V <- dollar(C_decs, "vectors")
-  C <- dollar(C_decs, "sizes")
-  J <- length(C)
-  C_eigvals <- c()
-  C_eigvecs <- c()
-  for (j in seq_len(J)) {
-    V_j <- as.vector(V[[j]]) # takes the matrix by columns
-    C_eigvals <- c(C_eigvals, D[[j]])
-    C_eigvecs <- c(C_eigvecs, V_j)
-  }
-  C_sizes <- dollar(C_decs, "sizes")
-  cat("C_sizes = [", paste(C_sizes, collapse = ", "), "]\n", sep = "")
-  C_inds <- create_C_inds(C_sizes)
-  list(
-    C_eigvals = C_eigvals,
-    C_eigvecs = C_eigvecs,
-    C_sizes = C_sizes,
-    len_eigvals = length(C_eigvals),
-    len_eigvecs = length(C_eigvecs),
-    C_inds = C_inds
-  )
-}
-
-create_C_inds <- function(C_sizes) {
-  num_cc <- length(C_sizes)
-  cs <- cumsum(C_sizes)
-  i_start <- c(1, cs + 1)[1:num_cc]
-  i_end <- cs
-  cbind(i_start, i_end)
 }
 
 # Validation
