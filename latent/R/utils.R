@@ -1,15 +1,3 @@
-# Check lgpr version
-check_version <- function(pkg_name) {
-  cur_ver <- packageVersion("lgpr")
-  min_ver <- "1.1"
-  if (cur_ver < min_ver) {
-    msg <- sprintf(
-      "lgpr version at least %s is needed, found %s", min_ver, cur_ver
-    )
-    stop(msg)
-  }
-}
-
 # Get draws of a parameter
 get_draws <- function(fit, name) {
   rstan::extract(fit, pars = name)[[name]]
@@ -98,10 +86,12 @@ compare_runtime_plot <- function(fit, fit_approx, ag_name, N) {
 plot_params_comparison <- function(fit, fit_approx, ag_name = "approx", N = 0) {
   a1 <- compare_param(fit, fit_approx, "alpha[1]", ag_name)
   a2 <- compare_param(fit, fit_approx, "alpha[2]", ag_name)
+  a3 <- compare_param(fit, fit_approx, "alpha[3]", ag_name)
   e1 <- compare_param(fit, fit_approx, "ell[1]", ag_name)
   e2 <- compare_param(fit, fit_approx, "ell[2]", ag_name)
+  e3 <- compare_param(fit, fit_approx, "ell[3]", ag_name)
   s1 <- compare_param(fit, fit_approx, "sigma[1]", ag_name)
   r <- compare_runtime_plot(fit, fit_approx, ag_name = ag_name, N = N)
-  plots <- ggarrange(a1, a2, e1, e2, s1, r, labels = "auto")
+  plots <- ggarrange(a1, a2, a3, e1, e2, e3, s1, r, labels = "auto")
   return(plots)
 }
