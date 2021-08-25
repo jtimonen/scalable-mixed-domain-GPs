@@ -48,25 +48,25 @@ f2 <- sampling(sm2, data = stan_data, cores = 4)
 
 # Compare
 N <- stan_data$num_obs
-plt <- plot_params_comparison(f2, f1, ag_name = "approx", N = N)
+plt <- plot_params_comparison_onecomp(f2, f1, ag_name = "approx", N = N)
 
 # Compare functions
-f1 <- extract(f1, pars="f_latent")$f_latent
-f2 <- extract(f2, pars="f_latent")$f_latent
-fl_1 <- apply(f1,c(2,3), mean)
-fl_2 <- apply(f2,c(2,3), mean)
+f_draws1 <- extract(f1, pars = "f_latent")$f_latent
+f_draws2 <- extract(f2, pars = "f_latent")$f_latent
+fl_1 <- apply(f_draws1, c(2, 3), mean)
+fl_2 <- apply(f_draws2, c(2, 3), mean)
 df1 <- data.frame(t(fl_1))
 df2 <- data.frame(t(fl_2))
-colnames(df1) <- c("f1", "f2", "f3")
-colnames(df2) <- c("f1", "f2", "f3")
-df1 <- cbind(model@data, df1)
-df2 <- cbind(model@data, df2)
+colnames(df1) <- c("f1")
+colnames(df2) <- c("f1")
+df1 <- cbind(dat, df1)
+df2 <- cbind(dat, df2)
 
-type <- as.factor(rep(c("approx", "exact"), each=N))
+type <- as.factor(rep(c("approx", "exact"), each = N))
 df <- rbind(df1, df2)
 df$type <- type
 
-p1 <-  ggplot(df, aes(x=age,y=f1,group=type,color=type)) +geom_line()
-p2 <-  ggplot(df, aes(x=age,y=f2,group=z,color=type)) +geom_line()
-p3 <-  ggplot(df, aes(x=age,y=f3,group=id,color=type)) +geom_line()
-
+p1 <- ggplot(df, aes(x = age, y = f1, group = type, color = type)) +
+  geom_line()
+# p2 <-  ggplot(df, aes(x=age,y=f2,group=z,color=type)) +geom_line()
+# p3 <-  ggplot(df, aes(x=age,y=f3,group=id,color=type)) +geom_line()

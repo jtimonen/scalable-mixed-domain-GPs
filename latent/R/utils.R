@@ -95,3 +95,13 @@ plot_params_comparison <- function(fit, fit_approx, ag_name = "approx", N = 0) {
   plots <- ggarrange(a1, a2, a3, e1, e2, e3, s1, r, labels = "auto")
   return(plots)
 }
+
+# Parameter comparison plot
+plot_params_comparison_onecomp <- function(fit, fit_approx, ag_name = "approx", N = 0) {
+  a1 <- compare_param(fit, fit_approx, "alpha[1]", ag_name)
+  e1 <- compare_param(fit, fit_approx, "ell[1]", ag_name)
+  s1 <- compare_param(fit, fit_approx, "sigma[1]", ag_name)
+  r <- compare_runtime_plot(fit, fit_approx, ag_name = ag_name, N = N)
+  plots <- ggarrange(a1, e1, s1, r, labels = "auto")
+  return(plots)
+}

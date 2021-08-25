@@ -84,9 +84,9 @@ transformed parameters {
   vector[num_obs] f_latent[num_comps];
   {
     // Compute diagonals of lambda matrices
-    vector[num_bf] d1 = alpha[1]*STAN_lambda_matrix(ell[1], num_bf, L);
+    vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1],  num_bf, L);
 
-    // Build the three components
+    // Build the the component
     f_latent[1] = PHI_mats[1] * (d1 .* xi_1[1]);   // (N,M) x (M)
   }
 }
