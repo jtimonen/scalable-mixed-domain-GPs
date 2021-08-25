@@ -114,28 +114,26 @@ transformed parameters {
   vector[num_obs] f_latent[num_comps];
   {
     // Compute diagonals of lambda matrices
-    vector[num_bf] d1 = STAN_lambda_matrix(ell[1], num_bf, L);
-    vector[num_bf] d2 = STAN_lambda_matrix(ell[2], num_bf, L);
-    vector[num_bf] d3 = STAN_lambda_matrix(ell[3], num_bf, L);
+    vector[num_bf] d1 = alpha[1]*STAN_lambda_matrix(ell[1], num_bf, L);
+    vector[num_bf] d2 = alpha[2]*STAN_lambda_matrix(ell[2], num_bf, L);
+    vector[num_bf] d3 = alpha[3]*STAN_lambda_matrix(ell[3], num_bf, L);
 
     // Build the three components
-    f_latent[1] = alpha[1]*PHI_mats[1] * (d1 .* sqrt(xi_1[1]));   // (N,M) x (M)
+    f_latent[1] = PHI_mats[1] * (d1 .* xi_1[1]);   // (N,M) x (M)
     f_latent[2] = rep_vector(0, num_obs);
     f_latent[3] = rep_vector(0, num_obs);
     for(m in 1:num_bf){
-      vector[num_obs] phi_m = alpha[2]*PHI_mats[1][:,m];
-      real d_m = sqrt(d2[m]);
+      vector[num_obs] phi_m = PHI_mats[1][:,m];
       for(c in 1:C2_num) {
         vector[num_obs] v_c = VP2[:,c];
-        f_latent[2] += d_m * sqrt(xi_2[c][m]) * phi_m .* v_c;
+        f_latent[2] += d2[m] * xi_2[c][m] * phi_m .* v_c;
       }
     }
     for(m in 1:num_bf){
-      vector[num_obs] phi_m = alpha[3]*PHI_mats[1][:,m];
-      real d_m = sqrt(d3[m]);
+      vector[num_obs] phi_m = PHI_mats[1][:,m];
       for(c in 1:C3_num) {
         vector[num_obs] v_c = VP3[:,c];
-        f_latent[3] += d_m * sqrt(xi_3[c][m]) * phi_m .* v_c;
+        f_latent[3] += d3[m] * xi_3[c][m] * phi_m .* v_c;
       }
     }
   }
