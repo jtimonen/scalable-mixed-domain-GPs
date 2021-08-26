@@ -138,13 +138,9 @@ model {
   vector[num_obs] f_sum = STAN_vectorsum(f_latent, num_obs) + c_hat;
   
   // Multiplier priors
-  xi_1[1] ~ normal(0, 1);
-  for(c in 1:C2_num) {
-    xi_2[c] ~ normal(0, 1);
-  }
-  for(c in 1:C3_num) {
-    xi_3[c] ~ normal(0, 1);
-  }
+  xi_1 ~ normal(0, 1);
+  xi_2 ~ normal(0, 1);
+  xi_3 ~ normal(0, 1);
   
   // Parameter priors
   for(j in 1:num_comps){
