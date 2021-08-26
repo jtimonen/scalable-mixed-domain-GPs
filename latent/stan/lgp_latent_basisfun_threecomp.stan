@@ -72,30 +72,36 @@ transformed data{
   matrix[num_obs, num_bf] PHI_mats[num_cov_cont];
   matrix[num_obs, C2_num] VP2;
   matrix[num_obs, C3_num] VP3;
+  matrix[num_obs, num_bf] PSI_1;
+  matrix[num_obs, num_bf*C2_num] PSI_2;
+  matrix[num_obs, num_bf*C3_num] PSI_3;
+  vector[num_bf] seq_bf = STAN_seq_len(num_bf);
   
   // PHI
   real L = 1.0 * scale_bf;
   for(ix in 1:num_cov_cont) {
-    for(m in 1:num_bf) {
-      PHI_mats[ix][:,m] = STAN_phi(x_cont[ix], m, L);
-    }
+    PHI_mats[ix] = STAN_PHI_eq(x_cont[ix], seq_bf, L);
   }
   
-  // VAR_PHI 2
-  for(n in 1:num_obs) {
-    int z2 = x_cat[idx_z2, n];
-    for(c in 1:C2_num) {
-      VP2[n,c] = sqrt(C2_vals[c]) * C2_vecs[z2,c];
-    }
+  // PSI_1
+  PSI_1 = PHI_mats[1];
+  
+  // PSI_2
+  for(c in 1:C2_num) {
+    int i1 = 1 + (c-1)*num_bf;
+    int i2 = c*num_bf;
+    vector[num_obs] vpc = sqrt(C2_vals[c]) * C2_vecs[x_cat[idx_z2, :],c];
+    PSI_2[:, i1:i2] = PHI_mats[1] .* rep_matrix(vpc, num_bf);
   }
   
-  // VAR_PHI 3
-  for(n in 1:num_obs) {
-    int z3 = x_cat[idx_z3, n];
-    for(c in 1:C3_num) {
-      VP3[n,c] = sqrt(C3_vals[c]) * C3_vecs[z3,c];
-    }
+    // PSI_3
+  for(c in 1:C3_num) {
+    int i1 = 1 + (c-1)*num_bf;
+    int i2 = c*num_bf;
+    vector[num_obs] vpc = sqrt(C3_vals[c]) * C3_vecs[x_cat[idx_z3, :],c];
+    PSI_3[:, i1:i2] = PHI_mats[1] .* rep_matrix(vpc, num_bf);
   }
+  
 }
 
 parameters {
@@ -105,38 +111,24 @@ parameters {
   real<lower=1e-12> phi[obs_model==3];
   real<lower=1e-12, upper=1-1e-12> gamma[obs_model==5];
   
-  vector[num_bf] xi_1[1];
-  vector[num_bf] xi_2[C2_num];
-  vector[num_bf] xi_3[C3_num];
+  vector[num_bf] xi_1;
+  vector[num_bf*C2_num] xi_2;
+  vector[num_bf*C3_num] xi_3;
 }
 
 transformed parameters {
   vector[num_obs] f_latent[num_comps];
   {
     
-    // Compute diagonals of lambda matrices
-    vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1],  num_bf, L);
-    vector[num_bf] d2 = STAN_diag_spd_eq(alpha[2], ell[2],  num_bf, L);
-    vector[num_bf] d3 = STAN_diag_spd_eq(alpha[3], ell[3],  num_bf, L);
+    // Multipliers
+    vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1],  num_bf, L, 1);
+    vector[num_bf*C2_num] d2 = STAN_diag_spd_eq(alpha[2], ell[2],  num_bf, L, C2_num);
+    vector[num_bf*C3_num] d3 = STAN_diag_spd_eq(alpha[3], ell[3],  num_bf, L, C3_num);
     
     // Build the three components
-    f_latent[1] = PHI_mats[1] * (d1 .* xi_1[1]);   // (N,M) x (M)
-    f_latent[2] = rep_vector(0, num_obs);
-    f_latent[3] = rep_vector(0, num_obs);
-    for(m in 1:num_bf){
-      vector[num_obs] phi_m = PHI_mats[1][:,m];
-      for(c in 1:C2_num) {
-        vector[num_obs] v_c = VP2[:,c];
-        f_latent[2] += d2[m] * xi_2[c][m] * phi_m .* v_c;
-      }
-    }
-    for(m in 1:num_bf){
-      vector[num_obs] phi_m = PHI_mats[1][:,m];
-      for(c in 1:C3_num) {
-        vector[num_obs] v_c = VP3[:,c];
-        f_latent[3] += d3[m] * xi_3[c][m] * phi_m .* v_c;
-      }
-    }
+    f_latent[1] = PSI_1 * (d1 .* xi_1);
+    f_latent[2] = PSI_2 * (d2 .* xi_2);
+    f_latent[3] = PSI_3 * (d3 .* xi_3);
   }
 }
 

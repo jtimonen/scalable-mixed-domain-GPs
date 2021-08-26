@@ -7,3 +7,12 @@
     }
     return(s);
   }
+  
+  // Create vector with elements 1, ..., N
+  vector STAN_seq_len(int N){
+    vector[N] v = rep_vector(1.0, N);
+    for(n in 2:N) { 
+      v[n] = n;
+    }
+    return(v);
+  }

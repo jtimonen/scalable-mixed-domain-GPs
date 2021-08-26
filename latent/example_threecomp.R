@@ -13,7 +13,7 @@ rstan_options(auto_write = TRUE)
 
 
 # Simulate data using lgpr
-n_per_N <- 10
+n_per_N <- 30
 sd <- simulate_data(
   N = 10, t_data = seq(1, 5, length.out = n_per_N),
   relevances = c(0, 1, 1),
@@ -73,4 +73,4 @@ p1 <- ggplot(df1, aes(x = age, y = f1)) +
 p2 <- ggplot(df1, aes(x = age, y = f2, group = z, color = z)) +
   geom_line()
 p3 <- ggplot(df1, aes(x = age, y = f3, group = id, color = id)) +
-  geom_line()
+  geom_line() + facet_grid(.~id)
