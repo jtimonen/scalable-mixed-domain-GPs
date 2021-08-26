@@ -13,7 +13,7 @@ rstan_options(auto_write = TRUE)
 
 
 # Simulate data using lgpr
-n_per_N <- 30
+n_per_N <- 100
 sd <- simulate_data(
   N = 10, t_data = seq(1, 5, length.out = n_per_N),
   relevances = c(0, 1, 1),
