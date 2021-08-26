@@ -16,3 +16,24 @@
     }
     return(v);
   }
+  
+  // Same as rep(x, times=N) in R
+  vector STAN_rep_vector_times(vector x, int N) {
+    return to_vector(rep_matrix(x, N));
+  }
+  
+    // Same as rep(x, each=N) in R
+  vector STAN_rep_vector_each(vector x, int N) {
+    return to_vector(transpose(rep_matrix(x, N)));
+  }
+  
+  // Wrap to functions into one
+  vector STAN_seq_len_rep_times(int M, int N) {
+    return STAN_rep_vector_times(STAN_seq_len(M), N);
+  }
+  
+    // Wrap two functions into one
+  vector STAN_seq_len_rep_each(int M, int N) {
+    return STAN_rep_vector_each(STAN_seq_len(M), N);
+  }
+  

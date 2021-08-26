@@ -75,12 +75,14 @@ transformed data{
   matrix[num_obs, num_bf] PSI_1;
   matrix[num_obs, num_bf*C2_num] PSI_2;
   matrix[num_obs, num_bf*C3_num] PSI_3;
-  vector[num_bf] seq_bf = STAN_seq_len(num_bf);
+  vector[num_bf] seq_C1 = STAN_seq_len_rep_times(num_bf, 1);
+  vector[num_bf*C2_num] seq_C2 = STAN_seq_len_rep_times(num_bf, C2_num);
+  vector[num_bf*C3_num] seq_C3 = STAN_seq_len_rep_times(num_bf, C3_num);
   
   // PHI
   real L = 1.0 * scale_bf;
   for(ix in 1:num_cov_cont) {
-    PHI_mats[ix] = STAN_PHI_eq(x_cont[ix], seq_bf, L);
+    PHI_mats[ix] = STAN_PHI_eq(x_cont[ix], seq_C1, L);
   }
   
   // PSI_1
@@ -121,9 +123,9 @@ transformed parameters {
   {
     
     // Multipliers
-    vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1],  num_bf, L, 1);
-    vector[num_bf*C2_num] d2 = STAN_diag_spd_eq(alpha[2], ell[2],  num_bf, L, C2_num);
-    vector[num_bf*C3_num] d3 = STAN_diag_spd_eq(alpha[3], ell[3],  num_bf, L, C3_num);
+    vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1], seq_C1, L);
+    vector[num_bf*C2_num] d2 = STAN_diag_spd_eq(alpha[2], ell[2], seq_C2, L);
+    vector[num_bf*C3_num] d3 = STAN_diag_spd_eq(alpha[3], ell[3], seq_C3, L);
     
     // Build the three components
     f_latent[1] = PSI_1 * (d1 .* xi_1);
