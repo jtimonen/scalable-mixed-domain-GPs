@@ -23,7 +23,7 @@ sd <- simulate_data(
 dat <- sd@data
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE)
+model <- create_model(y ~ age + age | z + id, dat, sample_f = TRUE)
 
 # Source all R files
 for (f in dir("R")) {
@@ -53,9 +53,11 @@ cat("N=", N, "\n", sep = "")
 
 # Compare functions
 f_draws1 <- extract(f1, pars = "f_latent")$f_latent
+f_sum_draws <- apply(f_draws1, c(1, 3), sum)
 fl_1 <- apply(f_draws1, c(2, 3), mean)
 df1 <- data.frame(t(fl_1))
-colnames(df1) <- c("f1", "f2", "f3")
+df1 <- cbind(df1, colMeans(f_sum_draws), apply(f_sum_draws, 2, stats::sd))
+colnames(df1) <- c("f1", "f2", "f3", "f", "f_sd")
 df1 <- cbind(dat, df1)
 
 # f_draws2 <- extract(f2, pars = "f_latent")$f_latent
@@ -72,5 +74,13 @@ p1 <- ggplot(df1, aes(x = age, y = f1)) +
   geom_line()
 p2 <- ggplot(df1, aes(x = age, y = f2, group = z, color = z)) +
   geom_line()
-p3 <- ggplot(df1, aes(x = age, y = f3, group = id, color = id)) +
-  geom_line() + facet_grid(.~id)
+p3 <- ggplot(df1, aes(x = age, y = f3, group = id)) +
+  geom_line() + facet_wrap(.~id)
+
+p4 <- ggplot(df1, aes(x = age, y = f, group = id)) +
+  geom_line() +
+  geom_ribbon(mapping=aes(x=age,ymax=f+2*f_sd,ymin=f-2*f_sd, group=id),
+              fill = "steelblue1", color="steelblue1") +
+  geom_point(mapping=aes(x=age,y=y, group=id)) +
+  facet_wrap(.~id)
+

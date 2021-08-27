@@ -74,10 +74,10 @@ transformed data{
   matrix[num_obs, C3_num] VP3;
   matrix[num_obs, num_bf] PSI_1;
   matrix[num_obs, num_bf*C2_num] PSI_2;
-  matrix[num_obs, num_bf*C3_num] PSI_3;
+  matrix[num_obs, 1*C3_num] PSI_3;
   vector[num_bf] seq_C1 = STAN_seq_len_rep_times(num_bf, 1);
   vector[num_bf*C2_num] seq_C2 = STAN_seq_len_rep_times(num_bf, C2_num);
-  vector[num_bf*C3_num] seq_C3 = STAN_seq_len_rep_times(num_bf, C3_num);
+  //vector[0*C3_num] seq_C3 = STAN_seq_len_rep_times(0, C3_num);
   
   // PHI
   real L = 1.0 * scale_bf;
@@ -98,10 +98,10 @@ transformed data{
   
     // PSI_3
   for(c in 1:C3_num) {
-    int i1 = 1 + (c-1)*num_bf;
-    int i2 = c*num_bf;
+    int i1 = 1 + (c-1)*1;
+    int i2 = c*1;
     vector[num_obs] vpc = sqrt(C3_vals[c]) * C3_vecs[x_cat[idx_z3, :],c];
-    PSI_3[:, i1:i2] = PHI_mats[1] .* rep_matrix(vpc, num_bf);
+    PSI_3[:, i1:i2] = rep_matrix(vpc, 1);
   }
   
 }
@@ -115,7 +115,7 @@ parameters {
   
   vector[num_bf] xi_1;
   vector[num_bf*C2_num] xi_2;
-  vector[num_bf*C3_num] xi_3;
+  vector[C3_num] xi_3;
 }
 
 transformed parameters {
@@ -125,8 +125,8 @@ transformed parameters {
     // Multipliers
     vector[num_bf] d1 = STAN_diag_spd_eq(alpha[1], ell[1], seq_C1, L);
     vector[num_bf*C2_num] d2 = STAN_diag_spd_eq(alpha[2], ell[2], seq_C2, L);
-    vector[num_bf*C3_num] d3 = STAN_diag_spd_eq(alpha[3], ell[3], seq_C3, L);
-    
+    vector[C3_num] d3 = rep_vector(alpha[3], C3_num); //STAN_diag_spd_eq(alpha[3], ell[3], seq_C3, L);
+
     // Build the three components
     f_latent[1] = PSI_1 * (d1 .* xi_1);
     f_latent[2] = PSI_2 * (d2 .* xi_2);
