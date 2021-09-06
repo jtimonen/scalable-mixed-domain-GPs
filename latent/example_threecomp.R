@@ -75,12 +75,14 @@ p1 <- ggplot(df1, aes(x = age, y = f1)) +
 p2 <- ggplot(df1, aes(x = age, y = f2, group = z, color = z)) +
   geom_line()
 p3 <- ggplot(df1, aes(x = age, y = f3, group = id)) +
-  geom_line() + facet_wrap(.~id)
+  geom_line() +
+  facet_wrap(. ~ id)
 
 p4 <- ggplot(df1, aes(x = age, y = f, group = id)) +
   geom_line() +
-  geom_ribbon(mapping=aes(x=age,ymax=f+2*f_sd,ymin=f-2*f_sd, group=id),
-              fill = "steelblue1", color="steelblue1") +
-  geom_point(mapping=aes(x=age,y=y, group=id)) +
-  facet_wrap(.~id)
-
+  geom_ribbon(
+    mapping = aes(x = age, ymax = f + 2 * f_sd, ymin = f - 2 * f_sd, group = id),
+    fill = "steelblue1", color = "steelblue1"
+  ) +
+  geom_point(mapping = aes(x = age, y = y, group = id)) +
+  facet_wrap(. ~ id)

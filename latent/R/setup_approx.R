@@ -3,7 +3,8 @@ setup_approx <- function(model, num_bf, scale_bf) {
   stopifnot(is(model, "lgpmodel"))
   si <- model@stan_input
   si_bf <- list(num_bf = num_bf, scale_bf = scale_bf)
-  si_precomp <- stan_input_approx_precomp(c(si, si_bf))
+  cn <- component_names(model)
+  si_precomp <- stan_input_approx_precomp(c(si, si_bf), cn)
   c(si_bf, si_precomp)
 }
 
@@ -16,24 +17,27 @@ dollar <- function(x, field) {
 }
 
 # Create additional Stan input for approximate models
-stan_input_approx_precomp <- function(stan_input) {
+stan_input_approx_precomp <- function(stan_input, comp_names) {
   num_bf <- dollar(stan_input, "num_bf")
   if (any(num_bf > 0)) {
     comps <- dollar(stan_input, "components")
 
     # Categorical decomposition stuff
     C_mats <- create_C_matrices(stan_input)
+    names(C_mats) <- comp_names
     C_decs <- decompose_C_matrices(C_mats)
     validate_stan_input_approx(C_decs, C_mats) # extra computation
     si_add <- list(
-      C2_vecs = C_decs$vectors[[2]],
-      C2_vals = C_decs$values[[2]],
-      C3_vecs = C_decs$vectors[[3]],
-      C3_vals = C_decs$values[[3]]
+      C2_vecs = t(C_decs$vectors[[2]]), # each row is one eigenvector
+      C2_vals = as.array(C_decs$values[[2]]),
+      C3_vecs = t(C_decs$vectors[[3]]), # each row is one eigenvector
+      C3_vals = as.array(C_decs$values[[3]])
     )
     si_add_add <- list(
-      C2_num = length(si_add$C2_vals),
-      C3_num = length(si_add$C3_vals)
+      C2_size = ncol(si_add$C2_vecs),
+      C3_size = ncol(si_add$C3_vecs),
+      C2_rank = nrow(si_add$C2_vecs),
+      C3_rank = nrow(si_add$C3_vecs)
     )
     si_add <- c(si_add, si_add_add)
   } else {
@@ -69,16 +73,28 @@ create_C_matrices <- function(si) {
 # Compute the eigendecompositions for the C x C matrices for each term
 decompose_C_matrices <- function(C_matrices) {
   J <- length(C_matrices)
+  cn <- names(C_matrices)
   VALS <- list()
   VECS <- list()
   SIZES <- rep(1, J)
   for (j in seq_len(J)) {
     eg <- eigen(C_matrices[[j]])
-    VALS[[j]] <- dollar(eg, "values")
-    VECS[[j]] <- dollar(eg, "vectors")
+    evals <- dollar(eg, "values")
+    inds <- which(abs(evals) > 1e-12) # remove "numerically zero" eigenvalues
+    evals <- evals[inds]
+    evecs <- dollar(eg, "vectors")[, inds, drop = FALSE]
+    if (ncol(evecs) != length(evals)) {
+      stop("error when creating categorical decomposition!")
+    }
+    VALS[[j]] <- evals
+    VECS[[j]] <- evecs
     SIZES[j] <- length(VALS[[j]])
   }
-  list(values = VALS, vectors = VECS, sizes = SIZES)
+  names(VALS) <- cn
+  names(VECS) <- cn
+  names(SIZES) <- cn
+  out <- list(values = VALS, vectors = VECS, sizes = SIZES)
+  return(out)
 }
 
 # Validation
@@ -87,10 +103,15 @@ validate_stan_input_approx <- function(C_decs, C_mats) {
   C_vecs <- dollar(C_decs, "vectors")
   J <- length(C_mats)
   for (j in seq_len(J)) {
-    V <- C_vecs[[j]]
-    D <- diag(C_vals[[j]])
-    C_rec <- V %*% D %*% t(V)
-    diff <- as.vector(C_mats[[j]] - C_rec)
+    V <- as.matrix(C_vecs[[j]])
+    evals <- C_vals[[j]]
+    n <- length(evals)
+    if (n == 1) {
+      evals <- as.matrix(evals) # because diag(n) is not what we want
+    }
+    D <- diag(evals)
+    C_rec <- V %*% D %*% t(V) # compute reconstruction
+    diff <- as.vector(C_mats[[j]] - C_rec) # check if same as original
     mae <- max(abs(diff))
     if (mae > 1e-12) {
       msg <- paste0("Numerical problem in decomposition ", j, ", MAE=", mae)
