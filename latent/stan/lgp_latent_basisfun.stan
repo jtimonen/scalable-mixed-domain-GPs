@@ -99,8 +99,11 @@ transformed parameters {
 
 model {
   vector[num_obs] f_sum = STAN_vectorsum(f_latent, num_obs) + c_hat;
+  
+  // Multiplier priors
   xi_1 ~ normal(0, 1);
   xi_2 ~ normal(0, 1);
   xi_3 ~ normal(0, 1);
+  
 #include model.stan
 }
