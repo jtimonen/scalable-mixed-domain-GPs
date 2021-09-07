@@ -31,18 +31,15 @@ model <- create_model(y ~ age + age | z + id, dat, sample_f = TRUE)
 # Create additional Stan input
 num_bf <- 30
 scale_bf <- 1.25
-decs <- categorical_kernel_decompositions(model)
-si_add <- additional_stan_input(model, num_bf, scale_bf, decs$decompositions)
-stan_data <- c(model@stan_input, si_add)
+
+res <- sample_approx(model, num_bf, scale_bf, chains = 2)
+stan_data <- res$stan_data
+f1 <- res$fit
 
 # Test creating transformed data
 expose_stanfuns()
 psi_mats <- create_psi_mats(stan_data)
 f_latent <- draw_f_latent(stan_data, psi_mats)
-
-# Create model and sample
-sm1 <- stan_model("stan/lgp_latent_approx.stan")
-f1 <- sampling(sm1, data = stan_data, cores = 4, pars = "xi", include = FALSE)
 
 # Create model and sample
 # sm2 <- stan_model("stan/lgp_latent_covariance.stan")
