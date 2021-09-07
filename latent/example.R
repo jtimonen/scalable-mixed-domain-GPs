@@ -42,17 +42,14 @@ f_latent <- draw_f_latent(stan_data, psi_mats)
 
 # Create model and sample
 sm1 <- stan_model("stan/lgp_latent_approx.stan")
-f1 <- sampling(sm1, data = stan_data, cores = 4, pars="xi", include=FALSE)
+f1 <- sampling(sm1, data = stan_data, cores = 4, pars = "xi", include = FALSE)
 
 # Create model and sample
 # sm2 <- stan_model("stan/lgp_latent_covariance.stan")
 # f2 <- sampling(sm2, data = stan_data, cores = 4)
 
-# Compare
 N <- stan_data$num_obs
 cat("N=", N, "\n", sep = "")
-
-
 
 # Compare functions
 f_draws1 <- extract(f1, pars = "f_latent")$f_latent
@@ -89,4 +86,3 @@ p4 <- ggplot(df1, aes(x = age, y = f, group = id)) +
   ) +
   geom_point(mapping = aes(x = age, y = y, group = id)) +
   facet_wrap(. ~ id)
-
