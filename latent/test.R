@@ -25,12 +25,14 @@ sd <- simulate_data(
   lengthscales = c(1.5, 0.75, 0.75), t_jitter = 0.2
 )
 dat <- sd@data
-normalize_var <- function(x) (x - mean(x))/stats::sd(x)
+normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 dat$y <- normalize_var(dat$y)
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | z + age | id, dat, sample_f = TRUE,
-                      prior = list(ell = igam(4,4)))
+model <- create_model(y ~ age + age | z + age | id, dat,
+  sample_f = TRUE,
+  prior = list(ell = igam(4, 4))
+)
 
 # Create additional Stan input
 num_bf <- 30
