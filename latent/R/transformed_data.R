@@ -29,7 +29,6 @@ create_phi_mats <- function(stan_data) {
 # Call STAN_create_psi_mats
 create_psi_mats <- function(stan_data, PHI_mats) {
   N <- stan_data$num_obs
-  D <- stan_data$num_cov_cont
   M <- stan_data$num_bf
   num_xi <- as.array(stan_data$num_xi)
   comps <- matrix_to_list(stan_data$components)
@@ -40,7 +39,7 @@ create_psi_mats <- function(stan_data, PHI_mats) {
   C_vals <- as.array(stan_data$C_vals)
   C_vecs <- as.array(stan_data$C_vecs)
   STAN_create_psi_mats(
-    N, D, M, num_xi, PHI_mats, comps,
+    N, M, num_xi, PHI_mats, comps,
     x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp
   )
 }

@@ -36,10 +36,10 @@ data {
 
 transformed data{
   vector[num_bf] seq_M = STAN_seq_len(num_bf);
-  matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
+  matrix[num_obs, num_bf] PHI[num_cov_cont] = 
     STAN_create_phi_mats(num_obs, num_cov_cont, seq_M, scale_bf, x_cont, X_hr);
-  matrix[num_obs, sum(num_xi)] PSI = STAN_create_psi_mats();
-  vector[num_bf*sum(C_ranks)] seq_C;
+  matrix[num_obs, sum(num_xi)] PSI = STAN_create_psi_mats(num_obs, num_bf,
+    num_xi, PHI, components, x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp);
 }
 
 parameters {

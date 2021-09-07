@@ -118,7 +118,7 @@
   
   // Create all PSI matrices
   // - returns a matrix of size N x total_num_xi
-  matrix STAN_create_psi_mats(data int N, data int D, data int M, 
+  matrix STAN_create_psi_mats(data int N, data int M, 
       data int[] num_xi, matrix[] PHI_mats, data int[,] components,
       data int[,] x_cat, data real[] C_vals, data vector C_vecs,
       data int[] C_ranks, data int[] C_sizes, data int[] C_rsp) 
