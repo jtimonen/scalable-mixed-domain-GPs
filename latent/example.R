@@ -39,7 +39,7 @@ phi_mats <- create_phi_mats(stan_data)
 psi_mats <- create_psi_mats(stan_data, phi_mats)
 
 # Create model and sample
-sm1 <- stan_model("stan/lgp_latent_basisfun.stan")
+sm1 <- stan_model("stan/lgp_latent_approx.stan")
 f1 <- sampling(sm1, data = stan_data, cores = 4)
 
 # Create model and sample
