@@ -34,6 +34,10 @@ decs <- categorical_kernel_decompositions(model)
 si_add <- additional_stan_input(model, num_bf, scale_bf, decs$decompositions)
 stan_data <- c(model@stan_input, si_add)
 
+# Test creating transformed data
+phi_mats <- create_phi_mats(stan_data)
+psi_mats <- create_psi_mats(stan_data, phi_mats)
+
 # Create model and sample
 sm1 <- stan_model("stan/lgp_latent_basisfun.stan")
 f1 <- sampling(sm1, data = stan_data, cores = 4)

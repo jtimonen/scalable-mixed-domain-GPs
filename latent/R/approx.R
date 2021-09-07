@@ -1,31 +1,3 @@
-# REQUIREMENTS ------------------------------------------------------------
-
-# Check if model has correct format
-check_model_compatibility <- function(model) {
-  stopifnot(is(model, "lgpmodel"))
-  ver <- model@info$lgpr_version
-  if (ver < "1.1.4" || ver >= "2.0.0") {
-    stop(
-      "model was created with lgpr ", ver, ", but should be created with ",
-      "lgpr version number at least 1.1.4 and less than 2.0.0!"
-    )
-  }
-  TRUE
-}
-
-# Check lgpr package version
-check_lgpr_version <- function() {
-  ver <- packageVersion("lgpr")
-  if (ver < "1.1.4" || ver >= "2.0.0") {
-    stop(
-      "using lgpr version ", ver, ", but ",
-      "lgpr version number at least 1.1.4 and less than 2.0.0 is needed!"
-    )
-  }
-  TRUE
-}
-
-
 # CATEGORICAL KERNEL DECOMPOSITIONS ---------------------------------------
 
 # Compute the C x C matrix for each term

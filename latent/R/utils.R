@@ -1,3 +1,33 @@
+# REQUIREMENTS ------------------------------------------------------------
+
+# Check if model has correct format
+check_model_compatibility <- function(model) {
+  stopifnot(is(model, "lgpmodel"))
+  ver <- model@info$lgpr_version
+  if (ver < "1.1.4" || ver >= "2.0.0") {
+    stop(
+      "model was created with lgpr ", ver, ", but should be created with ",
+      "lgpr version number at least 1.1.4 and less than 2.0.0!"
+    )
+  }
+  TRUE
+}
+
+# Check lgpr package version
+check_lgpr_version <- function() {
+  ver <- packageVersion("lgpr")
+  if (ver < "1.1.4" || ver >= "2.0.0") {
+    stop(
+      "using lgpr version ", ver, ", but ",
+      "lgpr version number at least 1.1.4 and less than 2.0.0 is needed!"
+    )
+  }
+  TRUE
+}
+
+
+# MISC --------------------------------------------------------------------
+
 # Get draws of a parameter
 get_draws <- function(fit, name) {
   rstan::extract(fit, pars = name)[[name]]
@@ -97,7 +127,8 @@ plot_params_comparison <- function(fit, fit_approx, ag_name = "approx", N = 0) {
 }
 
 # Parameter comparison plot
-plot_params_comparison_onecomp <- function(fit, fit_approx, ag_name = "approx", N = 0) {
+plot_params_comparison_onecomp <- function(fit, fit_approx, ag_name = "approx",
+                                           N = 0) {
   a1 <- compare_param(fit, fit_approx, "alpha[1]", ag_name)
   e1 <- compare_param(fit, fit_approx, "ell[1]", ag_name)
   s1 <- compare_param(fit, fit_approx, "sigma[1]", ag_name)
