@@ -27,7 +27,8 @@ create_phi_mats <- function(stan_data) {
 }
 
 # Call STAN_create_psi_mats
-create_psi_mats <- function(stan_data, PHI_mats) {
+create_psi_mats <- function(stan_data) {
+  PHI_mats <- create_phi_mats(stan_data)
   N <- stan_data$num_obs
   M <- stan_data$num_bf
   num_xi <- as.array(stan_data$num_xi)

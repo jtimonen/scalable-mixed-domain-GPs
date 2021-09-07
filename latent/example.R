@@ -37,8 +37,7 @@ stan_data <- c(model@stan_input, si_add)
 
 # Test creating transformed data
 expose_stanfuns()
-phi_mats <- create_phi_mats(stan_data)
-psi_mats <- create_psi_mats(stan_data, phi_mats)
+psi_mats <- create_psi_mats(stan_data)
 
 # Create model and sample
 sm1 <- stan_model("stan/lgp_latent_approx.stan")
