@@ -44,3 +44,33 @@ create_psi_mats <- function(stan_data) {
     x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp
   )
 }
+
+# Call STAN_build_f_latent
+build_f_latent <- function(stan_data, PSI, alpha, ell, xi) {
+  N <- stan_data$num_obs
+  seq_M <- STAN_seq_len(stan_data$num_bf)
+  scale_bf <- stan_data$scale_bf
+  X_hr <- as.array(stan_data$X_hr)
+  num_xi <- as.array(stan_data$num_xi)
+  comps <- matrix_to_list(stan_data$components)
+  C_ranks <- as.array(stan_data$C_ranks)
+  STAN_build_f_latent(
+    N, comps, num_xi, C_ranks, seq_M, X_hr, scale_bf, PSI,
+    alpha, ell, xi
+  )
+}
+
+# Draw xi and build latent
+draw_f_latent <- function(stan_data, PSI, alpha = NULL, ell = NULL) {
+  if (is.null(alpha)) {
+    alpha <- rep(1.0, stan_data$num_comps)
+  }
+  if (is.null(ell)) {
+    ell <- rep(1.0, stan_data$num_ell)
+  }
+  alpha <- as.array(alpha)
+  ell <- as.array(ell)
+  P <- sum(stan_data$num_xi)
+  xi <- rnorm(n = P)
+  build_f_latent(stan_data, PSI, alpha, ell, xi)
+}

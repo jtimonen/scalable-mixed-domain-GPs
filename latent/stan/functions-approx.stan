@@ -34,6 +34,15 @@
     return vecs[i1:i2];
   }
   
+  // Get jth submatrix
+  // - mats contains all matrices concatenated along second dimension
+  // - num_cols contains numbers of columns of the matrices
+  matrix STAN_submat(matrix mats, int[] num_cols, int j) {
+    int i1 = sum(num_cols[1:(j-1)]) + 1;
+    int i2 = sum(num_cols[1:j]);
+    return mats[:, i1:i2];
+  }
+  
   // Get ith element of jth vector
   // - vecs contains all vectors concatenated
   // - lens contains lengths of the vectors
@@ -144,4 +153,33 @@
       PSI[:, i1:i2] = PSI_j;
     }
     return(PSI);
+  }
+  
+  // Build the components of the latent signal f
+  vector[] STAN_build_f_latent(int N, int[,] components, int[] num_xi, int[]
+      C_ranks, vector seq_M, real[] X_hr, real scale_bf, matrix PSI,
+      real[] alpha, real[] ell, vector xi)
+  {
+    int J = size(components);
+    int M = num_elements(seq_M);
+    vector[N] f_latent[J];
+    int idx_ell = 0;
+
+    // Build the components
+    for(j in 1:J) {
+      int ctype = components[j,1];
+      int idx_x = components[j, 9];
+      int R = C_ranks[j];
+      vector[num_xi[j]] dj;
+      if(ctype==0) {
+        dj = rep_vector(alpha[j], R);
+      } else {
+        real L = X_hr[idx_x] * scale_bf;
+        vector[M*R] seq_M_rep = STAN_rep_vector_times(seq_M, R);
+        idx_ell += 1;
+        dj = STAN_diag_spd_eq(alpha[j], ell[idx_ell], seq_M_rep, L);
+      }
+      f_latent[j] = STAN_submat(PSI, num_xi, j) * (dj .* STAN_subvec(xi, num_xi, j));
+    }
+    return(f_latent);
   }

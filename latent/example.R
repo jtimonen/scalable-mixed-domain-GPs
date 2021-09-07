@@ -38,10 +38,11 @@ stan_data <- c(model@stan_input, si_add)
 # Test creating transformed data
 expose_stanfuns()
 psi_mats <- create_psi_mats(stan_data)
+f_latent <- draw_f_latent(stan_data, psi_mats)
 
 # Create model and sample
 sm1 <- stan_model("stan/lgp_latent_approx.stan")
-f1 <- sampling(sm1, data = stan_data, cores = 4)
+f1 <- sampling(sm1, data = stan_data, cores = 4, pars="xi", include=FALSE)
 
 # Create model and sample
 # sm2 <- stan_model("stan/lgp_latent_covariance.stan")
@@ -50,3 +51,42 @@ f1 <- sampling(sm1, data = stan_data, cores = 4)
 # Compare
 N <- stan_data$num_obs
 cat("N=", N, "\n", sep = "")
+
+
+
+# Compare functions
+f_draws1 <- extract(f1, pars = "f_latent")$f_latent
+f_sum_draws <- apply(f_draws1, c(1, 3), sum)
+fl_1 <- apply(f_draws1, c(2, 3), mean)
+df1 <- data.frame(t(fl_1))
+df1 <- cbind(df1, colMeans(f_sum_draws), apply(f_sum_draws, 2, stats::sd))
+colnames(df1) <- c("f1", "f2", "f3", "f", "f_sd")
+df1 <- cbind(dat, df1)
+
+# f_draws2 <- extract(f2, pars = "f_latent")$f_latent
+# fl_2 <- apply(f_draws2, c(2, 3), mean)
+# df2 <- data.frame(t(fl_2))
+# colnames(df2) <- c("f1")
+# df2 <- cbind(dat, df2)
+
+# type <- as.factor(rep(c("approx", "exact"), each = N))
+# df <- rbind(df1, df2)
+# df$type <- type
+
+p1 <- ggplot(df1, aes(x = age, y = f1)) +
+  geom_line()
+p2 <- ggplot(df1, aes(x = age, y = f2, group = z, color = z)) +
+  geom_line()
+p3 <- ggplot(df1, aes(x = age, y = f3, group = id)) +
+  geom_line() +
+  facet_wrap(. ~ id)
+
+p4 <- ggplot(df1, aes(x = age, y = f, group = id)) +
+  geom_line() +
+  geom_ribbon(
+    mapping = aes(x = age, ymax = f + 2 * f_sd, ymin = f - 2 * f_sd, group = id),
+    fill = "steelblue1", color = "steelblue1"
+  ) +
+  geom_point(mapping = aes(x = age, y = y, group = id)) +
+  facet_wrap(. ~ id)
+
