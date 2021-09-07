@@ -1,4 +1,3 @@
-
   // Create vector with elements 1, ..., N
   vector STAN_seq_len(int N){
     vector[N] v = rep_vector(1.0, N);
@@ -59,7 +58,7 @@
     return mats[(idx+1):(idx+num_rows[j])];
   }
   
-    // Basis function matrix (EQ kernel)
+  // Basis function matrix (EQ kernel)
   matrix STAN_PHI_eq(vector x, vector seq_M, real L) {
     int N = num_elements(x);
     int M = num_elements(seq_M);
@@ -73,46 +72,76 @@
   }
   
   // Create all PHI matrices
-  matrix[] STAN_create_phi_mats(data int N, data int D, data int M, 
+  matrix[] STAN_create_phi_mats(data int N, data int D, vector seq_M, 
       data real c, data vector[] x_cont, data real[] X_hr) {
+    int M = num_elements(seq_M);
     matrix[N, M] PHI_mats[D];
-    vector[M] seq_m = STAN_seq_len_rep_times(M, 1);
     for(ix in 1:D) {
-      PHI_mats[ix] = STAN_PHI_eq(x_cont[ix], seq_m, X_hr[ix] * c);
+      PHI_mats[ix] = STAN_PHI_eq(x_cont[ix], seq_M, X_hr[ix] * c);
     }
     return(PHI_mats);
+  }
+  
+  // Create psi matrix with component type 0
+  matrix STAN_create_psi_type0(int N, int j, data int[] z, 
+      data real[] C_vals, data vector C_vecs, data int[] C_ranks,
+      data int[] C_sizes, data int[] C_rsp) 
+  {
+    int R = C_ranks[j];
+    int S = C_sizes[j];
+    matrix[N, R] PSI_j;
+    for(r in 1:R) {
+      real eval = STAN_elem_i_of_vec_j(C_vals, C_ranks, j, r);
+      vector[S] evec = STAN_col_i_of_mat_j(C_vecs, C_rsp, C_sizes, j, r);
+      PSI_j[:,r] = sqrt(eval) * evec[z];
+    }
+    return(PSI_j);
+  }
+  
+  // Create psi matrix with component type 2
+  matrix STAN_create_psi_type2(int N, int j, data int[] z, 
+      data real[] C_vals, data vector C_vecs, data int[] C_ranks,
+      data int[] C_sizes, data int[] C_rsp, int M, matrix PHI) 
+  {
+    int R = C_ranks[j];
+    int S = C_sizes[j];
+    matrix[N, M*R] PSI_j;
+    for(r in 1:R) {
+      real eval = STAN_elem_i_of_vec_j(C_vals, C_ranks, j, r);
+      vector[S] evec = STAN_col_i_of_mat_j(C_vecs, C_rsp, C_sizes, j, r);
+      int j1 = 1 + (r-1)*M;
+      int j2 = r*M;
+      PSI_j[:,j1:j2] = PHI .* rep_matrix(sqrt(eval) * evec[z], M);
+    }
+    return(PSI_j);
   }
   
   // Create all PSI matrices
   // - returns a matrix of size N x total_num_xi
   matrix STAN_create_psi_mats(data int N, data int D, data int M, 
-      data int[] C_ranks, data int[] C_sizes, data int[] C_rsp, 
-      data int[] num_xi, matrix[] PHI_mats, int[,] components) {
+      data int[] num_xi, matrix[] PHI_mats, data int[,] components,
+      data int[,] x_cat, data real[] C_vals, data vector C_vecs,
+      data int[] C_ranks, data int[] C_sizes, data int[] C_rsp) 
+  {
     matrix[N, sum(num_xi)] PSI;
     int J = size(components);
     for(j in 1:J) {
+      int ctype = components[j,1];
+      int idx_x = components[j,9];
+      int idx_z = components[j,8];
       int i1 = sum(num_xi[1:(j-1)]) + 1;
       int i2 = sum(num_xi[1:j]);
-      matrix[N, num_xi[j]] PSI_j = j*rep_matrix(1.0, N, num_xi[j]);
-      for(c in 1:C_ranks[j]) {
-        int j1 = 1 + (c-1)*M;
-        int j2 = c*M;
+      matrix[N, num_xi[j]] PSI_j;
+      if (ctype==0)  {
+        PSI_j = STAN_create_psi_type0(N, j, x_cat[idx_z, :], C_vals, C_vecs,
+          C_ranks, C_sizes, C_rsp);
+      } else if (ctype==1) {
+        PSI_j = PHI_mats[idx_x];
+      } else {
+        PSI_j = STAN_create_psi_type2(N, j, x_cat[idx_z, :], C_vals, C_vecs,
+          C_ranks, C_sizes, C_rsp, M, PHI_mats[idx_x]);
       }
       PSI[:, i1:i2] = PSI_j;
     }
-  
-    // PSI_2
-    //for(c in 1:C2_rank) {
-    //  vector[num_obs] vpc = sqrt(C2_vals[c]) * C2_vecs[c][x_cat[idx_z2, :]];
-    //  PSI_2[:, i1:i2] = PHI_mats[1] .* rep_matrix(vpc, num_bf);
-    //}
-  
-    // PSI_3
-    //for(c in 1:C3_rank) {
-    //  int i1 = 1 + (c-1)*1;
-    //  int i2 = c*1;
-    //  vector[num_obs] vpc = sqrt(C3_vals[c]) * C3_vecs[c][x_cat[idx_z3, :]];
-    //  PSI_3[:, i1:i2] = rep_matrix(vpc, 1);
-    //}
     return(PSI);
   }

@@ -20,6 +20,7 @@ sd <- simulate_data(
   N = 10, t_data = seq(1, 5, length.out = n_per_N),
   relevances = c(0, 1, 1),
   covariates = c(2),
+  n_categs = c(3),
   lengthscales = c(1.5, 0.75, 0.75), t_jitter = 0.2
 )
 dat <- sd@data

@@ -35,9 +35,9 @@ data {
 }
 
 transformed data{
-  int idx_z[num_comps] = components[:, 8];
+  vector[num_bf] seq_M = STAN_seq_len(num_bf);
   matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
-    STAN_create_phi_mats(num_obs, num_bf, num_cov_cont, scale_bf, x_cont, X_hr);
+    STAN_create_phi_mats(num_obs, num_cov_cont, seq_M, scale_bf, x_cont, X_hr);
   matrix[num_obs, sum(num_xi)] PSI = STAN_create_psi_mats();
   vector[num_bf*sum(C_ranks)] seq_C;
 }
