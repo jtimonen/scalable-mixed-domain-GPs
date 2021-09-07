@@ -23,4 +23,3 @@
     }
     return(log_prior);
   }
-  

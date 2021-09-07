@@ -35,6 +35,7 @@ si_add <- additional_stan_input(model, num_bf, scale_bf, decs$decompositions)
 stan_data <- c(model@stan_input, si_add)
 
 # Test creating transformed data
+expose_stanfuns()
 phi_mats <- create_phi_mats(stan_data)
 psi_mats <- create_psi_mats(stan_data, phi_mats)
 
