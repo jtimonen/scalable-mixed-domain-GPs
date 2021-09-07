@@ -70,7 +70,23 @@ run_experiment <- function(n_per_N = 10, N = 6, model_idx = 1, chains = 1) {
   }
 
   # Return results
+  names(AFITS) <- NUM_BF
   list(approx_fits = AFITS, exact_fit = fit_exact)
+}
+
+# Get experiment results
+parse_results <- function(res){
+  t_mean <- function(x) {mean(rowSums(get_elapsed_time(x)))}
+  t_sd <- function(x) {stats::sd(rowSums(get_elapsed_time(x)))}
+  nams <- c(names(res$approx_fits), "exact")
+  ALL_FITS <- c(res$approx_fits, list(res$exact_fit))
+  names(ALL_FITS) <- nams
+  t_means <- sapply(ALL_FITS, t_mean)
+  t_sds <- sapply(ALL_FITS, t_sd)
+  list(
+    t_means = t_means,
+    t_sds = t_sds
+  )
 }
 
 res <- run_experiment(model_idx = 2, chains = 2)
