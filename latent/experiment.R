@@ -16,7 +16,7 @@ rstan_options(auto_write = TRUE)
 # Run an experiment
 run_experiment <- function(n_per_N = 10, N = 6, model_idx = 1, chains = 1) {
   scale_bf <- 4 / 3
-  NUM_BF <- c(10, 20, 30, 40, 50, 60, 70)
+  NUM_BF <- c(20, 40, 60, 80, 100)
 
   # Simulate data using lgpr
   sd <- simulate_data(
@@ -75,18 +75,35 @@ run_experiment <- function(n_per_N = 10, N = 6, model_idx = 1, chains = 1) {
 }
 
 # Get experiment results
-parse_results <- function(res){
-  t_mean <- function(x) {mean(rowSums(get_elapsed_time(x)))}
-  t_sd <- function(x) {stats::sd(rowSums(get_elapsed_time(x)))}
+parse_results <- function(res) {
+  t_mean <- function(x) {
+    mean(rowSums(get_elapsed_time(x)))
+  }
+  t_sd <- function(x) {
+    stats::sd(rowSums(get_elapsed_time(x)))
+  }
+  get_pars <- function(x) {
+    p <- extract(x, pars = c("alpha", "ell", "sigma"))
+    return(cbind(p$alpha, p$ell, p$sigma))
+  }
   nams <- c(names(res$approx_fits), "exact")
   ALL_FITS <- c(res$approx_fits, list(res$exact_fit))
   names(ALL_FITS) <- nams
-  t_means <- sapply(ALL_FITS, t_mean)
-  t_sds <- sapply(ALL_FITS, t_sd)
+  draws <- lapply(ALL_FITS, get_pars)
+  p_means <- sapply(draws, colMeans)
+  colStds <- function(x) {
+    apply(x, 2, stats::sd)
+  }
+  p_sds <- sapply(draws, colStds)
   list(
-    t_means = t_means,
-    t_sds = t_sds
+    names = nams,
+    t_means = sapply(ALL_FITS, t_mean),
+    t_sds = sapply(ALL_FITS, t_sd),
+    draws = draws,
+    p_means = p_means,
+    p_sds = p_sds
   )
 }
 
-res <- run_experiment(model_idx = 2, chains = 2)
+res <- run_experiment(model_idx = 2, chains = 4)
+pres <- parse_results(res)
