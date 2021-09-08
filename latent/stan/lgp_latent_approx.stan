@@ -36,20 +36,27 @@ data {
 
 transformed data{
   vector[num_bf] seq_M = STAN_seq_len(num_bf);
-  matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
-    STAN_create_phi_mats(num_obs, num_cov_cont, seq_M, scale_bf, x_cont, X_hr);
-  matrix[num_obs, sum(num_xi)] PSI_mats = STAN_create_psi_mats(num_obs, num_bf,
-    num_xi, PHI_mats, components, x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp);
+  //matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
+  //  STAN_create_phi_mats(num_obs, num_cov_cont, seq_M, scale_bf, x_cont, X_hr);
+  //matrix[num_obs, sum(num_xi)] PSI_mats = STAN_create_psi_mats(num_obs, num_bf,
+  //  num_xi, PHI_mats, components, x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp);
 }
 
 parameters {
 #include parameters.stan
-  vector[sum(num_xi)] xi;
+  vector[num_bf] xi; // sum(num_xi)
 }
 
 transformed parameters {
- vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(num_obs, components,
-   num_xi, C_ranks, seq_M, X_hr, scale_bf, PSI_mats, alpha, ell, xi);
+ vector[num_obs] f_latent[1];
+ {
+   real L = X_hr[1] * scale_bf;
+   vector[num_bf] dj = STAN_diag_spd_eq(alpha[1], ell[1], seq_M, L);
+   f_latent[1] = STAN_PHI_eq(x_cont[1], seq_M, L) * (sqrt(dj) .* xi);
+ }
+      
+ //vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(num_obs, components,
+ // num_xi, C_ranks, seq_M, X_hr, scale_bf, PSI_mats, alpha, ell, xi);
 }
 
 model {

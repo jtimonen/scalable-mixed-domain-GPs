@@ -18,8 +18,8 @@ n_per_N <- 10
 N <- 8
 model_idx <- 1
 chains <- 4
-scale_bf <- 3 / 2
-NUM_BF <- c(20, 40, 60, 80)
+scale_bf <- 1.25
+NUM_BF <- c(30, 60, 120)
 
 # Simulate data using lgpr
 sd <- simulate_data(
@@ -52,11 +52,11 @@ AFITS <- list()
 for (i in seq_len(NUM_CONF)) {
   cat("\n================================================================\n")
   cat("i=", i, "\n", sep = "")
-  res <- sample_approx(model, 30, scale_bf,
+  sres <- sample_approx(model, NUM_BF[i], scale_bf,
     chains = chains,
     refresh = 500
   )
-  AFITS[[i]] <- res$fit
+  AFITS[[i]] <- sres$fit
 }
 
 # Exact fit

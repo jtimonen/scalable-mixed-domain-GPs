@@ -71,13 +71,12 @@
   matrix STAN_PHI_eq(vector x, vector seq_M, real L) {
     int N = num_elements(x);
     int M = num_elements(seq_M);
-    matrix[N,M] A = rep_matrix(pi()/(2*L)*(x+L), M);
-    return sin(diag_post_multiply(A, seq_M))/sqrt(L);
+    return sin(diag_post_multiply(rep_matrix(pi()/(2*L) * (x+L), M), seq_M))/sqrt(L);
   }
 
   // Compute diagonal of diagonal matrix Lambda
   vector STAN_diag_spd_eq(real alpha, real ell, vector seq_M, real L){
-    return sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * seq_M .* seq_M);
+    return sqrt((alpha^2) * sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * seq_M .* seq_M));
   }
   
   // Create all PHI matrices
@@ -172,7 +171,7 @@
       int R = C_ranks[j];
       vector[num_xi[j]] dj;
       if(ctype==0) {
-        dj = rep_vector(alpha[j], R);
+        dj = rep_vector(alpha[j]^2, R);
       } else {
         real L = X_hr[idx_x] * scale_bf;
         vector[M*R] seq_M_rep = STAN_rep_vector_times(seq_M, R);
