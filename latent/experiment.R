@@ -72,9 +72,13 @@ if (N <= 200) {
   fit_exact <- NULL
 }
 
+fit_lgpr <- lgp(formula = form, data = dat, prior = prior)
+
 # Collect results
 names(AFITS) <- NUM_BF
-res <- list(approx_fits = AFITS, exact_fit = fit_exact)
+ex <- list(fit_exact, fit_lgpr@stan_fit)
+names(ex) <- c("lgp_latent", "lgpr_marginal")
+res <- list(approx_fits = AFITS, exact_fits = ex)
 
 # Get experiment results
 parse_results <- function(res) {
@@ -91,8 +95,8 @@ parse_results <- function(res) {
   get_ndiv <- function(x) {
     sum(rstan::get_divergent_iterations(x))
   }
-  nams <- c(names(res$approx_fits), "exact")
-  ALL_FITS <- c(res$approx_fits, list(res$exact_fit))
+  nams <- c(names(res$approx_fits), names(res$exact_fits))
+  ALL_FITS <- c(res$approx_fits, res$exact_fits)
   names(ALL_FITS) <- nams
   draws <- lapply(ALL_FITS, get_pars)
   p_means <- sapply(draws, colMeans)
