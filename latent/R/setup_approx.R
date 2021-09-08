@@ -112,8 +112,8 @@ unlist_C_decompositions <- function(C_decs) {
   C_vals <- as.array(unlist(C_decs$values))
 
   out <- list(
-    C_vecs = C_vecs[which(!is.na(C_vecs))],
-    C_vals = C_vals[which(!is.na(C_vals))],
+    C_vecs = as.array(C_vecs[which(!is.na(C_vecs))]),
+    C_vals = as.array(C_vals[which(!is.na(C_vals))]),
     C_ranks = as.array(C_decs$ranks),
     C_sizes = as.array(C_decs$sizes)
   )

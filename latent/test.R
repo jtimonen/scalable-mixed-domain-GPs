@@ -29,7 +29,7 @@ normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 dat$y <- normalize_var(dat$y)
 
 # Create model using lgpr
-model <- create_model(y ~ age + age | z + age | id, dat,
+model <- create_model(y ~ age, dat,
   sample_f = TRUE,
   prior = list(ell = igam(4, 4))
 )
