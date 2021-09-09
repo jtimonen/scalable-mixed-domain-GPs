@@ -36,6 +36,10 @@ data {
 
 transformed data{
   vector[num_bf] seq_M = STAN_seq_len(num_bf);
+  real L[num_cov_cont];
+  for(l in 1:num_cov_cont) {
+    L[l] = X_hr[l] * scale_bf;
+  }
   //matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
   //  STAN_create_phi_mats(num_obs, num_cov_cont, seq_M, scale_bf, x_cont, X_hr);
   //matrix[num_obs, sum(num_xi)] PSI_mats = STAN_create_psi_mats(num_obs, num_bf,
@@ -50,9 +54,8 @@ parameters {
 transformed parameters {
  vector[num_obs] f_latent[1];
  {
-   real L = X_hr[1] * scale_bf;
-   vector[num_bf] dj = STAN_basisfun_eq_multipliers(alpha[1], ell[1], seq_M, L);
-   f_latent[1] = STAN_basisfun_eq(x_cont[1], seq_M, L) * (dj .* xi);
+   vector[num_bf] dj = STAN_basisfun_eq_multipliers(alpha[1], ell[1], seq_M, L[1]);
+   f_latent[1] = STAN_basisfun_eq(x_cont[1], seq_M, L[1]) * (dj .* xi);
  }
       
  //vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(num_obs, components,

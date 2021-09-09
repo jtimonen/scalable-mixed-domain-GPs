@@ -6,22 +6,22 @@
   }
   
   // Same as rep(x, each=N) in R
-  vector STAN_rep_vector_each(vector x, int N) {
+  vector STAN_rep_vector_each(data vector x, int N) {
     return to_vector(transpose(rep_matrix(x, N)));
   }
   
     // Wrap two functions into one
-  vector STAN_seq_len_rep_each(int M, int N) {
+  vector STAN_seq_len_rep_each(data int M, int N) {
     return STAN_rep_vector_each(STAN_seq_len(M), N);
   }
   
   // Same as rep(x, times=N) in R
-  vector STAN_rep_vector_times(vector x, int N) {
+  vector STAN_rep_vector_times(data vector x, int N) {
     return to_vector(rep_matrix(x, N));
   }
   
   // Wrap
-  vector STAN_seq_len_rep_times(int M, int N) {
+  vector STAN_seq_len_rep_times(data int M, int N) {
     return STAN_rep_vector_times(STAN_seq_len(M), N);
   }
   
@@ -68,14 +68,10 @@
   }
   
   // Basis function matrix (EQ kernel)
-  matrix STAN_basisfun_eq(vector x, vector seq_B, real L) {
+  matrix STAN_basisfun_eq(vector x, data vector seq_B, real L) {
     int N = num_elements(x);
     int B = num_elements(seq_B);
-    matrix[N,B] PHI = rep_matrix(0.0, N, B);
-    for (b in 1:B) {
-      PHI[:, b] = sin(0.5*pi()*b/L *(x+L));
-    }
-    return(1.0/sqrt(L)*PHI);
+    return 1.0/sqrt(L)*sin(0.5*pi()/L * rep_matrix(x+L, B) .* transpose(rep_matrix(seq_B, N)));
     //return sin(diag_post_multiply(rep_matrix(pi()/(2*L) * (x+L), M), seq_M))/sqrt(L);
   }
   
@@ -85,18 +81,18 @@
   }
   
   // Compute the multipliers s_b
-  vector STAN_basisfun_eq_multipliers(real alpha, real ell, vector seq_B, real L){
+  vector STAN_basisfun_eq_multipliers(real alpha, real ell, data vector seq_B, real L){
     return STAN_spectral_density_eq(alpha, ell, 0.5*pi()*seq_B/L);
     //return sqrt((alpha^2) * sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * seq_M .* seq_M));
   }
   
   // Create all PHI matrices
-  matrix[] STAN_create_basisfun_mats(data int N, data int D, vector seq_B, 
-      data real c, data vector[] x_cont, data real[] X_hr) {
+  matrix[] STAN_create_basisfun_mats(data int N, data int D, data vector seq_B, 
+      data vector[] x_cont, data real[] L) {
     int B = num_elements(seq_B);
     matrix[N, B] PHI_mats[D];
     for(ix in 1:D) {
-      PHI_mats[ix] = STAN_basisfun_eq(x_cont[ix], seq_B, X_hr[ix] * c);
+      PHI_mats[ix] = STAN_basisfun_eq(x_cont[ix], seq_B, L[ix]);
     }
     return(PHI_mats);
   }
@@ -167,7 +163,7 @@
   
   // Build the components of the latent signal f
   vector[] STAN_build_f_latent(int N, int[,] components, int[] num_xi, int[]
-      C_ranks, vector seq_M, real[] X_hr, real scale_bf, matrix PSI,
+      C_ranks, vector seq_M, data real[] L, matrix PSI,
       real[] alpha, real[] ell, vector xi)
   {
     int J = size(components);
@@ -184,10 +180,8 @@
       if(ctype==0) {
         dj = rep_vector(alpha[j], R);
       } else {
-        real L = X_hr[idx_x] * scale_bf;
-        vector[M*R] seq_M_rep = STAN_rep_vector_times(seq_M, R);
         idx_ell += 1;
-        dj = STAN_basisfun_eq_multipliers(alpha[j], ell[idx_ell], seq_M_rep, L);
+        dj = STAN_basisfun_eq_multipliers(alpha[j], ell[idx_ell], STAN_rep_vector_times(seq_M, R), L[idx_x]);
       }
       f_latent[j] = STAN_submat(PSI, num_xi, j) * (dj .* STAN_subvec(xi, num_xi, j));
     }
