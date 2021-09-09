@@ -1,9 +1,9 @@
   // Dimensions
-  int<lower=0> num_obs;         // number of observations
-  int<lower=0> num_cov_cont;    // number of continuous covariates
+  int<lower=1> num_obs;         // number of observations
+  int<lower=1> num_cov_cont;    // number of continuous covariates
   int<lower=0> num_cov_cat;     // number of categorical covariates
   int<lower=1> num_comps;       // number of additive components
-  int<lower=0> num_ell;         // number of lengthscale parameters
+  int<lower=1> num_ell;         // number of lengthscale parameters
   int<lower=0> components[num_comps, 9];
   int<lower=0> x_cat_num_levels[num_cov_cat];
 

@@ -19,8 +19,9 @@ n_per_N <- 14
 N <- 10
 model_idx <- 1
 chains <- 4
-scale_bf <- 1.25
+scale_bf <- 1.5
 NUM_BF <- c(15, 30, 60)
+do_lgpr_marginal <- TRUE
 
 # Simulate data using lgpr
 sd <- simulate_data(
@@ -73,8 +74,9 @@ if (FALSE) {
 } else {
   fit_exact <- NULL
 }
-
-fit_lgpr <- lgp(formula = form, data = dat, prior = prior)
+if (do_lgpr_marginal) {
+  fit_lgpr <- lgp(formula = form, data = dat, prior = prior)
+}
 
 # Collect results
 names(AFITS) <- NUM_BF

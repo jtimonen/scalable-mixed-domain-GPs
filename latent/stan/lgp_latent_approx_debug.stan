@@ -20,10 +20,10 @@ functions {
 
 data {
 #include data.stan
-  vector<lower=0>[num_cov_cont] X_sd;
-  vector<lower=0>[num_cov_cont] X_hr;
+  real<lower=0> X_sd[num_cov_cont];
+  real<lower=0> X_hr[num_cov_cont];
   real<lower=0> scale_bf; // factor c to determine domain width L
-  int<lower=1> num_bf;    // number of basis functions
+  int<lower=0> num_bf;    // number of basis functions
   int<lower=0> num_xi[num_comps];
   
   // Categorical decomposition stuff
@@ -35,24 +35,31 @@ data {
 }
 
 transformed data{
-  vector[num_bf] seq_B = STAN_seq_len(num_bf);
-  matrix[num_obs, num_bf] mat_B = 
-    transpose(rep_matrix(seq_B, num_obs));
-  vector[num_cov_cont] L = scale_bf * X_hr;
-  matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
-    STAN_create_basisfun_mats(x_cont, mat_B, L);
-  matrix[num_obs, sum(num_xi)] PSI_mats = STAN_create_psi_mats(num_xi, PHI_mats,
-    components, x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp);
+  vector[num_bf] seq_M = STAN_seq_len(num_bf);
+  real L[num_cov_cont];
+  for(l in 1:num_cov_cont) {
+    L[l] = X_hr[l] * scale_bf;
+  }
+  //matrix[num_obs, num_bf] PHI_mats[num_cov_cont] = 
+  //  STAN_create_phi_mats(num_obs, num_cov_cont, seq_M, scale_bf, x_cont, X_hr);
+  //matrix[num_obs, sum(num_xi)] PSI_mats = STAN_create_psi_mats(num_obs, num_bf,
+  //  num_xi, PHI_mats, components, x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp);
 }
 
 parameters {
 #include parameters.stan
-  vector[sum(num_xi)] xi;
+  vector[num_bf] xi; // sum(num_xi)
 }
 
 transformed parameters {
- vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(components,
-  num_xi, C_ranks, seq_B, L, PSI_mats, alpha, ell, xi);
+ vector[num_obs] f_latent[1];
+ {
+   vector[num_bf] dj = STAN_basisfun_eq_multipliers(alpha[1], ell[1], seq_M, L[1]);
+   f_latent[1] = STAN_basisfun_eq(x_cont[1], seq_M, L[1]) * (dj .* xi);
+ }
+      
+ //vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(num_obs, components,
+ // num_xi, C_ranks, seq_M, X_hr, scale_bf, PSI_mats, alpha, ell, xi);
 }
 
 model {
