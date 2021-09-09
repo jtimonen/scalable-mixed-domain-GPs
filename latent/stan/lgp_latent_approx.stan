@@ -51,8 +51,8 @@ transformed parameters {
  vector[num_obs] f_latent[1];
  {
    real L = X_hr[1] * scale_bf;
-   vector[num_bf] dj = STAN_diag_spd_eq(alpha[1], ell[1], seq_M, L);
-   f_latent[1] = STAN_PHI_eq(x_cont[1], seq_M, L) * (sqrt(dj) .* xi);
+   vector[num_bf] dj = STAN_basisfun_eq_multipliers(alpha[1], ell[1], seq_M, L);
+   f_latent[1] = STAN_basisfun_eq(x_cont[1], seq_M, L) * (dj .* xi);
  }
       
  //vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(num_obs, components,

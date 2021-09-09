@@ -68,24 +68,42 @@
   }
   
   // Basis function matrix (EQ kernel)
-  matrix STAN_PHI_eq(vector x, vector seq_M, real L) {
+  matrix STAN_basisfun_eq(vector x, vector seq_B, real L) {
     int N = num_elements(x);
-    int M = num_elements(seq_M);
-    return sin(diag_post_multiply(rep_matrix(pi()/(2*L) * (x+L), M), seq_M))/sqrt(L);
+    int B = num_elements(seq_B);
+    matrix[N,B] PHI = rep_matrix(0.0, N, B);
+    for(n in 1:N) {
+      for (b in 1:B) {
+        PHI[n, b] = 1.0/sqrt(L)*sin(0.5*pi()*b/L *(x[n]+L));
+      }
+    }
+    return(PHI);
+    //return sin(diag_post_multiply(rep_matrix(pi()/(2*L) * (x+L), M), seq_M))/sqrt(L);
   }
-
-  // Compute diagonal of diagonal matrix Lambda
-  vector STAN_diag_spd_eq(real alpha, real ell, vector seq_M, real L){
-    return sqrt((alpha^2) * sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * seq_M .* seq_M));
+  
+  // Compute spectral density of EQ kernel
+  real STAN_spectral_density_eq(real alpha, real ell, real omega){
+    return alpha^2*ell*sqrt(2*pi())*exp(-0.5*ell^2*omega^2);
+  }
+  
+  // Compute the multipliers s_b
+  vector STAN_basisfun_eq_multipliers(real alpha, real ell, vector seq_B, real L){
+    int B = num_elements(seq_B);
+    vector[B] s = rep_vector(0.0, B);
+    for(b in 1:B) {
+      s[b] = STAN_spectral_density_eq(alpha, ell, 0.5*pi()*b/L);
+    }
+    return(s);
+    //return sqrt((alpha^2) * sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * seq_M .* seq_M));
   }
   
   // Create all PHI matrices
-  matrix[] STAN_create_phi_mats(data int N, data int D, vector seq_M, 
+  matrix[] STAN_create_basisfun_mats(data int N, data int D, vector seq_B, 
       data real c, data vector[] x_cont, data real[] X_hr) {
-    int M = num_elements(seq_M);
-    matrix[N, M] PHI_mats[D];
+    int B = num_elements(seq_B);
+    matrix[N, B] PHI_mats[D];
     for(ix in 1:D) {
-      PHI_mats[ix] = STAN_PHI_eq(x_cont[ix], seq_M, X_hr[ix] * c);
+      PHI_mats[ix] = STAN_basisfun_eq(x_cont[ix], seq_B, X_hr[ix] * c);
     }
     return(PHI_mats);
   }
@@ -171,12 +189,12 @@
       int R = C_ranks[j];
       vector[num_xi[j]] dj;
       if(ctype==0) {
-        dj = rep_vector(alpha[j]^2, R);
+        dj = rep_vector(alpha[j], R);
       } else {
         real L = X_hr[idx_x] * scale_bf;
         vector[M*R] seq_M_rep = STAN_rep_vector_times(seq_M, R);
         idx_ell += 1;
-        dj = STAN_diag_spd_eq(alpha[j], ell[idx_ell], seq_M_rep, L);
+        dj = STAN_basisfun_eq_multipliers(alpha[j], ell[idx_ell], seq_M_rep, L);
       }
       f_latent[j] = STAN_submat(PSI, num_xi, j) * (dj .* STAN_subvec(xi, num_xi, j));
     }
