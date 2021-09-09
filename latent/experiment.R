@@ -21,7 +21,7 @@ N <- 500
 model_idx <- 1
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(5, 10, 20)
+NUM_BF <- c(1, 2, 3, 4, 5, 10)
 do_lgpr_marginal <- FALSE
 
 # Simulate data using lgpr
@@ -151,8 +151,13 @@ plot_f <- function(data, fit, aname = "approx") {
       alpha = 0.3
     ) +
     geom_line() +
-    ylab(aname)
-  plt <- plt + geom_point(data = data, aes(x = age, y = y), pch = 4, alpha = 0.1)
+    ggtitle(aname) +
+    ylab("") +
+    theme_bw()
+  plt <- plt + geom_point(
+    data = data, aes(x = age, y = y), pch = 4,
+    alpha = 0.2, color = "firebrick3"
+  )
   return(plt)
 }
 
@@ -177,9 +182,30 @@ plot_f_compare <- function(data, fit, fit_approx, aname = "approx", ribbon = FAL
   return(plt)
 }
 
+# Plot means comparison
+plot_f_means_compare <- function(data, fits) {
+  df <- create_plot_df(data, fit)
+  df_approx <- create_plot_df(data, fit_approx)
+  N1 <- nrow(df)
+  N2 <- nrow(df_approx)
+  fit <- as.factor(c(rep("exact", N1), rep(aname, N2)))
+  df <- rbind(df, df_approx)
+  df <- cbind(df, fit)
+  plt <- ggplot(df, aes(x = age, y = f_mean, group = fit, color = fit))
+  if (ribbon) {
+    plt <- plt + geom_ribbon(aes(x = age, ymin = f_mean - 2 * f_sd, ymax = f_mean + 2 * f_sd),
+      alpha = 0.15, linetype = 3
+    )
+  }
+  plt <- plt + geom_line()
+  plt <- plt + geom_point(data = data, aes(x = age, y = y), inherit.aes = FALSE)
+  plt <- plt + theme_bw() + ylab("posterior f")
+  return(plt)
+}
+
 PLOTS <- list()
 for (i in seq_len(NUM_CONF)) {
-  aname <- paste0("num_bf=", NUM_BF[i])
+  aname <- paste0("num_bf = ", NUM_BF[i], ", c = ", scale_bf)
   if (do_lgpr_marginal) {
     plt <- plot_f_compare(dat, fit_lgpr, AFITS[[i]], ribbon = T, aname = aname)
   } else {
@@ -187,4 +213,4 @@ for (i in seq_len(NUM_CONF)) {
   }
   PLOTS[[i]] <- plt
 }
-full_plt <- ggarrange(plotlist = PLOTS, nrow = 3, ncol = 1)
+full_plt <- ggarrange(plotlist = PLOTS, nrow = 3, ncol = 2)
