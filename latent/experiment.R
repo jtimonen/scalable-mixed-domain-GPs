@@ -91,4 +91,4 @@ if (do_lgpr_marginal) {
 # Results
 pres <- summarize_results(fits)
 plt_same <- plot_f_compare_same(dat, fits)
-plt_separete <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
+plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
