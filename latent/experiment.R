@@ -45,6 +45,7 @@ if (model_idx == 1) {
   form <- y ~ age + age | z + age | id
 }
 prior <- list(ell = igam(4, 4))
+# prior <- list(ell = normal(0, 1))
 model <- create_model(form, dat, prior = prior, sample_f = TRUE)
 
 # Approximate fits

@@ -72,28 +72,21 @@
     int N = num_elements(x);
     int B = num_elements(seq_B);
     matrix[N,B] PHI = rep_matrix(0.0, N, B);
-    for(n in 1:N) {
-      for (b in 1:B) {
-        PHI[n, b] = 1.0/sqrt(L)*sin(0.5*pi()*b/L *(x[n]+L));
-      }
+    for (b in 1:B) {
+      PHI[:, b] = sin(0.5*pi()*b/L *(x+L));
     }
-    return(PHI);
+    return(1.0/sqrt(L)*PHI);
     //return sin(diag_post_multiply(rep_matrix(pi()/(2*L) * (x+L), M), seq_M))/sqrt(L);
   }
   
   // Compute spectral density of EQ kernel
-  real STAN_spectral_density_eq(real alpha, real ell, real omega){
-    return alpha^2*ell*sqrt(2*pi())*exp(-0.5*ell^2*omega^2);
+  vector STAN_spectral_density_eq(real alpha, real ell, vector omega){
+    return alpha^2*ell*sqrt(2*pi())*exp(-0.5*ell^2*omega .* omega);
   }
   
   // Compute the multipliers s_b
   vector STAN_basisfun_eq_multipliers(real alpha, real ell, vector seq_B, real L){
-    int B = num_elements(seq_B);
-    vector[B] s = rep_vector(0.0, B);
-    for(b in 1:B) {
-      s[b] = STAN_spectral_density_eq(alpha, ell, 0.5*pi()*b/L);
-    }
-    return(s);
+    return STAN_spectral_density_eq(alpha, ell, 0.5*pi()*seq_B/L);
     //return sqrt((alpha^2) * sqrt(2*pi()) * ell * exp(-0.5*(ell*pi()/2/L)^2 * seq_M .* seq_M));
   }
   
