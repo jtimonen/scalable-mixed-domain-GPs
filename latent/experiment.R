@@ -15,23 +15,27 @@ rstan_options(javascript = FALSE)
 rstan_options(auto_write = TRUE)
 
 # Settings
-n_per_N <- 14
-N <- 10
+N <- 500
+# n_per_N <- 1000
+# N <- 10
 model_idx <- 1
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(15, 30, 60)
-do_lgpr_marginal <- TRUE
+NUM_BF <- c(5, 10, 20)
+do_lgpr_marginal <- FALSE
 
 # Simulate data using lgpr
-sd <- simulate_data(
-  N = N, t_data = seq(1, 5, length.out = n_per_N),
-  relevances = c(0, 1, 1),
-  covariates = c(2),
-  n_categs = c(2),
-  lengthscales = c(1.5, 1.0, 0.75), t_jitter = 0.2
-)
-dat <- sd@data
+# sd <- simulate_data(
+#  N = N, t_data = seq(1, 5, length.out = n_per_N),
+#  relevances = c(0, 1, 1),
+#  covariates = c(2),
+#  n_categs = c(2),
+#  lengthscales = c(1.0, 1.0, 0.75), t_jitter = 0.2
+# )
+# dat <- sd@data
+age <- seq(1, 5, length.out = N)
+y <- sin(0.3 * age**2) + 0.2 * rnorm(N)
+dat <- data.frame(age, y)
 normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 dat$y <- normalize_var(dat$y)
 
@@ -57,7 +61,7 @@ for (i in seq_len(NUM_CONF)) {
   cat("i=", i, "\n", sep = "")
   sres <- sample_approx(model, NUM_BF[i], scale_bf,
     chains = chains,
-    refresh = 500
+    refresh = 100
   )
   AFITS[[i]] <- sres$fit
 }
@@ -140,14 +144,15 @@ create_plot_df <- function(data, fit) {
 }
 
 # Plot
-plot_f <- function(data, fit) {
+plot_f <- function(data, fit, aname = "approx") {
   df <- create_plot_df(data, fit)
   plt <- ggplot(df, aes(x = age, y = f_mean)) +
     geom_ribbon(aes(x = age, ymin = f_mean - 2 * f_sd, ymax = f_mean + 2 * f_sd),
       alpha = 0.3
     ) +
-    geom_line()
-  plt <- plt + geom_point(data = data, aes(x = age, y = y))
+    geom_line() +
+    ylab(aname)
+  plt <- plt + geom_point(data = data, aes(x = age, y = y), pch = 4, alpha = 0.1)
   return(plt)
 }
 
@@ -175,7 +180,11 @@ plot_f_compare <- function(data, fit, fit_approx, aname = "approx", ribbon = FAL
 PLOTS <- list()
 for (i in seq_len(NUM_CONF)) {
   aname <- paste0("num_bf=", NUM_BF[i])
-  plt <- plot_f_compare(dat, fit_lgpr, AFITS[[i]], ribbon = T, aname = aname)
+  if (do_lgpr_marginal) {
+    plt <- plot_f_compare(dat, fit_lgpr, AFITS[[i]], ribbon = T, aname = aname)
+  } else {
+    plt <- plot_f(dat, AFITS[[i]], aname = aname)
+  }
   PLOTS[[i]] <- plt
 }
 full_plt <- ggarrange(plotlist = PLOTS, nrow = 3, ncol = 1)
