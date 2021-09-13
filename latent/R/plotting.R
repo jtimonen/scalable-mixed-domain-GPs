@@ -104,3 +104,16 @@ plot_f_compare_separate <- function(data, fits, ncol = 2, nrow = NULL,
   if (is.null(nrow)) nrow <- ceiling(J / ncol)
   ggarrange(plotlist = PLOTS, nrow = nrow, ncol = ncol)
 }
+
+# Pairs plot of alpha and ell parameters
+pairs_kernelparams <- function(fit) {
+  stopifnot(is(fit, "stanfit"))
+  pairs(fit[[1]], pars = c("alpha", "ell"))
+}
+
+# Compare approximate and exact EQ covariance functions
+plot_kernelcomparison_eq <- function(alpha, ell, stan_data, idx_x = 1) {
+  cmp <- compare_kernels_eq(alpha, ell, stan_data, idx_x)
+  plot(cmp$x, cmp$K[1, ], type = "l", ylim = c(0, alpha^2), xlab = "x", ylab = "K")
+  lines(cmp$x, cmp$K_approx[1, ], col = "firebrick")
+}

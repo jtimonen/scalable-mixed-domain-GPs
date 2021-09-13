@@ -15,13 +15,13 @@ rstan_options(javascript = FALSE)
 rstan_options(auto_write = TRUE)
 
 # Settings
-N <- 80
+N <- 150
 # n_per_N <- 1000
 # N <- 10
 model_idx <- 1
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(2, 4, 6)
+NUM_BF <- c(2, 4, 30, 100)
 do_lgpr_marginal <- TRUE
 
 # Simulate data using lgpr
@@ -51,8 +51,8 @@ if (model_idx == 1) {
 } else {
   form <- y ~ age + age | z + age | id
 }
-prior <- list(ell = igam(4, 4))
-# prior <- list(ell = normal(0, 1))
+# prior <- list(ell = igam(4, 4))
+prior <- list(ell = normal(0, 1))
 model <- create_model(form, dat, prior = prior, sample_f = TRUE)
 
 # Approximate fits
@@ -62,8 +62,7 @@ for (i in seq_len(J)) {
   cat("\n================================================================\n")
   cat("i=", i, "\n", sep = "")
   sres <- sample_approx(model, NUM_BF[i], scale_bf,
-    chains = chains,
-    refresh = 100
+    chains = chains, refresh = 100
   )
   fits[[i]] <- sres$fit
 }
@@ -92,3 +91,7 @@ if (do_lgpr_marginal) {
 pres <- summarize_results(fits)
 plt_same <- plot_f_compare_same(dat, fits)
 plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
+
+# Compare kernels
+expose_stan_functions()
+plot_kernelcomparison_eq(4,0.1, stan_data, 1)

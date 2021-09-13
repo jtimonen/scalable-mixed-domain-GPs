@@ -12,23 +12,8 @@ matrix_to_list <- function(x) {
   return(L)
 }
 
-
-# Call STAN_create_phi_mats
-create_phi_mats <- function(stan_data) {
-  N <- stan_data$num_obs
-  D <- stan_data$num_cov_cont
-  seq_M <- STAN_seq_len(stan_data$num_bf)
-  c <- stan_data$scale_bf
-  x_cont <- matrix_to_list(stan_data$x_cont)
-  X_hr <- as.array(stan_data$X_hr)
-  PHI <- STAN_create_phi_mats(N, D, seq_M, c, x_cont, X_hr)
-  names(PHI) <- rownames(x_cont)
-  return(PHI)
-}
-
 # Call STAN_create_psi_mats
-create_psi_mats <- function(stan_data) {
-  PHI_mats <- create_phi_mats(stan_data)
+create_psi_mats <- function(stan_data, PHI_mats) {
   N <- stan_data$num_obs
   M <- stan_data$num_bf
   num_xi <- as.array(stan_data$num_xi)
@@ -40,8 +25,28 @@ create_psi_mats <- function(stan_data) {
   C_vals <- as.array(stan_data$C_vals)
   C_vecs <- as.array(stan_data$C_vecs)
   STAN_create_psi_mats(
-    N, M, num_xi, PHI_mats, comps,
+    num_xi, PHI_mats, comps,
     x_cat, C_vals, C_vecs, C_ranks, C_sizes, C_rsp
+  )
+}
+
+# Compute all the transformed data in R, by calling exposed Stan functions
+do_transformed_data <- function(stan_data) {
+  num_bf <- stan_data$num_bf
+  num_obs <- stan_data$num_obs
+  seq_B <- STAN_seq_len(num_bf)
+  X_hr <- as.vector(stan_data$X_hr)
+  mat_B <- matrix(rep(seq_B, each = num_obs), num_obs, num_bf, byrow = FALSE)
+  L <- stan_data$scale_bf * X_hr
+  x_cont <- matrix_to_list(stan_data$x_cont)
+  PHI_mats <- STAN_create_basisfun_mats(x_cont, mat_B, L)
+  PSI_mats <- create_psi_mats(stan_data, PHI_mats)
+  list(
+    seq_B = seq_B,
+    mat_B = mat_B,
+    L = L,
+    PHI_mats = PHI_mats,
+    PSI_mats = PSI_mats
   )
 }
 
@@ -73,4 +78,14 @@ draw_f_latent <- function(stan_data, PSI, alpha = NULL, ell = NULL) {
   P <- sum(stan_data$num_xi)
   xi <- rnorm(n = P)
   build_f_latent(stan_data, PSI, alpha, ell, xi)
+}
+
+# Approximate the EQ kernel
+approximate_kernel_eq <- function(alpha, ell, stan_data, idx_x = 1) {
+  td <- do_transformed_data(stan_data)
+  PHI <- td$PHI_mats[[idx_x]]
+  dj <- STAN_basisfun_eq_multipliers(alpha, ell, td$seq_B, td$L[idx_x])
+  DELTA <- diag(dj)
+  K <- PHI %*% DELTA %*% t(PHI)
+  list(K_approx = K, x = stan_data$x_cont[idx_x, ])
 }
