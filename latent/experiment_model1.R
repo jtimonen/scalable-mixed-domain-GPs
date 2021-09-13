@@ -89,9 +89,17 @@ if (do_lgpr_marginal) {
 
 # Results
 pres <- summarize_results(fits)
+rownames(pres$p_means) <- c("alpha", "ell", "sigma")
+rownames(pres$p_sds) <- c("alpha", "ell", "sigma")
+
 plt_same <- plot_f_compare_same(dat, fits)
 plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 
 # Compare kernels
-expose_stan_functions()
-plot_kernelcomparison_eq(4,0.1, stan_data, 1)
+fit_name <- "num_bf = 100"
+stan_data <- sres$stan_data
+pars_lgpr <- as.vector(pres$p_means[, "lgpr_marginal"])
+pars_approx <- as.vector(pres$p_means[, fit_name])
+fit <- fits[[fit_name]]
+expose_stanfuns()
+plot_kernelcomparison_eq(pars_approx, pars_lgpr, stan_data, 1)

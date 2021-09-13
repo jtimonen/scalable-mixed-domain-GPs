@@ -29,10 +29,10 @@ summarize_results <- function(fits) {
 }
 
 # Compare approximate and exact EQ covariance functions
-compare_kernels_eq <- function(alpha, ell, stan_data, idx_x = 1) {
-  a <- approximate_kernel_eq(alpha, ell, stan_data)
+compare_kernels_eq <- function(pars_approx, pars, stan_data, idx_x = 1) {
+  a <- approximate_kernel_eq(pars_approx[1], pars_approx[2], stan_data, idx_x)
   x <- stan_data$x_cont[idx_x, ]
-  K <- STAN_kernel_eq(x, x, alpha, ell)
+  K <- STAN_kernel_eq(x, x, pars[1], pars[2])
   a$K <- K
   return(a)
 }
