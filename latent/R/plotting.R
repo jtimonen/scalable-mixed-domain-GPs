@@ -114,6 +114,11 @@ pairs_kernelparams <- function(fit) {
 # Compare approximate and exact EQ covariance functions
 plot_kernelcomparison_eq <- function(pars_approx, pars, stan_data, idx_x = 1) {
   cmp <- compare_kernels_eq(pars_approx, pars, stan_data, idx_x)
-  plot(cmp$x, cmp$K[1, ], type = "l", ylim = c(0, alpha^2), xlab = "x", ylab = "K")
-  lines(cmp$x, cmp$K_approx[1, ], col = "firebrick")
+  alpha <- max(pars_approx[1], pars[1])
+  r <- cmp$x - cmp$x[1]
+  plot(r, cmp$K[1, ],
+    type = "l", ylim = c(0, alpha^2),
+    xlab = "r", ylab = "K", main = "Covariance function (EQ)"
+  )
+  lines(r, cmp$K_approx[1, ], col = "firebrick")
 }

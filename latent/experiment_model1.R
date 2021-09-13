@@ -15,13 +15,13 @@ rstan_options(javascript = FALSE)
 rstan_options(auto_write = TRUE)
 
 # Settings
-N <- 150
+N <- 200
 # n_per_N <- 1000
 # N <- 10
 model_idx <- 1
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(2, 4, 30, 100)
+NUM_BF <- c(2, 4, 10, 30, 100, 200)
 do_lgpr_marginal <- TRUE
 
 # Simulate data using lgpr
@@ -58,6 +58,7 @@ model <- create_model(form, dat, prior = prior, sample_f = TRUE)
 # Approximate fits
 J <- length(NUM_BF)
 fits <- list()
+stan_dats <- list()
 for (i in seq_len(J)) {
   cat("\n================================================================\n")
   cat("i=", i, "\n", sep = "")
@@ -65,8 +66,10 @@ for (i in seq_len(J)) {
     chains = chains, refresh = 100
   )
   fits[[i]] <- sres$fit
+  stan_dats[[i]] <- sres$stan_data
 }
 names(fits) <- paste0("num_bf = ", NUM_BF)
+names(stan_dats) <- paste0("num_bf = ", NUM_BF)
 
 # Exact fit
 N <- model@stan_input$num_obs
@@ -96,10 +99,11 @@ plt_same <- plot_f_compare_same(dat, fits)
 plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 
 # Compare kernels
-fit_name <- "num_bf = 100"
-stan_data <- sres$stan_data
+fit_name <- "num_bf = 2"
+stan_data <- stan_dats[[fit_name]]
 pars_lgpr <- as.vector(pres$p_means[, "lgpr_marginal"])
 pars_approx <- as.vector(pres$p_means[, fit_name])
 fit <- fits[[fit_name]]
 expose_stanfuns()
-plot_kernelcomparison_eq(pars_approx, pars_lgpr, stan_data, 1)
+plot_kernelcomparison_eq(pars_lgpr, pars_lgpr, stan_data, 1)
+text(2, 1, paste0("exact (black) vs. ", fit_name, " (red) \n same params"))
