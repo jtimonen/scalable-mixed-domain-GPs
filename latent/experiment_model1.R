@@ -99,7 +99,7 @@ plt_same <- plot_f_compare_same(dat, fits)
 plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 
 # Compare kernels
-fit_name <- "num_bf = 2"
+fit_name <- "num_bf = 4"
 stan_data <- stan_dats[[fit_name]]
 pars_lgpr <- as.vector(pres$p_means[, "lgpr_marginal"])
 pars_approx <- as.vector(pres$p_means[, fit_name])
