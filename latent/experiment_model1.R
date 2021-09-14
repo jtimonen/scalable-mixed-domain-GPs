@@ -11,17 +11,18 @@ library(rstan)
 library(ggplot2)
 library(ggpubr)
 library(posterior)
+library(cmdstanr)
 rstan_options(javascript = FALSE)
 rstan_options(auto_write = TRUE)
 
 # Settings
-N <- 200
+N <- 100
 # n_per_N <- 1000
 # N <- 10
 model_idx <- 1
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(2, 4, 10, 30, 100, 200)
+NUM_BF <- c(2, 4, 10, 30)
 do_lgpr_marginal <- TRUE
 
 # Simulate data using lgpr
@@ -53,30 +54,22 @@ if (model_idx == 1) {
 }
 # prior <- list(ell = igam(4, 4))
 prior <- list(ell = normal(0, 1))
-model <- create_model(form, dat, prior = prior, sample_f = TRUE)
+model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 
 # Approximate fits
-J <- length(NUM_BF)
-fits <- list()
-stan_dats <- list()
-for (i in seq_len(J)) {
-  cat("\n================================================================\n")
-  cat("i=", i, "\n", sep = "")
-  sres <- sample_approx(model, NUM_BF[i], scale_bf,
-    chains = chains, refresh = 100
-  )
-  fits[[i]] <- sres$fit
-  stan_dats[[i]] <- sres$stan_data
-}
-names(fits) <- paste0("num_bf = ", NUM_BF)
-names(stan_dats) <- paste0("num_bf = ", NUM_BF)
+NUM_BF <- c(3, 10, 30)
+SCALE_BF <- c(1.5, 2.5)
+approx <- sample_approx_many(model, NUM_BF, SCALE_BF, backend = "rstan", 
+                             refresh=500)
+fits <- approx$fits
+stan_dats <- fits$stan_dats
 
 # Exact fit
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
 if (FALSE) {
-  sm_exact <- stan_model("stan/lgp_latent.stan")
-  fit_exact <- sampling(sm_exact,
+  sm_exact <- rstan::stan_model("stan/lgp_latent.stan")
+  fit_exact <- rstan::sampling(sm_exact,
     data = model@stan_input, chains = chains,
     pars = "eta", include = FALSE, refresh = 500
   )
@@ -84,7 +77,7 @@ if (FALSE) {
   fit_exact <- NULL
 }
 if (do_lgpr_marginal) {
-  fit_lgpr <- lgp(formula = form, data = dat, prior = prior)
+  fit_lgpr <- lgpr::lgp(formula = form, data = dat, prior = prior)
   nam <- names(fits)
   fits <- c(fits, fit_lgpr)
   names(fits) <- c(nam, "lgpr_marginal")
