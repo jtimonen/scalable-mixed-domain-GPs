@@ -59,29 +59,20 @@ model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 # Approximate fits
 NUM_BF <- c(3, 10, 30)
 SCALE_BF <- c(1.5, 2.5)
-approx <- sample_approx_many(model, NUM_BF, SCALE_BF, backend = "rstan", 
-                             refresh=500)
-fits <- approx$fits
-stan_dats <- fits$stan_dats
+approx <- sample_approx_many(model, NUM_BF, SCALE_BF,
+  backend = "rstan",
+  refresh = 1000
+)
 
-# Exact fit
+# Exact fit(s)
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
-if (FALSE) {
-  sm_exact <- rstan::stan_model("stan/lgp_latent.stan")
-  fit_exact <- rstan::sampling(sm_exact,
-    data = model@stan_input, chains = chains,
-    pars = "eta", include = FALSE, refresh = 500
-  )
-} else {
-  fit_exact <- NULL
-}
-if (do_lgpr_marginal) {
-  fit_lgpr <- lgpr::lgp(formula = form, data = dat, prior = prior)
-  nam <- names(fits)
-  fits <- c(fits, fit_lgpr)
-  names(fits) <- c(nam, "lgpr_marginal")
-}
+exact <- sample_exact(model, latent = TRUE, marginal = TRUE, refresh = 1000)
+
+# Collect all fits
+fits <- c(approx$fits, exact$fits)
+stan_dats <- approx$stan_dats
+
 
 # Results
 pres <- summarize_results(fits)

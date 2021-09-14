@@ -209,8 +209,8 @@ sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
 sample_approx_many <- function(model, num_bf, scale_bf,
                                backend = "rstan", ...) {
   stopifnot(is(model, "lgpmodel"))
-  NUM_BF <- rep(num_bf, each = length(scale_bf))
-  SCALE_BF <- rep(scale_bf, times = length(num_bf))
+  NUM_BF <- rep(num_bf, times = length(scale_bf))
+  SCALE_BF <- rep(scale_bf, each = length(num_bf))
   J <- length(NUM_BF)
   fits <- list()
   stan_dats <- list()
@@ -230,6 +230,30 @@ sample_approx_many <- function(model, num_bf, scale_bf,
   names(stan_dats) <- nams
   list(fits = fits, stan_dats = stan_dats)
 }
+
+# Sample exact model(s) for comparison
+sample_exact <- function(model, latent = FALSE, marginal = TRUE, ...) {
+  stopifnot(is(model, "lgpmodel"))
+  fits <- list()
+  nams <- c()
+  if (latent) {
+    sm <- rstan::stan_model("stan/lgp_latent.stan")
+    fit <- rstan::sampling(sm, data = model@stan_input, ...)
+    nams <- c(nams, "latent")
+    fits <- c(fits, list(fit))
+  }
+  if (marginal) {
+    fit <- lgpr::lgp(
+      formula = model@model_formula,
+      data = model@data, prior = model@full_prior
+    )
+    nams <- c(nams, "marginal")
+    fits <- c(fits, list(fit))
+  }
+  names(fits) <- nams
+  return(fits)
+}
+
 
 # WRAPPING STAN FUNCTIONS -------------------------------------------------
 
