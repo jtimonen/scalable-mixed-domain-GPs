@@ -70,26 +70,23 @@ N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
 exact <- sample_exact(model,
   latent = TRUE, marginal = TRUE,
-  backend = backend, refresh = 1000
+  backend = backend, refresh = 1000, iter = 4
 )
 
 # Collect all fits
-fits <- c(approx$fits, exact$fits)
+fits <- c(approx$fits, exact)
 stan_dats <- approx$stan_dats
 
 
 # Results
 pres <- summarize_results(fits)
-rownames(pres$p_means) <- c("alpha", "ell", "sigma")
-rownames(pres$p_sds) <- c("alpha", "ell", "sigma")
-
 plt_same <- plot_f_compare_same(dat, fits)
 plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 
 # Compare kernels
-fit_name <- "num_bf = 4"
+fit_name <- create_fitname(3, 1.5)
 stan_data <- stan_dats[[fit_name]]
-pars_lgpr <- as.vector(pres$p_means[, "lgpr_marginal"])
+pars_lgpr <- as.vector(pres$p_means[, "marginal"])
 pars_approx <- as.vector(pres$p_means[, fit_name])
 fit <- fits[[fit_name]]
 expose_stanfuns()

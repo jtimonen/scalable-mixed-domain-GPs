@@ -208,6 +208,11 @@ sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
   list(stan_data = stan_data, fit = fit)
 }
 
+# Create name for an approximate fit
+create_fitname <- function(num_bf, scale_bf) {
+  paste0("<B=", num_bf, ", c=", scale_bf, ">")
+}
+
 # Sample approximate model with various configurations
 sample_approx_many <- function(model, num_bf, scale_bf,
                                backend = "rstan", ...) {
@@ -221,8 +226,8 @@ sample_approx_many <- function(model, num_bf, scale_bf,
   for (i in seq_len(J)) {
     num_bf <- NUM_BF[i]
     scale_bf <- SCALE_BF[i]
-    conf_str <- paste0("* B = ", num_bf, ", c = ", scale_bf)
-    cat(conf_str, "\n")
+    conf_str <- create_fitname(num_bf, scale_bf)
+    cat("* ", conf_str, "\n", sep = "")
     sres <- sample_approx(model, num_bf, scale_bf, backend = backend, ...)
     fits[[i]] <- sres$fit
     stan_dats[[i]] <- sres$stan_data
@@ -247,7 +252,7 @@ sample_exact <- function(model, latent = FALSE, marginal = TRUE,
   }
   if (marginal) {
     fit <- lgpr::lgp(
-      formula = model@model_formula@call,
+      formula = formula(model@model_formula@call),
       data = model@data, prior = model@full_prior, ...
     )
     nams <- c(nams, "marginal")
@@ -377,26 +382,37 @@ get_times <- function(x) {
   }
   return(tims)
 }
-t_mean <- function(x) stats::mean(get_times(x))
+t_mean <- function(x) mean(get_times(x))
 t_sd <- function(x) stats::sd(get_times(x))
-get_ndiv <- function(x) sum(rstan::get_divergent_iterations(x))
+get_ndiv <- function(x) {
+  if (is(x, "lgpfit")) x <- x@stan_fit
+  if (is(x, "CmdStanMCMC")) {
+    stop("ndiv not implemented for CmdStanMCMC")
+  } else {
+    ndiv <- sum(rstan::get_divergent_iterations(x))
+  }
+  return(ndiv)
+}
+
 get_pars <- function(x) {
   pars <- c("alpha", "ell", "sigma")
   if (is(x, "lgpfit")) x <- x@stan_fit
   if (is(x, "CmdStanMCMC")) {
     d <- x$draws(pars)
   } else {
-    d <- posterior::as_draws(x, pars)
+    d <- posterior::subset_draws(posterior::as_draws(x), pars)
   }
+  d <- posterior::merge_chains(d)
   return(d)
 }
 
 # Get experiment results
 summarize_results <- function(fits) {
   draws <- lapply(fits, get_pars)
-  p_means <- sapply(draws, colMeans)
-  colStds <- function(x) apply(x, 2, stats::sd)
-  p_sds <- sapply(draws, colStds)
+  p_means <- sapply(draws, function(x) apply(x, 3, mean))
+  p_sds <- sapply(draws, function(x) apply(x, 3, stats::sd))
+  colnames(p_means) <- names(fits)
+  colnames(p_sds) <- names(fits)
   list(
     draws = draws,
     p_means = p_means,
