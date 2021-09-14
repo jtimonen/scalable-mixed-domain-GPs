@@ -241,14 +241,14 @@ sample_exact <- function(model, latent = FALSE, marginal = TRUE,
   fits <- list()
   nams <- c()
   if (latent) {
-    fit <- run_sampling("stan/lgp_latent.stan", model@stan_input, backend)
+    fit <- run_sampling("stan/lgp_latent.stan", model@stan_input, backend, ...)
     nams <- c(nams, "latent")
     fits <- c(fits, list(fit))
   }
   if (marginal) {
     fit <- lgpr::lgp(
       formula = model@model_formula@call,
-      data = model@data, prior = model@full_prior
+      data = model@data, prior = model@full_prior, ...
     )
     nams <- c(nams, "marginal")
     fits <- c(fits, list(fit))
