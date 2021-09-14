@@ -186,12 +186,8 @@ additional_stan_input <- function(model, num_bf, scale_bf, decs) {
 
 # FITTING STAN MODELS -----------------------------------------------------
 
-# Sample approximate model
-sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
-  MODEL_FILE <- "stan/lgp_latent_approx.stan"
-  decs <- categorical_kernel_decompositions(model)
-  si_add <- additional_stan_input(model, num_bf, scale_bf, decs$decompositions)
-  stan_data <- c(model@stan_input, si_add)
+# Run sampling in either backend
+run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
   if (backend == "cmdstanr") {
     sm <- cmdstanr::cmdstan_model(MODEL_FILE, include_paths = "stan")
     fit <- sm$sample(data = stan_data, ...)
@@ -199,10 +195,17 @@ sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
     sm <- rstan::stan_model(MODEL_FILE)
     fit <- rstan::sampling(sm, data = stan_data, ...)
   }
-  list(
-    stan_data = stan_data,
-    fit = fit
-  )
+  return(fit)
+}
+
+# Sample approximate model
+sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
+  MODEL_FILE <- "stan/lgp_latent_approx.stan"
+  decs <- categorical_kernel_decompositions(model)
+  si_add <- additional_stan_input(model, num_bf, scale_bf, decs$decompositions)
+  stan_data <- c(model@stan_input, si_add)
+  fit <- run_sampling(MODEL_FILE, stan_data, backend, ...)
+  list(stan_data = stan_data, fit = fit)
 }
 
 # Sample approximate model with various configurations
@@ -232,19 +235,19 @@ sample_approx_many <- function(model, num_bf, scale_bf,
 }
 
 # Sample exact model(s) for comparison
-sample_exact <- function(model, latent = FALSE, marginal = TRUE, ...) {
+sample_exact <- function(model, latent = FALSE, marginal = TRUE,
+                         backend = "rstan", ...) {
   stopifnot(is(model, "lgpmodel"))
   fits <- list()
   nams <- c()
   if (latent) {
-    sm <- rstan::stan_model("stan/lgp_latent.stan")
-    fit <- rstan::sampling(sm, data = model@stan_input, ...)
+    fit <- run_sampling("stan/lgp_latent.stan", model@stan_input, backend)
     nams <- c(nams, "latent")
     fits <- c(fits, list(fit))
   }
   if (marginal) {
     fit <- lgpr::lgp(
-      formula = model@model_formula,
+      formula = model@model_formula@call,
       data = model@data, prior = model@full_prior
     )
     nams <- c(nams, "marginal")

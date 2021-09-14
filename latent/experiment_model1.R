@@ -24,6 +24,7 @@ chains <- 4
 scale_bf <- 1.5
 NUM_BF <- c(2, 4, 10, 30)
 do_lgpr_marginal <- TRUE
+backend <- "rstan"
 
 # Simulate data using lgpr
 # sd <- simulate_data(
@@ -60,14 +61,17 @@ model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 NUM_BF <- c(3, 10, 30)
 SCALE_BF <- c(1.5, 2.5)
 approx <- sample_approx_many(model, NUM_BF, SCALE_BF,
-  backend = "rstan",
+  backend = backend,
   refresh = 1000
 )
 
 # Exact fit(s)
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
-exact <- sample_exact(model, latent = TRUE, marginal = TRUE, refresh = 1000)
+exact <- sample_exact(model,
+  latent = TRUE, marginal = TRUE,
+  backend = backend, refresh = 1000
+)
 
 # Collect all fits
 fits <- c(approx$fits, exact$fits)
