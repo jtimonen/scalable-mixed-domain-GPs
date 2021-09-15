@@ -40,7 +40,6 @@ backend <- "rstan"
 age <- seq(1, 5, length.out = N)
 y <- sin(0.3 * age**2) + 0.2 * rnorm(N)
 dat <- data.frame(age, y)
-normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 dat$y <- normalize_var(dat$y)
 
 # Create model using lgpr
@@ -61,22 +60,19 @@ model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 NUM_BF <- c(3, 10, 30)
 SCALE_BF <- c(1.5, 2.5)
 approx <- sample_approx_many(model, NUM_BF, SCALE_BF,
-  backend = backend,
-  refresh = 1000
+  backend = backend, refresh = 1000
 )
 
 # Exact fit(s)
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
-exact <- sample_exact(model,
-  latent = TRUE, marginal = TRUE,
-  backend = backend, refresh = 1000, iter = 4
+exact <- sample_exact(
+  model, latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
 )
 
 # Collect all fits
 fits <- c(approx$fits, exact)
 stan_dats <- approx$stan_dats
-
 
 # Results
 pres <- summarize_results(fits)
@@ -84,11 +80,6 @@ plt_same <- plot_f_compare_same(dat, fits)
 plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 
 # Compare kernels
-fit_name <- create_fitname(3, 1.5)
-stan_data <- stan_dats[[fit_name]]
-pars_lgpr <- as.vector(pres$p_means[, "marginal"])
-pars_approx <- as.vector(pres$p_means[, fit_name])
-fit <- fits[[fit_name]]
+pars <- as.vector(pres$p_means)
 expose_stanfuns()
-plot_kernelcomparison_eq(pars_lgpr, pars_lgpr, stan_data, 1)
-text(2, 1, paste0("exact (black) vs. ", fit_name, " (red) \n same params"))
+plot_kernelcomparison_eq(pars, stan_dats, 1)

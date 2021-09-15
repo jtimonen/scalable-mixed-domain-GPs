@@ -43,6 +43,8 @@ matrix_to_list <- function(x) {
   return(L)
 }
 
+# Standardize to zero mean and unit variance
+normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 
 # STAN INPUT --------------------------------------------------------------
 
@@ -329,47 +331,6 @@ do_transformed_data <- function(stan_data) {
   )
 }
 
-# Wraps STAN_build_f_latent
-build_f_latent <- function(stan_data, PSI, alpha, ell, xi) {
-  expose_stanfuns()
-  N <- stan_data$num_obs
-  seq_M <- STAN_seq_len(stan_data$num_bf)
-  scale_bf <- stan_data$scale_bf
-  X_hr <- as.array(stan_data$X_hr)
-  num_xi <- as.array(stan_data$num_xi)
-  comps <- matrix_to_list(stan_data$components)
-  C_ranks <- as.array(stan_data$C_ranks)
-  STAN_build_f_latent(
-    N, comps, num_xi, C_ranks, seq_M, X_hr, scale_bf, PSI,
-    alpha, ell, xi
-  )
-}
-
-# Draw xi and build latent
-draw_f_latent <- function(stan_data, PSI, alpha = NULL, ell = NULL) {
-  if (is.null(alpha)) {
-    alpha <- rep(1.0, stan_data$num_comps)
-  }
-  if (is.null(ell)) {
-    ell <- rep(1.0, stan_data$num_ell)
-  }
-  alpha <- as.array(alpha)
-  ell <- as.array(ell)
-  P <- sum(stan_data$num_xi)
-  xi <- rnorm(n = P)
-  build_f_latent(stan_data, PSI, alpha, ell, xi)
-}
-
-# Approximate the EQ kernel
-approximate_kernel_eq <- function(alpha, ell, stan_data, idx_x = 1) {
-  td <- do_transformed_data(stan_data) # exposes stan functions
-  PHI <- td$PHI_mats[[idx_x]]
-  dj <- STAN_basisfun_eq_multipliers(alpha, ell, td$seq_B, td$L[idx_x])
-  DELTA <- diag(dj)
-  K <- PHI %*% DELTA %*% t(PHI)
-  list(K_approx = K, x = stan_data$x_cont[idx_x, ])
-}
-
 # SUMMARIZING RESULTS --------------------------------------------------------
 
 # Helper functions
@@ -421,13 +382,4 @@ summarize_results <- function(fits) {
     t_sds = sapply(fits, t_sd),
     num_div = sapply(fits, get_ndiv)
   )
-}
-
-# Compare approximate and exact EQ covariance functions
-compare_kernels_eq <- function(pars_approx, pars, stan_data, idx_x = 1) {
-  a <- approximate_kernel_eq(pars_approx[1], pars_approx[2], stan_data, idx_x)
-  x <- stan_data$x_cont[idx_x, ]
-  K <- STAN_kernel_eq(x, x, pars[1], pars[2])
-  a$K <- K
-  return(a)
 }
