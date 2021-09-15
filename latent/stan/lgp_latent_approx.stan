@@ -53,6 +53,8 @@ parameters {
 transformed parameters {
  vector[num_obs] f_latent[num_comps] = STAN_build_f_latent(components,
   num_xi, C_ranks, seq_B, L, PSI_mats, alpha, ell, xi);
+  print("alpha=", alpha);
+  print("ell=", ell);
 }
 
 model {

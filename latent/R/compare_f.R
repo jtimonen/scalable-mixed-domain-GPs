@@ -171,5 +171,3 @@ plot_f_compare_separate <- function(data, fits, last_is_exact = FALSE, ...) {
   }
   return(PLOTS)
 }
-
-plot_f_compare_separate(dat, fits, last_is_exact = TRUE, aes = aes(x = age, y = f_mean, group = z_x_fit, color = fit), comp_idx = 2)[[1]] + facet_wrap(. ~ z)
