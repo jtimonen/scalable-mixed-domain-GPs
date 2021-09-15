@@ -111,8 +111,7 @@ plot_f_compare_same <- function(data, fits) {
 }
 
 # Plot mean and sd comparison in separate figures
-plot_f_compare_separate <- function(data, fits, ncol = 3, nrow = NULL,
-                                    last_is_exact = FALSE) {
+plot_f_compare_separate <- function(data, fits, last_is_exact = FALSE) {
   PLOTS <- list()
   J <- length(fits)
   nams <- names(fits)
@@ -131,8 +130,8 @@ plot_f_compare_separate <- function(data, fits, ncol = 3, nrow = NULL,
     } else {
       plt <- plot_f(data, fits[[j]], aname = nams[j])
     }
-    PLOTS[[j]] <- plt + theme(legend.position = "top")
+    thm <- theme(legend.position = "top", legend.title = element_blank())
+    PLOTS[[j]] <- plt + thm + ylab("")
   }
-  if (is.null(nrow)) nrow <- ceiling(J / ncol)
-  ggarrange(plotlist = PLOTS, nrow = nrow, ncol = ncol)
+  return(PLOTS)
 }

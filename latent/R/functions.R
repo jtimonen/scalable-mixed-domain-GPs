@@ -212,22 +212,19 @@ sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
 
 # Create name for an approximate fit
 create_fitname <- function(num_bf, scale_bf) {
-  paste0("<B=", num_bf, ", c=", scale_bf, ">")
+  paste0("B=", num_bf)
 }
 
-# Sample approximate model with various configurations
-sample_approx_many <- function(model, num_bf, scale_bf,
-                               backend = "rstan", ...) {
+# Sample approximate model with various configurations of num_bf
+sample_approx_alter_num_bf <- function(model, NUM_BF, scale_bf,
+                                       backend = "rstan", ...) {
   stopifnot(is(model, "lgpmodel"))
-  NUM_BF <- rep(num_bf, times = length(scale_bf))
-  SCALE_BF <- rep(scale_bf, each = length(num_bf))
   J <- length(NUM_BF)
   fits <- list()
   stan_dats <- list()
   nams <- c()
   for (i in seq_len(J)) {
     num_bf <- NUM_BF[i]
-    scale_bf <- SCALE_BF[i]
     conf_str <- create_fitname(num_bf, scale_bf)
     cat("* ", conf_str, "\n", sep = "")
     sres <- sample_approx(model, num_bf, scale_bf, backend = backend, ...)

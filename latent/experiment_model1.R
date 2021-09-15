@@ -56,30 +56,41 @@ if (model_idx == 1) {
 prior <- list(ell = normal(0, 1))
 model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 
-# Approximate fits
-NUM_BF <- c(3, 10, 30)
-SCALE_BF <- c(1.5, 2.5)
-approx <- sample_approx_many(model, NUM_BF, SCALE_BF,
-  backend = backend, refresh = 1000
-)
-
 # Exact fit(s)
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
 exact <- sample_exact(
-  model, latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
+  model,
+  latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
 )
 
-# Collect all fits
-fits <- c(approx$fits, exact)
-stan_dats <- approx$stan_dats
+# Approximate fits
+NUM_BF <- c(3, 10, 30)
+SCALE_BF <- c(1.5, 2.5)
+K_plots <- list()
+F_plots <- list()
+PRES <- list()
+conf_names <- c()
+j <- 0
+for (scale_bf in SCALE_BF) {
+  j <- j + 1
+  conf_names[j] <- paste0("scale_bf = ", scale_bf)
 
-# Results
-pres <- summarize_results(fits)
-plt_same <- plot_f_compare_same(dat, fits)
-plt_separate <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
+  # Sample approximate models
+  approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
+    backend = backend, refresh = 1000
+  )
 
-# Compare kernels
-pars <- as.vector(pres$p_means)
-expose_stanfuns()
-plot_kernelcomparison_eq(pars, stan_dats, 1)
+  # Collect all fits
+  fits <- c(approx$fits, exact)
+  stan_dats <- approx$stan_dats
+
+  # Results
+  pars <- PRES[[j]]$p_means
+  K_plots[[j]] <- plot_kernelcomparison_eq(pars, stan_dats, 1)
+  PRES[[j]] <- summarize_results(fits)
+  F_plots[[j]] <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
+}
+names(K_PLOTS) <- conf_names
+names(PRES) <- conf_names
+names(FPLOTS) <- conf_names

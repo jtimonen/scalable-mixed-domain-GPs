@@ -19,16 +19,18 @@ compare_kernels_eq <- function(pars, stan_dats, idx_x = 1, exact_name) {
   for (j in 1:J) {
     nam <- colnames(pars)[j]
     pars_j <- pars[, j]
+    alpha <- as.numeric(pars_j["alpha[1]"])
+    ell <- as.numeric(pars_j["ell[1]"])
     if (nam == exact_name) {
-      k <- STAN_kernel_eq(x, x, pars_j[1], pars_j[2])
+      k <- STAN_kernel_eq(x, x, alpha, ell)
     } else {
-      k <- approximate_kernel_eq(pars_j[1], pars_j[2], stan_dats[[j]], idx_x)
+      k <- approximate_kernel_eq(alpha, ell, stan_dats[[j]], idx_x)
     }
     R <- c(R, r)
     K <- c(K, k[1, ])
     model <- c(model, rep(nam, length(r)))
   }
-  df <- c(R, K, as.factor(model))
+  df <- data.frame(R, K, as.factor(model))
   colnames(df) <- c("r", "k", "model")
   return(df)
 }
