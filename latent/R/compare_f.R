@@ -29,7 +29,7 @@ draw_f_latent <- function(stan_data, tdata, alpha = NULL, ell = NULL) {
 }
 
 # Helper function
-create_plot_df <- function(data, fit) {
+create_plotf_df <- function(data, fit) {
   if (is(fit, "lgpfit")) {
     gpred <- pred(fit)
     f_mean <- as.vector(gpred@f_mean)
@@ -38,15 +38,19 @@ create_plot_df <- function(data, fit) {
     rv <- as_draws_rvars(fit)$f_latent[1, ]
     f_mean <- as.vector(mean(rv))
     f_sd <- as.vector(sd(rv))
+  } else if (is(fit, "CmdStanMCMC")) {
+    rv <- as_draws_rvars(fit$draws())$f_latent[1, ]
+    f_mean <- as.vector(mean(rv))
+    f_sd <- as.vector(sd(rv))
   } else {
-    stop("fit should be a stanfit or lgpfit object!")
+    stop("fit should be a stanfit, lgpfit or CmdStanMCMC object!")
   }
   cbind(data, f_mean, f_sd)
 }
 
 # Plot
 plot_f <- function(data, fit, aname = "approx") {
-  df <- create_plot_df(data, fit)
+  df <- create_plotf_df(data, fit)
   map <- aes(x = age, ymin = f_mean - 2 * f_sd, ymax = f_mean + 2 * f_sd)
   plt <- ggplot(df, aes(x = age, y = f_mean)) +
     geom_ribbon(aes = map, alpha = 0.3) +
@@ -64,8 +68,8 @@ plot_f <- function(data, fit, aname = "approx") {
 # Plot comparison
 plot_f_compare_with_exact <- function(data, fit, fit_approx, aname = "approx",
                                       ribbon = FALSE) {
-  df <- create_plot_df(data, fit)
-  df_approx <- create_plot_df(data, fit_approx)
+  df <- create_plotf_df(data, fit)
+  df_approx <- create_plotf_df(data, fit_approx)
   N1 <- nrow(df)
   N2 <- nrow(df_approx)
   fit <- as.factor(c(rep("exact", N1), rep(aname, N2)))

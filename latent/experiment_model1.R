@@ -24,7 +24,7 @@ chains <- 4
 scale_bf <- 1.5
 NUM_BF <- c(2, 4, 10, 30)
 do_lgpr_marginal <- TRUE
-backend <- "rstan"
+backend <- "cmdstanr" # "rstan"
 
 # Simulate data using lgpr
 # sd <- simulate_data(
@@ -74,7 +74,7 @@ conf_names <- c()
 j <- 0
 for (scale_bf in SCALE_BF) {
   j <- j + 1
-  conf_names[j] <- paste0("scale_bf = ", scale_bf)
+  conf_names[j] <- paste0("c = ", scale_bf)
 
   # Sample approximate models
   approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
@@ -91,5 +91,12 @@ for (scale_bf in SCALE_BF) {
   F_plots[[j]] <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 }
 names(K_plots) <- conf_names
-names(PRES) <- conf_names
 names(F_plots) <- conf_names
+names(PRES) <- conf_names
+
+p1 <- ggarrange(plotlist = F_plots[[1]], nrow = 1)
+p2 <- ggarrange(plotlist = F_plots[[2]], nrow = 1)
+plt <- ggarrange(p1, p2,
+  ncol = 1, labels = conf_names,
+  label.x = -0.11, label.y = 1.01
+)
