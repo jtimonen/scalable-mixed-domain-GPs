@@ -70,7 +70,7 @@
   vector STAN_basisfun_eq_multipliers(real alpha, real ell, data vector seq_B,
       real L)
   {
-    return STAN_spectral_density_eq(alpha, ell, 0.5*pi()*seq_B/L);
+    return sqrt(STAN_spectral_density_eq(alpha, ell, 0.5*pi()*seq_B/L));
   }
   
   // Create all PHI matrices

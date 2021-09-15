@@ -94,9 +94,11 @@ names(K_plots) <- conf_names
 names(F_plots) <- conf_names
 names(PRES) <- conf_names
 
-p1 <- ggarrange(plotlist = F_plots[[1]], nrow = 1)
-p2 <- ggarrange(plotlist = F_plots[[2]], nrow = 1)
-plt <- ggarrange(p1, p2,
+# Final plots
+pf1 <- ggarrange(plotlist = F_plots[[1]], nrow = 1)
+pf2 <- ggarrange(plotlist = F_plots[[2]], nrow = 1)
+plt_f <- ggarrange(pf1, pf2,
   ncol = 1, labels = conf_names,
-  label.x = -0.11, label.y = 1.01
+  label.x = -0.03, label.y = 1.00
 )
+plt_k <- ggarrange(plotlist=K_plots,nrow=1, labels=conf_names)
