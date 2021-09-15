@@ -86,9 +86,8 @@ for (scale_bf in SCALE_BF) {
   stan_dats <- approx$stan_dats
 
   # Results
-  pars <- PRES[[j]]$p_means
-  K_plots[[j]] <- plot_kernelcomparison_eq(pars, stan_dats, 1)
   PRES[[j]] <- summarize_results(fits)
+  K_plots[[j]] <- plot_kernelcomparison_eq(PRES[[j]]$p_means, stan_dats, 1)
   F_plots[[j]] <- plot_f_compare_separate(dat, fits, last_is_exact = TRUE)
 }
 names(K_PLOTS) <- conf_names
