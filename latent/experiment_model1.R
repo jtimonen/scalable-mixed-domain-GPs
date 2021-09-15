@@ -22,7 +22,8 @@ N <- 100
 model_idx <- 1
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(2, 4, 10, 30)
+NUM_BF <- c(3, 5, 20, 50)
+SCALE_BF <- c(1.1, 1.5, 2.5)
 do_lgpr_marginal <- TRUE
 backend <- "cmdstanr" # "rstan"
 
@@ -65,8 +66,6 @@ exact <- sample_exact(
 )
 
 # Approximate fits
-NUM_BF <- c(3, 10, 30)
-SCALE_BF <- c(1.5, 2.5)
 K_plots <- list()
 F_plots <- list()
 PRES <- list()
@@ -97,7 +96,8 @@ names(PRES) <- conf_names
 # Final plots
 pf1 <- ggarrange(plotlist = F_plots[[1]], nrow = 1)
 pf2 <- ggarrange(plotlist = F_plots[[2]], nrow = 1)
-plt_f <- ggarrange(pf1, pf2,
+pf3 <- ggarrange(plotlist = F_plots[[3]], nrow = 1)
+plt_f <- ggarrange(pf1, pf2, pf3,
   ncol = 1, labels = conf_names,
   label.x = -0.03, label.y = 1.00
 )

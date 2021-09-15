@@ -41,7 +41,7 @@ plot_kernelcomparison_eq <- function(pars, stan_data, idx_x = 1,
   df <- compare_kernels_eq(pars, stan_data, idx_x, exact_name)
   plt <- ggplot(df, aes(x = r, y = k, group = model, color = model)) +
     geom_line()
-  plt <- plt + ggtitle("Covariance function (EQ)") +
+  plt <- plt +
     theme(
       legend.position = c(.95, .95),
       legend.justification = c("right", "top"),
