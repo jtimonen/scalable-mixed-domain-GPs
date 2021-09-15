@@ -1,22 +1,20 @@
 
 # Wraps STAN_build_f_latent
-build_f_latent <- function(stan_data, PSI, alpha, ell, xi) {
+build_f_latent <- function(stan_data, tdata, alpha, ell, xi) {
   expose_stanfuns()
   N <- stan_data$num_obs
   seq_M <- STAN_seq_len(stan_data$num_bf)
   scale_bf <- stan_data$scale_bf
-  X_hr <- as.array(stan_data$X_hr)
   num_xi <- as.array(stan_data$num_xi)
   comps <- matrix_to_list(stan_data$components)
   C_ranks <- as.array(stan_data$C_ranks)
   STAN_build_f_latent(
-    N, comps, num_xi, C_ranks, seq_M, X_hr, scale_bf, PSI,
-    alpha, ell, xi
+    comps, num_xi, C_ranks, seq_M, tdata$L, tdata$PSI, alpha, ell, xi
   )
 }
 
 # Draw xi and build latent
-draw_f_latent <- function(stan_data, PSI, alpha = NULL, ell = NULL) {
+draw_f_latent <- function(stan_data, tdata, alpha = NULL, ell = NULL) {
   if (is.null(alpha)) {
     alpha <- rep(1.0, stan_data$num_comps)
   }
@@ -27,7 +25,7 @@ draw_f_latent <- function(stan_data, PSI, alpha = NULL, ell = NULL) {
   ell <- as.array(ell)
   P <- sum(stan_data$num_xi)
   xi <- rnorm(n = P)
-  build_f_latent(stan_data, PSI, alpha, ell, xi)
+  build_f_latent(stan_data, tdata, alpha, ell, xi)
 }
 
 # Helper function

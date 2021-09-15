@@ -212,7 +212,7 @@ sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
 
 # Create name for an approximate fit
 create_fitname <- function(num_bf, scale_bf) {
-  paste0("B=", num_bf)
+  paste0("B=", formatC(num_bf, width = 3, flag = 0))
 }
 
 # Sample approximate model with various configurations of num_bf

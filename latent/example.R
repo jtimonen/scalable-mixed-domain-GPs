@@ -37,9 +37,8 @@ stan_data <- res$stan_data
 f1 <- res$fit
 
 # Test creating transformed data
-expose_stanfuns()
-psi_mats <- create_psi_mats(stan_data)
-f_latent <- draw_f_latent(stan_data, psi_mats)
+tdata <- do_transformed_data(stan_data)
+f_latent <- draw_f_latent(stan_data, tdata)
 
 # Create model and sample
 # sm2 <- stan_model("stan/lgp_latent_covariance.stan")
