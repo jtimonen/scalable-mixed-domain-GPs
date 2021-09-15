@@ -17,22 +17,29 @@ rstan_options(auto_write = TRUE)
 
 # Settings
 N <- 100
-model_idx <- 1
+N_indiv <- 10
 chains <- 4
 scale_bf <- 1.5
-NUM_BF <- c(3, 5, 20, 50)
+NUM_BF <- c(3, 5, 20, 40)
 SCALE_BF <- c(1.1, 1.5, 2.5)
 do_lgpr_marginal <- TRUE
 backend <- "cmdstanr" # "rstan"
 
-# Simulate
-age <- seq(1, 5, length.out = N)
-y <- sin(0.3 * age**2) + 0.2 * rnorm(N)
-dat <- data.frame(age, y)
+# Simulate data using lgpr
+sd <- simulate_data(
+  N = N_indiv, t_data = seq(1, 5, length.out = N / N_indiv),
+  relevances = c(0, 1, 1),
+  covariates = c(2),
+  n_categs = c(2),
+  lengthscales = c(1.0, 1.0, 0.75), t_jitter = 0.2
+)
+dat <- sd@data
 dat$y <- normalize_var(dat$y)
 
 # Create model using lgpr
-form <- y ~ age
+form <- y ~ age + age | z
+
+# prior <- list(ell = igam(4, 4))
 prior <- list(ell = normal(0, 1))
 model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 

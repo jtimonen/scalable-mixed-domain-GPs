@@ -28,18 +28,42 @@ draw_f_latent <- function(stan_data, tdata, alpha = NULL, ell = NULL) {
   build_f_latent(stan_data, tdata, alpha, ell, xi)
 }
 
+# Colsums for draws_rvar
+colsums_rvar <- function(x) {
+  D <- dim(x)[1]
+  rv <- x[1, ]
+  for (d in 2:D) {
+    rv <- rv + x[d, ]
+  }
+  return(rv)
+}
 # Helper function
-create_plotf_df <- function(data, fit) {
+create_plotf_df <- function(data, fit, comp_idx) {
   if (is(fit, "lgpfit")) {
     gpred <- pred(fit)
-    f_mean <- as.vector(gpred@f_mean)
-    f_sd <- as.vector(gpred@f_std)
+    if (comp_idx == 0) {
+      f_mean <- as.vector(gpred@f_mean)
+      f_sd <- as.vector(gpred@f_std)
+    } else {
+      f_mean <- as.vector(gpred@f_comp_mean[[comp_idx]])
+      f_sd <- as.vector(gpred@f_comp_std[[comp_idx]])
+    }
   } else if (is(fit, "stanfit")) {
-    rv <- as_draws_rvars(fit)$f_latent[1, ]
+    rv <- as_draws_rvars(fit)$f_latent
+    if (comp_idx == 0) {
+      rv <- colsums_rvar(rv)
+    } else {
+      rv <- rv[comp_idx, ]
+    }
     f_mean <- as.vector(mean(rv))
     f_sd <- as.vector(sd(rv))
   } else if (is(fit, "CmdStanMCMC")) {
-    rv <- as_draws_rvars(fit$draws())$f_latent[1, ]
+    rv <- as_draws_rvars(fit$draws())$f_latent
+    if (comp_idx == 0) {
+      rv <- colsums_rvar(rv)
+    } else {
+      rv <- rv[comp_idx, ]
+    }
     f_mean <- as.vector(mean(rv))
     f_sd <- as.vector(sd(rv))
   } else {
@@ -49,8 +73,8 @@ create_plotf_df <- function(data, fit) {
 }
 
 # Plot
-plot_f <- function(data, fit, aname = "approx") {
-  df <- create_plotf_df(data, fit)
+plot_f <- function(data, fit, aname, comp_idx) {
+  df <- create_plotf_df(data, fit, comp_idx)
   map <- aes(x = age, ymin = f_mean - 2 * f_sd, ymax = f_mean + 2 * f_sd)
   plt <- ggplot(df, aes(x = age, y = f_mean)) +
     geom_ribbon(aes = map, alpha = 0.3) +
@@ -66,16 +90,24 @@ plot_f <- function(data, fit, aname = "approx") {
 }
 
 # Plot comparison
-plot_f_compare_with_exact <- function(data, fit, fit_approx, aname = "approx",
-                                      ribbon = FALSE) {
-  df <- create_plotf_df(data, fit)
-  df_approx <- create_plotf_df(data, fit_approx)
+plot_f_compare_with_exact <- function(data, fit, fit_approx, aname,
+                                      comp_idx = 0,
+                                      aes = NULL,
+                                      plot_data = FALSE) {
+  if (is.null(aes)) {
+    aes <- aes(x = age, y = f_mean, group = id_x_fit, color = fit)
+  }
+  df <- create_plotf_df(data, fit, comp_idx)
+  df_approx <- create_plotf_df(data, fit_approx, comp_idx)
   N1 <- nrow(df)
   N2 <- nrow(df_approx)
   fit <- as.factor(c(rep("exact", N1), rep(aname, N2)))
   df <- rbind(df, df_approx)
   df <- cbind(df, fit)
-  plt <- ggplot(df, aes(x = age, y = f_mean, group = fit, color = fit))
+  df$id_x_fit <- paste(df$fit, df$id)
+  df$z_x_fit <- paste(df$fit, df$z)
+  plt <- ggplot(df, mapping = aes)
+  ribbon <- TRUE
   if (ribbon) {
     plt <- plt + geom_ribbon(
       aes(x = age, ymin = f_mean - 2 * f_sd, ymax = f_mean + 2 * f_sd),
@@ -83,10 +115,12 @@ plot_f_compare_with_exact <- function(data, fit, fit_approx, aname = "approx",
     )
   }
   plt <- plt + geom_line() + theme_bw() + ylab("posterior f")
-  plt <- plt + geom_point(
-    data = data, aes(x = age, y = y), inherit.aes = FALSE,
-    pch = 4, alpha = 0.3
-  )
+  if (plot_data) {
+    plt <- plt + geom_point(
+      data = data, aes(x = age, y = y), inherit.aes = FALSE,
+      pch = 4, alpha = 0.6
+    )
+  }
   return(plt)
 }
 
@@ -113,7 +147,7 @@ plot_f_compare_same <- function(data, fits) {
 }
 
 # Plot mean and sd comparison in separate figures
-plot_f_compare_separate <- function(data, fits, last_is_exact = FALSE) {
+plot_f_compare_separate <- function(data, fits, last_is_exact = FALSE, ...) {
   PLOTS <- list()
   J <- length(fits)
   nams <- names(fits)
@@ -127,13 +161,15 @@ plot_f_compare_separate <- function(data, fits, last_is_exact = FALSE) {
   for (j in seq_len(J)) {
     if (!(is.null(fit_exact))) {
       plt <- plot_f_compare_with_exact(data, fit_exact, fits[[j]],
-        ribbon = T, aname = nams[j]
+        aname = nams[j], ...
       )
     } else {
-      plt <- plot_f(data, fits[[j]], aname = nams[j])
+      plt <- plot_f(data, fits[[j]], nams[j], ...)
     }
     thm <- theme(legend.position = "top", legend.title = element_blank())
     PLOTS[[j]] <- plt + thm + ylab("")
   }
   return(PLOTS)
 }
+
+plot_f_compare_separate(dat, fits, last_is_exact = TRUE, aes = aes(x = age, y = f_mean, group = z_x_fit, color = fit), comp_idx = 2)[[1]] + facet_wrap(. ~ z)
