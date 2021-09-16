@@ -19,7 +19,7 @@ rstan_options(auto_write = TRUE)
 N <- 100
 N_indiv <- 10
 chains <- 4
-NUM_BF <- c(12,64)# c(4, 8, 16, 32, 64)
+NUM_BF <- c(4, 8, 16, 32, 64)
 SCALE_BF <- c(1.2, 1.5, 2.5)
 backend <- "cmdstanr" # "rstan"
 
@@ -67,7 +67,7 @@ for (scale_bf in SCALE_BF) {
 
   # Sample approximate models
   approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
-    backend = backend, refresh = 1000)
+    backend = backend, refresh = 1000, adapt_delta=0.95)
 
   # Collect all fits
   fits <- c(approx$fits, exact)
