@@ -62,3 +62,30 @@ plot_runtimes <- function(PRES, NUM_BF, N) {
     xlab("number of basis functions")
   return(plt)
 }
+
+
+# Compare runtimes
+plot_runtimes_wrt_N <- function(PRES, NUM_BF, N_sizes, scale_bf) {
+  tims <- sapply(PRES, function(x) {
+    getElement(x, "t_means")
+  })
+  t_exact <- tims["marginal", ]
+  tims <- tims[1:nrow(tims) - 1, ]
+  nn <- rep(N_sizes, each = nrow(tims))
+  bb <- as.factor(rep(NUM_BF, times = ncol(tims)))
+  df <- data.frame(as.vector(tims), nn, bb)
+  main <- paste0("c = ", scale_bf)
+  sub <- paste0("black dotted  line is for exact fit")
+  colnames(df) <- c("time", "N", "B")
+  plt <- ggplot(df, aes(x = N, y = time, group = B, color = B)) +
+    geom_line() +
+    geom_point()
+  plt <- plt + ggtitle(main, subtitle = sub) + ylab(" average chain time (s)") +
+    xlab("N")
+  df_exact <- data.frame(N=N_sizes[1:4], time=t_exact[1:4])
+  plt <- plt + geom_line(data = df_exact, aes(x=N,y=time), inherit.aes = F,
+                         lty=2)  +
+    geom_point(data = df_exact, aes(x=N,y=time), inherit.aes = F)
+  return(plt)
+}
+
