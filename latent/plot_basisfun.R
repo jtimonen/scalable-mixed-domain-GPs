@@ -30,7 +30,8 @@ for (j in 1:3) {
   colnames(df) <- c("x", "phi", "b")
   PLOTS[[j]] <- ggplot(df, aes(x = x, y = phi, group = b, color = b)) +
     geom_line() +
-    ylab("phi_b") + theme(legend.position = "top")
+    ylab("phi_b") +
+    theme(legend.position = "top")
   phi_sum <- 1 * PHI[, 1] + 0.2 * PHI[, 2] + 0.6 * PHI[, 3]
   df2 <- data.frame(x, phi_sum)
   SPLOTS[[j]] <- ggplot(df2, aes(x = x, y = phi_sum)) +

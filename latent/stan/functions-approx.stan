@@ -70,7 +70,7 @@
   vector STAN_basisfun_eq_multipliers(real alpha, real ell, data vector seq_B,
       real L)
   {
-    return sqrt(1e-20+exp(STAN_log_spd_eq(alpha, ell, 0.5*pi()*seq_B/L)));
+    return exp(0.5*STAN_log_spd_eq(alpha, ell, 0.5*pi()*seq_B/L));
   }
   
   // Create all PHI matrices

@@ -58,22 +58,27 @@ for (N in N_sizes) {
       latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
     )
   }
-  
+
   # Sample approximate models
   approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
     backend = backend, refresh = 1000, adapt_delta = 0.95
   )
 
   # Collect all fits
-  fits <- c(approx$fits, exact)
+  fits <- approx$fits # c(approx$fits, exact)
   stan_dats <- approx$stan_dats
 
   # Results
   PRES[[j]] <- summarize_results(fits)
 }
 
-names(PRES) <- conf_names
+names(PRES) <- paste0("N_indiv = ", N_indiv_sizes)
 
 # Runtimes plot
-rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
-ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
+rt <- plot_runtimes_wrt_N_indiv(PRES, NUM_BF, N_indiv_sizes, N, scale_bf)
+ggsave("res/exp4/times4.pdf", plot = rt, width = 5.5, height = 4.3)
+
+# Divergences
+divs <- sapply(PRES, function(x) {
+  getElement(x, "num_div")
+})

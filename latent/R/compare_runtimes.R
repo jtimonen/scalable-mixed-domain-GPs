@@ -90,3 +90,21 @@ plot_runtimes_wrt_N <- function(PRES, NUM_BF, N_sizes, scale_bf) {
     geom_point(data = df_exact, aes(x = N, y = time), inherit.aes = F)
   return(plt)
 }
+
+# Third runtimes plot
+plot_runtimes_wrt_N_indiv <- function(PRES, NUM_BF, N_indiv, N, scale_bf) {
+  tims <- sapply(PRES, function(x) {
+    getElement(x, "t_means")
+  })
+  nn <- rep(N_indiv, each = nrow(tims))
+  bb <- as.factor(rep(NUM_BF, times = ncol(tims)))
+  df <- data.frame(as.vector(tims), nn, bb)
+  main <- paste0("c = ", scale_bf)
+  colnames(df) <- c("time", "N_indiv", "B")
+  plt <- ggplot(df, aes(x = N_indiv, y = time, group = B, color = B)) +
+    geom_line() +
+    geom_point()
+  plt <- plt + ggtitle(main) + ylab(" average chain time (s)") +
+    xlab("number of individuals")
+  return(plt)
+}
