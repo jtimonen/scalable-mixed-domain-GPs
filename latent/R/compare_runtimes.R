@@ -82,10 +82,11 @@ plot_runtimes_wrt_N <- function(PRES, NUM_BF, N_sizes, scale_bf) {
     geom_point()
   plt <- plt + ggtitle(main, subtitle = sub) + ylab(" average chain time (s)") +
     xlab("N")
-  df_exact <- data.frame(N=N_sizes[1:4], time=t_exact[1:4])
-  plt <- plt + geom_line(data = df_exact, aes(x=N,y=time), inherit.aes = F,
-                         lty=2)  +
-    geom_point(data = df_exact, aes(x=N,y=time), inherit.aes = F)
+  df_exact <- data.frame(N = N_sizes[1:4], time = t_exact[1:4])
+  plt <- plt + geom_line(
+    data = df_exact, aes(x = N, y = time), inherit.aes = F,
+    lty = 2
+  ) +
+    geom_point(data = df_exact, aes(x = N, y = time), inherit.aes = F)
   return(plt)
 }
-

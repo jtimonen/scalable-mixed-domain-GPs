@@ -29,7 +29,7 @@ conf_names <- c()
 for (N in N_sizes) {
   conf_names[j] <- paste0("N = ", N)
   j <- j + 1
-  N_indiv <- N/10
+  N_indiv <- N / 10
   # Simulate data using lgpr
   sd <- simulate_data(
     N = N_indiv, t_data = seq(1, 5, length.out = N / N_indiv),
