@@ -62,15 +62,15 @@
   }
   
   // Compute spectral density of EQ kernel
-  vector STAN_spectral_density_eq(real alpha, real ell, vector omega){
-    return alpha^2*ell*sqrt(2*pi())*exp(-0.5*ell^2*omega .* omega);
+  vector STAN_log_spd_eq(real alpha, real ell, vector omega){
+    return 2*log(alpha)+log(ell)+0.5*log(2*pi())-0.5*ell^2*omega .* omega;
   }
   
   // Compute the multipliers s_b
   vector STAN_basisfun_eq_multipliers(real alpha, real ell, data vector seq_B,
       real L)
   {
-    return sqrt(STAN_spectral_density_eq(alpha, ell, 0.5*pi()*seq_B/L));
+    return sqrt(1e-20+exp(STAN_log_spd_eq(alpha, ell, 0.5*pi()*seq_B/L)));
   }
   
   // Create all PHI matrices

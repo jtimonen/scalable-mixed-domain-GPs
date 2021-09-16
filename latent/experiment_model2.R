@@ -19,7 +19,7 @@ rstan_options(auto_write = TRUE)
 N <- 100
 N_indiv <- 10
 chains <- 4
-NUM_BF <- c(4, 8, 16, 32, 64)
+NUM_BF <- c(12,64)# c(4, 8, 16, 32, 64)
 SCALE_BF <- c(1.2, 1.5, 2.5)
 backend <- "cmdstanr" # "rstan"
 
@@ -44,10 +44,10 @@ model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 # Exact fit(s)
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
-exact <- sample_exact(
-  model,
-  latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
-)
+#exact <- sample_exact(
+#  model,
+#  latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
+#)
 
 # Approximate fits
 K_plots <- list()
@@ -67,8 +67,7 @@ for (scale_bf in SCALE_BF) {
 
   # Sample approximate models
   approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
-    backend = backend, refresh = 1000
-  )
+    backend = backend, refresh = 1000)
 
   # Collect all fits
   fits <- c(approx$fits, exact)
@@ -115,3 +114,4 @@ plt_f <- ggarrange(pf1, pf2, pf3,
 plt_k <- ggarrange(plotlist = K_plots, nrow = 1, labels = conf_names)
 
 plot_f_compare_separate(dat, fits, last_is_exact = TRUE, aes)[[1]]
+
