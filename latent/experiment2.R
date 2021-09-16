@@ -16,10 +16,10 @@ rstan_options(javascript = FALSE)
 rstan_options(auto_write = TRUE)
 
 # Settings
-N <- 100
+N <- 200
 N_indiv <- 10
 chains <- 4
-NUM_BF <- c(4, 8, 16, 32, 64)
+NUM_BF <- c(2, 4, 8, 16, 32, 64)
 SCALE_BF <- c(1.2, 1.5, 2.5)
 backend <- "cmdstanr" # "rstan"
 
@@ -28,8 +28,8 @@ sd <- simulate_data(
   N = N_indiv, t_data = seq(1, 5, length.out = N / N_indiv),
   relevances = c(0, 1, 1),
   covariates = c(2),
-  n_categs = c(2),
-  lengthscales = c(0.75, 1.0, 0.75), t_jitter = 0.2
+  n_categs = c(3),
+  lengthscales = c(0.7, 1.0, 0.75), t_jitter = 0.2
 )
 dat <- sd@data
 dat$y <- normalize_var(dat$y)
@@ -44,10 +44,10 @@ model <- lgpr::create_model(form, dat, prior = prior, sample_f = TRUE)
 # Exact fit(s)
 N <- model@stan_input$num_obs
 cat("N=", N, "\n", sep = "")
-#exact <- sample_exact(
-#  model,
-#  latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
-#)
+exact <- sample_exact(
+  model,
+  latent = FALSE, marginal = TRUE, backend = backend, refresh = 1000
+)
 
 # Approximate fits
 K_plots <- list()
@@ -67,7 +67,8 @@ for (scale_bf in SCALE_BF) {
 
   # Sample approximate models
   approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
-    backend = backend, refresh = 1000, adapt_delta=0.95)
+    backend = backend, refresh = 1000, adapt_delta = 0.95
+  )
 
   # Collect all fits
   fits <- c(approx$fits, exact)
@@ -104,14 +105,29 @@ names(F2_plots) <- conf_names
 names(PRES) <- conf_names
 
 # Final plots
-pf1 <- ggarrange(plotlist = F0_plots[[1]], nrow = 1)
-pf2 <- ggarrange(plotlist = F0_plots[[2]], nrow = 1)
-pf3 <- ggarrange(plotlist = F0_plots[[3]], nrow = 1)
-plt_f <- ggarrange(pf1, pf2, pf3,
-  ncol = 1, labels = conf_names,
-  label.x = -0.03, label.y = 1.00
-)
-plt_k <- ggarrange(plotlist = K_plots, nrow = 1, labels = conf_names)
+plot_final <- function(F_plots) {
+  pf1 <- ggarrange(plotlist = F_plots[[1]][1:3], nrow = 1)
+  pf2 <- ggarrange(plotlist = F_plots[[2]][1:3], nrow = 1)
+  pf3 <- ggarrange(plotlist = F_plots[[3]][1:3], nrow = 1)
+  ggarrange(pf1, pf2, pf3,
+    ncol = 1, labels = conf_names,
+    label.x = -0.03, label.y = 1.00
+  )
+}
 
-plot_f_compare_separate(dat, fits, last_is_exact = TRUE, aes)[[1]]
+# Just shared component
+plot_k <- ggarrange(plotlist = K_plots, nrow = 1, labels = conf_names)
 
+# Final plots
+p0 <- plot_final(F0_plots)
+p1 <- plot_final(F1_plots)
+p2 <- plot_final(F2_plots)
+W <- 10.42
+H <- 6.24
+ggsave("res/exp2/p0.pdf", plot = p0, width = W, height = H)
+ggsave("res/exp2/p1.pdf", plot = p1, width = W, height = H)
+ggsave("res/exp2/p2.pdf", plot = p2, width = W, height = H)
+
+# Runtimes
+rt <- plot_runtimes(PRES, NUM_BF, N)
+ggsave("res/exp2/times.pdf", plot = rt, width = 5.5, height = 4.3)

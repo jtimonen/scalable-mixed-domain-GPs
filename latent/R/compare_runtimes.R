@@ -41,3 +41,24 @@ compare_runtime_plot <- function(fit, fit_approx, ag_name, N) {
   plt <- plt + coord_cartesian(ylim = c(0, ymax + 10)) + ylab("runtime (s)")
   return(plt)
 }
+
+# Compare runtimes
+plot_runtimes <- function(PRES, NUM_BF, N) {
+  tims <- sapply(PRES, function(x) {
+    getElement(x, "t_means")
+  })
+  t_exact <- mean(tims["marginal", ])
+  tims <- tims[1:nrow(tims) - 1, ]
+  cc <- as.factor(rep(colnames(tims), each = nrow(tims)))
+  bb <- rep(NUM_BF, times = ncol(tims))
+  df <- data.frame(as.vector(tims), cc, bb)
+  main <- paste0("N = ", N)
+  sub <- paste0("average chain time for exact fit = ", t_exact, " s")
+  colnames(df) <- c("time", "c", "B")
+  plt <- ggplot(df, aes(x = bb, y = time, group = c, color = c)) +
+    geom_line() +
+    geom_point()
+  plt <- plt + ggtitle(main, subtitle = sub) + ylab(" average chain time (s)") +
+    xlab("number of basis functions")
+  return(plt)
+}

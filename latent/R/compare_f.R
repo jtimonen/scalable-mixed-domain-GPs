@@ -39,6 +39,7 @@ colsums_rvar <- function(x) {
 }
 # Helper function
 create_plotf_df <- function(data, fit, comp_idx) {
+  if (is.null(comp_idx)) stop("comp_idx cannot be NULL")
   if (is(fit, "lgpfit")) {
     gpred <- pred(fit)
     if (comp_idx == 0) {
@@ -104,6 +105,8 @@ plot_f_compare_with_exact <- function(data, fit, fit_approx, aname,
   fit <- as.factor(c(rep("exact", N1), rep(aname, N2)))
   df <- rbind(df, df_approx)
   df <- cbind(df, fit)
+  df$z <- paste("z =", df$z)
+  data$z <- paste("z =", data$z)
   df$id_x_fit <- paste(df$fit, df$id)
   df$z_x_fit <- paste(df$fit, df$z)
   plt <- ggplot(df, mapping = aes)
@@ -111,14 +114,14 @@ plot_f_compare_with_exact <- function(data, fit, fit_approx, aname,
   if (ribbon) {
     plt <- plt + geom_ribbon(
       aes(x = age, ymin = f_mean - 2 * f_sd, ymax = f_mean + 2 * f_sd),
-      alpha = 0.15, linetype = 3
+      alpha = 0.2, linetype = 2
     )
   }
   plt <- plt + geom_line() + theme_bw() + ylab("posterior f")
   if (plot_data) {
     plt <- plt + geom_point(
       data = data, aes(x = age, y = y), inherit.aes = FALSE,
-      pch = 4, alpha = 0.6
+      pch = 4, alpha = 0.7
     )
   }
   return(plt)
