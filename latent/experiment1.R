@@ -1,19 +1,6 @@
-# Source all R files
-for (f in dir("R")) {
-  path <- file.path("R", f)
-  source(path)
-}
-
-# Requirements
-library(lgpr)
-check_lgpr_version()
-library(rstan)
-library(ggplot2)
-library(ggpubr)
-library(posterior)
-library(cmdstanr)
-rstan_options(javascript = FALSE)
-rstan_options(auto_write = TRUE)
+# Startup
+backend <- "cmdstanr"
+startup(backend = backend)
 
 # Settings
 N <- 100
@@ -23,7 +10,7 @@ scale_bf <- 1.5
 NUM_BF <- c(3, 5, 20, 50)
 SCALE_BF <- c(1.1, 1.5, 2.5)
 do_lgpr_marginal <- TRUE
-backend <- "cmdstanr" # "rstan"
+
 
 # Simulate
 age <- seq(1, 5, length.out = N)

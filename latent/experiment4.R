@@ -1,27 +1,16 @@
-# Source all R files
+# Startup
+backend <- "cmdstanr"
 for (f in dir("R")) {
-  path <- file.path("R", f)
-  source(path)
+  source(file.path("R", f))
 }
-
-# Requirements
-library(lgpr)
-check_lgpr_version()
-library(rstan)
-library(ggplot2)
-library(ggpubr)
-library(posterior)
-library(cmdstanr)
-rstan_options(javascript = FALSE)
-rstan_options(auto_write = TRUE)
+outdir <- startup("experiment4", backend)
 
 # Settings
 N_indiv_sizes <- c(8, 12, 16, 20, 24)
 N_sizes <- rep(240, length(N_indiv_sizes))
 chains <- 4
-NUM_BF <- c(8, 16, 32)
+NUM_BF <- c(8, 16, 32, 64)
 scale_bf <- 1.5
-backend <- "cmdstanr" # "rstan"
 j <- 0
 
 PRES <- list()
@@ -76,9 +65,10 @@ names(PRES) <- paste0("N_indiv = ", N_indiv_sizes)
 
 # Runtimes plot
 rt <- plot_runtimes_wrt_N_indiv(PRES, NUM_BF, N_indiv_sizes, N, scale_bf)
-ggsave("res/exp4/times4.pdf", plot = rt, width = 5.5, height = 4.3)
+ggsave(file.path(outdir, "times4.pdf"), plot = rt, width = 5.5, height = 4.3)
 
 # Divergences
 divs <- sapply(PRES, function(x) {
   getElement(x, "num_div")
 })
+write.table(divs, file.path(outdir, "divs.txt"), row.names = T, col.names = T)

@@ -1,8 +1,5 @@
 # Source all R files
-for (f in dir("R")) {
-  path <- file.path("R", f)
-  source(path)
-}
+for (f in dir("R")) source(file.path("R", f))
 
 # Requirements
 library(lgpr)

@@ -30,6 +30,27 @@ check_lgpr_version <- function() {
   TRUE
 }
 
+# Startup for all experiments
+startup <- function(experiment_name = NULL, backend = "both") {
+  if (is.null(experiment_name)) stop("experiment_name is NULL!")
+  library(lgpr)
+  check_lgpr_version()
+  library(ggplot2)
+  library(ggpubr)
+  library(posterior)
+  if (backend %in% c("cmdstanr", "both")) {
+    library(rstan)
+    rstan::rstan_options(javascript = FALSE)
+    rstan::rstan_options(auto_write = TRUE)
+  }
+  if (backend %in% c("cmdstanr", "both")) {
+    library(cmdstanr)
+  }
+  outdir <- file.path("results", experiment_name)
+  dir.create("results")
+  dir.create(outdir)
+  return(outdir)
+}
 
 # UTILS -------------------------------------------------------------------
 
