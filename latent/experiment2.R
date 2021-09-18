@@ -1,16 +1,9 @@
-# Source all R files
-for (f in dir("R")) source(file.path("R", f))
-
-# Requirements
-library(lgpr)
-check_lgpr_version()
-library(rstan)
-library(ggplot2)
-library(ggpubr)
-library(posterior)
-library(cmdstanr)
-rstan_options(javascript = FALSE)
-rstan_options(auto_write = TRUE)
+# Startup
+backend <- "cmdstanr"
+for (f in dir("R")) {
+  source(file.path("R", f))
+}
+outdir <- startup("experiment2", backend)
 
 # Settings
 N <- 200
@@ -18,7 +11,6 @@ N_indiv <- 10
 chains <- 4
 NUM_BF <- c(2, 4, 8, 16, 32, 64)
 SCALE_BF <- c(1.2, 1.5, 2.5)
-backend <- "cmdstanr" # "rstan"
 
 # Simulate data using lgpr
 sd <- simulate_data(
@@ -121,10 +113,11 @@ p1 <- plot_final(F1_plots)
 p2 <- plot_final(F2_plots)
 W <- 10.42
 H <- 6.24
-ggsave("res/exp2/p0.pdf", plot = p0, width = W, height = H)
-ggsave("res/exp2/p1.pdf", plot = p1, width = W, height = H)
-ggsave("res/exp2/p2.pdf", plot = p2, width = W, height = H)
+
+ggsave(file.path(outdir, "p0.pdf"), plot = p0, width = W, height = H)
+ggsave(file.path(outdir, "p1.pdf"), plot = p1, width = W, height = H)
+ggsave(file.path(outdir, "p2.pdf"), plot = p2, width = W, height = H)
 
 # Runtimes
 rt <- plot_runtimes(PRES, NUM_BF, N)
-ggsave("res/exp2/times.pdf", plot = rt, width = 5.5, height = 4.3)
+ggsave(file.path(outdir, "times.pdf"), plot = rt, width = 5.5, height = 4.3)
