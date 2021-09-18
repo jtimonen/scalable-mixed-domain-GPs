@@ -58,7 +58,11 @@
     int N = num_elements(x);
     int B = cols(mat_B);
     matrix[N, B] mat_X = rep_matrix(x+L, B);
-    return 1.0/sqrt(L)*sin(0.5*pi()/L * mat_X .* mat_B);
+    matrix[N, B] PHI = 1.0/sqrt(L)*sin(0.5*pi()/L * mat_X .* mat_B);
+    for (b in 1:B) {
+      PHI[,b] = PHI[,b] - mean(PHI[,b]);
+    }
+    return(PHI);
   }
   
   // Compute spectral density of EQ kernel

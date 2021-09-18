@@ -47,8 +47,8 @@ startup <- function(experiment_name = NULL, backend = "both") {
     library(cmdstanr)
   }
   outdir <- file.path("results", experiment_name)
-  dir.create("results")
-  dir.create(outdir)
+  if (!dir.exists("results")) dir.create("results")
+  if (!dir.exists(outdir)) dir.create(outdir)
   return(outdir)
 }
 
