@@ -222,7 +222,7 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
 }
 
 # Sample approximate model
-sample_approx <- function(model, num_bf, scale_bf, backend = "rstan", ...) {
+sample_approx <- function(model, num_bf, scale_bf, backend, ...) {
   MODEL_FILE <- "stan/lgp_latent_approx.stan"
   decs <- categorical_kernel_decompositions(model)
   si_add <- additional_stan_input(model, num_bf, scale_bf, decs$decompositions)
