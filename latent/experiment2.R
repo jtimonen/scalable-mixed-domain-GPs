@@ -94,10 +94,10 @@ names(F2_plots) <- conf_names
 names(PRES) <- conf_names
 
 # Final plots
-plot_final <- function(F_plots) {
-  pf1 <- ggarrange(plotlist = F_plots[[1]][1:3], nrow = 1)
-  pf2 <- ggarrange(plotlist = F_plots[[2]][1:3], nrow = 1)
-  pf3 <- ggarrange(plotlist = F_plots[[3]][1:3], nrow = 1)
+plot_final <- function(F_plots, inds) {
+  pf1 <- ggarrange(plotlist = F_plots[[1]][inds], nrow = 1)
+  pf2 <- ggarrange(plotlist = F_plots[[2]][inds], nrow = 1)
+  pf3 <- ggarrange(plotlist = F_plots[[3]][inds], nrow = 1)
   ggarrange(pf1, pf2, pf3,
     ncol = 1, labels = conf_names,
     label.x = -0.03, label.y = 1.00
@@ -108,15 +108,25 @@ plot_final <- function(F_plots) {
 plot_k <- ggarrange(plotlist = K_plots, nrow = 1, labels = conf_names)
 
 # Final plots
-p0 <- plot_final(F0_plots)
-p1 <- plot_final(F1_plots)
-p2 <- plot_final(F2_plots)
+p0a <- plot_final(F0_plots, 1:3)
+p1a <- plot_final(F1_plots, 1:3)
+p2a <- plot_final(F2_plots, 1:3)
+p0b <- plot_final(F0_plots, 4:6)
+p1b <- plot_final(F1_plots, 4:6)
+p2b <- plot_final(F2_plots, 4:6)
 W <- 10.42
 H <- 6.24
 
-ggsave(file.path(outdir, "p0.pdf"), plot = p0, width = W, height = H)
-ggsave(file.path(outdir, "p1.pdf"), plot = p1, width = W, height = H)
-ggsave(file.path(outdir, "p2.pdf"), plot = p2, width = W, height = H)
+saveplot <- function(x) {
+  fn <- paste0(deparse(substitute(x)), ".pdf")
+  ggsave(file.path(outdir, fn), plot = x, width = W, height = H)
+}
+saveplot(p0a)
+saveplot(p1a)
+saveplot(p2a)
+saveplot(p0b)
+saveplot(p1b)
+saveplot(p2b)
 
 # Runtimes
 rt <- plot_runtimes(PRES, NUM_BF, N)
