@@ -50,9 +50,10 @@ approx <- sample_approx(model, num_bf, scale_bf, backend,
 )
 
 # Collect all fits
-fits <- list(approx$fit, exact)
-names(fits) <- c("approx", "exact")
-stan_dats <- approx$stan_data
+fits <- c(list(approx$fit), exact)
+stan_dats <- list(approx$stan_data, model@stan_input)
+names(fits) <- c("approx", "marginal")
+names(stan_dats) <- c("approx", "marginal")
 
 # Results
 PRES <- summarize_results(fits)
@@ -70,10 +71,10 @@ plt2 <- plot_f_compare_separate(dat, fits,
   last_is_exact = TRUE,
   aes = aes2, comp_idx = 2
 )
-F0_plots[[j]] <- lapply(plt0, function(x) {
+F0_plots <- lapply(plt0, function(x) {
   x + facet_wrap(. ~ z)
 })
-F1_plots[[j]] <- plt1
-F2_plots[[j]] <- lapply(plt2, function(x) {
+F1_plots <- plt1
+F2_plots <- lapply(plt2, function(x) {
   x + facet_wrap(. ~ z)
 })

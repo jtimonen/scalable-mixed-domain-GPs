@@ -36,9 +36,9 @@ compare_kernels_eq <- function(pars, stan_dats, idx_x = 1, exact_name) {
 }
 
 # Compare approximate and exact EQ covariance functions
-plot_kernelcomparison_eq <- function(pars, stan_data, idx_x = 1,
+plot_kernelcomparison_eq <- function(pars, stan_dats, idx_x = 1,
                                      exact_name = "marginal") {
-  df <- compare_kernels_eq(pars, stan_data, idx_x, exact_name)
+  df <- compare_kernels_eq(pars, stan_dats, idx_x, exact_name)
   plt <- ggplot(df, aes(x = r, y = k, group = model, color = model)) +
     geom_line()
   plt <- plt +

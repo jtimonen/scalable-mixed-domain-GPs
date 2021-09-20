@@ -59,9 +59,9 @@
     int B = cols(mat_B);
     matrix[N, B] mat_X = rep_matrix(x+L, B);
     matrix[N, B] PHI = 1.0/sqrt(L)*sin(0.5*pi()/L * mat_X .* mat_B);
-    for (b in 1:B) {
-      PHI[,b] = PHI[,b] - mean(PHI[,b]);
-    }
+    //for (b in 1:B) {
+    //  PHI[,b] = PHI[,b] - mean(PHI[,b]);
+    //}
     return(PHI);
   }
   
