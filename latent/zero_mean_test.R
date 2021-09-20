@@ -25,8 +25,8 @@ mat_B <- matrix(rep(seq_len(B), times = N), N, B, byrow = TRUE)
 PHI <- STAN_basisfun_eq(x, mat_B, L)
 LAM <- diag(exp(-1 + rnorm(B)))
 PHI_zm <- PHI
-for(b in 1:B) {
-  PHI_zm[,b] <- PHI_zm[,b] - mean(PHI_zm[,b])
+for (b in 1:B) {
+  PHI_zm[, b] <- PHI_zm[, b] - mean(PHI_zm[, b])
 }
 K <- PHI %*% LAM %*% t(PHI)
 K_zm <- PHI_zm %*% LAM %*% t(PHI_zm)
