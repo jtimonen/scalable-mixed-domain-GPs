@@ -1,22 +1,12 @@
-# Source all R files
+# Startup
+backend <- "cmdstanr"
 for (f in dir("R")) {
-  path <- file.path("R", f)
-  source(path)
+  source(file.path("R", f))
 }
-
-# Requirements
-library(lgpr)
-check_lgpr_version()
-library(rstan)
-library(ggplot2)
-library(ggpubr)
-library(posterior)
-library(cmdstanr)
-rstan_options(javascript = FALSE)
-rstan_options(auto_write = TRUE)
+outdir <- startup("experiment3", backend)
 
 # Settings
-N_sizes <- c(60, 80, 120, 160, 400, 1000, 2000)
+N_sizes <- c(60, 80, 120, 160, 400) #, 1000, 2000)
 chains <- 4
 NUM_BF <- c(8, 16, 32)
 scale_bf <- 1.5
@@ -58,7 +48,6 @@ for (N in N_sizes) {
     )
   }
 
-
   # Sample approximate models
   approx <- sample_approx_alter_num_bf(model, NUM_BF, scale_bf,
     backend = backend, refresh = 1000, adapt_delta = 0.95
@@ -77,3 +66,7 @@ names(PRES) <- conf_names
 # Runtimes plot
 rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
 ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
+
+
+fit <- fits[[4]]
+lpd <- compute_lpd(fit, df_star = dat)
