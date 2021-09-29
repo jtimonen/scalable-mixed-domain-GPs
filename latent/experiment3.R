@@ -18,9 +18,8 @@ conf_names <- c()
 for (N in N_sizes) {
   conf_names[j] <- paste0("N = ", N)
   j <- j + 1
+  N <- N + 10
   N_indiv <- N / 10
-
-  N <- 2 * N
   # Simulate data using lgpr
   sd <- simulate_data(
     N = N_indiv, t_data = seq(1, 5, length.out = N / N_indiv),
@@ -33,7 +32,7 @@ for (N in N_sizes) {
   dat$y <- normalize_var(dat$y)
 
   # Split to train and test data
-  split <- lgpr:::split_random(dat, p_test = 0.5)
+  split <- lgpr:::split_random(dat, p_test = 10 / N)
   train_dat <- split$train
   test_dat <- split$test
   N_train <- nrow(train_dat)
@@ -68,11 +67,11 @@ for (N in N_sizes) {
   PRES[[j]] <- summarize_results(fits)
 }
 
-names(PRES) <- conf_names
+# names(PRES) <- conf_names
 
 # Runtimes plot
-rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
-ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
+# rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
+# ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
 
 
 fit <- fits[[4]]
@@ -80,6 +79,4 @@ lpd <- compute_lpd(fit, df_star = test_dat)
 
 fa <- fits[[1]]
 fp <- posterior_f_approx(model, fa, test_dat, NUM_BF[1], scale_bf)
-
-#  TODO write loop in Stan/C++
-
+# fp is a list (length S) of lists (length J) of vectors (length P)

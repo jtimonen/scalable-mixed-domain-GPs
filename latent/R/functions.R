@@ -59,7 +59,17 @@ matrix_to_list <- function(x) {
   m <- dim(x)[1]
   L <- list()
   for (i in seq_len(m)) {
-    L[[i]] <- x[i, ]
+    L[[i]] <- as.numeric(x[i, ])
+  }
+  return(L)
+}
+
+# Matrix rows to a list of lists
+matrix_to_list_of_lists <- function(x) {
+  m <- dim(x)[1]
+  L <- list()
+  for (i in seq_len(m)) {
+    L[[i]] <- as.list(x[i, ])
   }
   return(L)
 }

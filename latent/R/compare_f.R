@@ -13,6 +13,21 @@ build_f_latent <- function(stan_data, tdata, alpha, ell, xi) {
   )
 }
 
+# Wraps STAN_pred_approx
+pred_approx <- function(stan_data, tdata, ALPHA, ELL, XI, refresh) {
+  expose_stanfuns()
+  N <- stan_data$num_obs
+  seq_M <- STAN_seq_len(stan_data$num_bf)
+  scale_bf <- stan_data$scale_bf
+  num_xi <- as.array(stan_data$num_xi)
+  comps <- matrix_to_list(stan_data$components)
+  C_ranks <- as.array(stan_data$C_ranks)
+  STAN_pred_approx(
+    comps, num_xi, C_ranks, seq_M, tdata$L, tdata$PSI, ALPHA, ELL, XI,
+    refresh
+  )
+}
+
 # Draw xi and build latent
 draw_f_latent <- function(stan_data, tdata, alpha = NULL, ell = NULL) {
   if (is.null(alpha)) {

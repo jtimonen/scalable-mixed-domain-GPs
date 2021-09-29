@@ -24,7 +24,8 @@ gaussian_lpd <- function(pred, y_star) {
 }
 
 # posterior_f but with approximate model fit
-posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf) {
+posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf,
+                               refresh = NULL) {
   xi <- posterior::merge_chains(fit$draws("xi"))
   alpha <- posterior::merge_chains(fit$draws("alpha"))
   ell <- posterior::merge_chains(fit$draws("ell"))
@@ -43,15 +44,14 @@ posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf) {
   si <- c(pred_model@stan_input, si_add)
   F_PRED <- array(0.0, dim = c(S, J, P))
   tdata <- do_transformed_data(si)
-  for (s in 1:S) {
-    if (s %% 10 == 0) {
-      cat("s =", s, " / ", S, "\n")
-    }
-    as <- alpha[s, 1, , drop = T]
-    es <- ell[s, 1, , drop = T]
-    xis <- xi[s, 1, , drop = T]
-    f_comps <- build_f_latent(si, tdata, as, es, xis)
-    F_PRED[s, , ] <- lgpr:::list_to_matrix(f_comps, P)
+  as <- alpha[, 1, , drop = T]
+  es <- ell[, 1, , drop = T]
+  xis <- xi[, 1, , drop = T]
+  as <- matrix_to_list(as)
+  es <- matrix_to_list(es)
+  xis <- matrix_to_list(xis)
+  if (is.null(refresh)) {
+    refresh <- round(S / 10)
   }
-  return(F_PRED)
+  pred_approx(si, tdata, as, es, xis, refresh)
 }
