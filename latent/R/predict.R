@@ -1,29 +1,4 @@
-# Compute log predictive density
-compute_lpd <- function(fit, df_star) {
-  stopifnot(is(fit, "lgpfit"))
-  p <- lgpr::pred(fit, x = df_star, reduce = NULL)
-  y_name <- fit@model@var_names$y
-  y_star <- df_star[[y_name]]
-  gaussian_lpd(p, y_star)
-}
-
-# Gaussian log predictive density
-gaussian_lpd <- function(pred, y_star) {
-  stopifnot(is(pred, "GaussianPrediction"))
-  P <- lgpr::num_evalpoints(pred)
-  S <- lgpr::num_paramsets(pred)
-  y_means <- pred@y_mean
-  y_stds <- pred@y_std
-  log_pds <- array(0.0, dim = dim(y_means))
-  for (s in seq_len(S)) {
-    mu <- y_means[s, ]
-    sig <- y_stds[s, ]
-    log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
-  }
-  return(rowMeans(log_pds))
-}
-
-# posterior_f but with approximate model fit
+# Like  lgpr:::posterior_f but with approximate model fit
 posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf,
                                refresh = NULL) {
   xi <- posterior::merge_chains(fit$draws("xi"))
@@ -56,9 +31,41 @@ posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf,
   build_f_draws(si, tdata, as, es, xis, refresh)
 }
 
+# Extract draws of one component
+get_approx_component <- function(fp, j) {
+  S <- length(fp)
+  P <- length(fp[[1]][[1]])
+  fc <- matrix(0.0, S, P)
+  for (s in seq_len(S)) {
+    fc[s, ] <- fp[[s]][[j]]
+  }
+  return(fc)
+}
+
 # Predict with approximate model
 pred_approx <- function(model, fit, df_star, num_bf, scale_bf,
-                        refresh = NULL) {
+                        refresh = NULL, c_hat_pred = NULL) {
   fp <- posterior_f_approx(model, fit, df_star, num_bf, scale_bf, refresh)
-  return(fp)
+  S <- length(fp)
+  J <- length(fp[[1]])
+  P <- length(fp[[1]][[1]])
+  f_comp <- list()
+  f_sum <- matrix(0.0, S, P)
+  for (j in seq_len(J)) {
+    fj <- get_approx_component(fp, j)
+    f_comp[[j]] <- fj
+    f_sum <- f_sum + fj
+  }
+  names(f_comp) <- component_names(model)
+  c_hat_pred <- lgpr:::set_c_hat_pred(model, f_sum, c_hat_pred, TRUE)
+  h <- lgpr:::map_f_to_h(model, f_sum, c_hat_pred, reduce = NULL)
+
+  # Return
+  new("Prediction",
+    f_comp = f_comp,
+    f = f_sum,
+    h = h,
+    x = df_star,
+    extrapolated = FALSE
+  )
 }

@@ -18,7 +18,8 @@ conf_names <- c()
 for (N in N_sizes) {
   conf_names[j] <- paste0("N = ", N)
   j <- j + 1
-  N <- 2 * N
+  N_test <- 20
+  N <- N + N_test
   N_indiv <- N / 10
   # Simulate data using lgpr
   sd <- simulate_data(
@@ -32,7 +33,7 @@ for (N in N_sizes) {
   dat$y <- normalize_var(dat$y)
 
   # Split to train and test data
-  split <- lgpr:::split_random(dat, p_test = 10 / N)
+  split <- lgpr:::split_random(dat, p_test = N_test / N)
   train_dat <- split$train
   test_dat <- split$test
   N_train <- nrow(train_dat)
@@ -73,10 +74,15 @@ for (N in N_sizes) {
 # rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
 # ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
 
-
-fit <- fits[[4]]
-lpd <- compute_lpd(fit, df_star = test_dat)
-
-fa <- fits[[1]]
-fp <- pred_approx(model, fa, test_dat, NUM_BF[1], scale_bf)
-# fp is a list (length S) of lists (length J) of vectors (length P)
+# Compute test elpd
+num_fits <- length(fits)
+ELPD <- rep(0.0, num_fits)
+for (j in 1:num_fits) {
+  fit <- fits[[j]]
+  if (isa(fit, "lgpfit")) {
+    num_bf <- NULL
+  } else {
+    num_bf <- NUM_BF[j]
+  }
+  ELPD[j] <- compute_elpd(model, fit, test_dat, num_bf, scale_bf)
+}
