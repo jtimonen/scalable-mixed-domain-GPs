@@ -18,7 +18,7 @@ conf_names <- c()
 for (N in N_sizes) {
   conf_names[j] <- paste0("N = ", N)
   j <- j + 1
-  N <- N + 10
+  N <- 2 * N
   N_indiv <- N / 10
   # Simulate data using lgpr
   sd <- simulate_data(
@@ -78,5 +78,5 @@ fit <- fits[[4]]
 lpd <- compute_lpd(fit, df_star = test_dat)
 
 fa <- fits[[1]]
-fp <- posterior_f_approx(model, fa, test_dat, NUM_BF[1], scale_bf)
+fp <- pred_approx(model, fa, test_dat, NUM_BF[1], scale_bf)
 # fp is a list (length S) of lists (length J) of vectors (length P)

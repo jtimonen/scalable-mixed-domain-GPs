@@ -158,7 +158,7 @@
   }
   
   // Build the components of the latent signal f
-  vector[] STAN_build_f_latent(data int[,] components, 
+  vector[] STAN_build_f(data int[,] components, 
       data int[] num_xi, data int[] C_ranks, data vector seq_B, 
       data vector L, data matrix PSI, real[] alpha, real[] ell, vector xi)
   {
@@ -187,7 +187,7 @@
   
   // Build the components of the latent signal f, using several
   // parameter values
-  vector[,] STAN_pred_approx(data int[,] components, 
+  vector[,] STAN_build_f_draws(data int[,] components, 
       data int[] num_xi, data int[] C_ranks, data vector seq_B, 
       data vector L, data matrix PSI, 
       vector[] alpha, vector[] ell, vector[] xi, int refresh) 
@@ -200,7 +200,7 @@
       if(s%refresh==0 || s==1 || s==S) {
         print("s = ", s, "/", S);
       }
-      F_PRED[s] = STAN_build_f_latent(components, num_xi, C_ranks, seq_B, L, PSI, 
+      F_PRED[s] = STAN_build_f(components, num_xi, C_ranks, seq_B, L, PSI, 
         to_array_1d(alpha[s]), to_array_1d(ell[s]), xi[s]);
     }
     return(F_PRED);

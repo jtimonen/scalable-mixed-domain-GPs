@@ -53,5 +53,12 @@ posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf,
   if (is.null(refresh)) {
     refresh <- round(S / 10)
   }
-  pred_approx(si, tdata, as, es, xis, refresh)
+  build_f_draws(si, tdata, as, es, xis, refresh)
+}
+
+# Predict with approximate model
+pred_approx <- function(model, fit, df_star, num_bf, scale_bf,
+                        refresh = NULL) {
+  fp <- posterior_f_approx(model, fit, df_star, num_bf, scale_bf, refresh)
+  return(fp)
 }
