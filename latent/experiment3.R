@@ -18,9 +18,9 @@ conf_names <- c()
 for (N in N_sizes) {
   conf_names[j] <- paste0("N = ", N)
   j <- j + 1
-  N_test <- 20
-  N <- N + N_test
+  N_test <- N
   N_indiv <- N / 10
+  N <- N + N_test
   # Simulate data using lgpr
   sd <- simulate_data(
     N = N_indiv, t_data = seq(1, 5, length.out = N / N_indiv),
@@ -77,6 +77,7 @@ for (N in N_sizes) {
 # Compute test elpd
 num_fits <- length(fits)
 ELPD <- rep(0.0, num_fits)
+PRED <- list()
 for (j in 1:num_fits) {
   fit <- fits[[j]]
   if (isa(fit, "lgpfit")) {
@@ -84,5 +85,41 @@ for (j in 1:num_fits) {
   } else {
     num_bf <- NUM_BF[j]
   }
-  ELPD[j] <- compute_elpd(model, fit, test_dat, num_bf, scale_bf)
+  elp <- compute_elpd(model, fit, test_dat, num_bf, scale_bf)
+  ELPD[j] <- mean(elp$lpd)
+  PRED[[j]] <- elp$pred
 }
+names(ELPD) <- names(fits)
+names(PRED) <- names(fits)
+
+# Function for plotting
+plot_pred_test <- function(train_dat, test_dat, PRED, cols) {
+  N1 <- nrow(train_dat)
+  N2 <- nrow(test_dat)
+  dat <- rbind(train_dat, test_dat)
+  dtype <- as.factor(c(rep("train", N1), rep("test", N2)))
+  dat$dtype <- dtype
+  plt <- ggplot2::ggplot(dat, aes(x = age, y = y, group = id, color = dtype))
+  plt <- plt + geom_point() + facet_wrap(. ~ id)
+  j <- 0
+  for (p in PRED) {
+    j <- j + 1
+    if (isa(p, "Prediction")) {
+      h <- colMeans(p@h)
+      pdat <- cbind(p@x, h)
+    } else {
+      h <- colMeans(p@y_mean)
+      pdat <- cbind(p@x, h)
+    }
+    plt <- plt + geom_line(
+      data = pdat, aes(x = age, y = h, group = id),
+      inherit.aes = FALSE, color = cols[j]
+    )
+  }
+  return(plt)
+}
+
+plot_pred_test(
+  train_dat, test_dat, PRED,
+  c("orange", "blue", "purple", "black")
+)

@@ -47,9 +47,12 @@ compute_elpd <- function(model, fit, df_star, num_bf = NULL, scale_bf = NULL) {
     p <- lgpr::pred(fit, x = df_star, reduce = NULL)
     lpd <- compute_lpd.marginal(p, y_star)
   } else {
-    p_approx <- pred_approx(model, fit, df_star, num_bf, scale_bf)
+    p <- pred_approx(model, fit, df_star, num_bf, scale_bf)
     s_draws <- as.vector(posterior::merge_chains(fit$draws("sigma")))
-    lpd <- compute_lpd.sampled_gaussian(p_approx, y_star, s_draws)
+    lpd <- compute_lpd.sampled_gaussian(p, y_star, s_draws)
   }
-  return(mean(lpd))
+  list(
+    pred = p,
+    lpd = lpd
+  )
 }
