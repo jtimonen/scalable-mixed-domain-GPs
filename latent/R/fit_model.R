@@ -22,7 +22,6 @@ sample_approx <- function(exact_model, confs, backend, ...) {
     si_add <- approx_model@add_stan_input
     stan_data <- c(exact_model@stan_input, si_add)
     fit <- run_sampling(approx_model@stan_file, stan_data, backend, ...)
-    print(class(fit))
     fits[[j]] <- new("ApproxModelFit",
       model = approx_model,
       fit = list(fit),

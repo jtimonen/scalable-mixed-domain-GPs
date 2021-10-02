@@ -1,21 +1,19 @@
 # Like  lgpr:::posterior_f but with approximate model fit
-posterior_f_approx <- function(model, fit, df_star, num_bf, scale_bf,
-                               refresh = NULL) {
+posterior_f_approx <- function(fit, x_star, refresh = NULL) {
+  amodel <- fit@model
+  emodel <- amodel@exact_model
+  fit <- fit@fit[[1]]
   xi <- posterior::merge_chains(fit$draws("xi"))
   alpha <- posterior::merge_chains(fit$draws("alpha"))
   ell <- posterior::merge_chains(fit$draws("ell"))
   S <- dim(alpha)[1]
-  P <- nrow(df_star)
-  J <- length(component_names(model))
+  P <- nrow(x_star)
+  J <- length(component_names(emodel))
   pred_model <- lgpr::create_model(
-    formula = formula(model@model_formula@call),
-    data = df_star, prior = model@full_prior
+    formula = formula(emodel@model_formula@call),
+    data = x_star, prior = emodel@full_prior
   )
-  decs <- categorical_kernel_decompositions(pred_model)
-  si_add <- additional_stan_input(
-    pred_model, num_bf, scale_bf,
-    decs$decompositions
-  )
+  si_add <- amodel@add_stan_input
   si <- c(pred_model@stan_input, si_add)
   F_PRED <- array(0.0, dim = c(S, J, P))
   tdata <- do_transformed_data(si)
@@ -43,9 +41,9 @@ get_approx_component <- function(fp, j) {
 }
 
 # Predict with approximate model
-pred_approx <- function(model, fit, df_star, num_bf, scale_bf,
-                        refresh = NULL, c_hat_pred = NULL) {
-  fp <- posterior_f_approx(model, fit, df_star, num_bf, scale_bf, refresh)
+pred_approx <- function(fit, x_star, refresh = NULL, c_hat_pred = NULL) {
+  fp <- posterior_f_approx(fit, x_star, refresh)
+  emodel <- fit@model@exact_model
   S <- length(fp)
   J <- length(fp[[1]])
   P <- length(fp[[1]][[1]])
@@ -56,34 +54,34 @@ pred_approx <- function(model, fit, df_star, num_bf, scale_bf,
     f_comp[[j]] <- fj
     f_sum <- f_sum + fj
   }
-  names(f_comp) <- component_names(model)
-  c_hat_pred <- lgpr:::set_c_hat_pred(model, f_sum, c_hat_pred, TRUE)
-  h <- lgpr:::map_f_to_h(model, f_sum, c_hat_pred, reduce = NULL)
+  names(f_comp) <- component_names(emodel)
+  c_hat_pred <- lgpr:::set_c_hat_pred(emodel, f_sum, c_hat_pred, TRUE)
+  h <- lgpr:::map_f_to_h(emodel, f_sum, c_hat_pred, reduce = NULL)
 
   # Return
   new("Prediction",
     f_comp = f_comp,
     f = f_sum,
     h = h,
-    x = df_star,
+    x = x_star,
     extrapolated = FALSE
   )
 }
 
 
 # Compute predictions using several fitted models
-compute_predictions <- function(model, fits, x_star,
-                                num_bf = NULL, scale_bf = NULL) {
-  PRED <- list()
+compute_predictions <- function(fits, x_star) {
+  preds <- list()
   j <- 0
   for (f in fits) {
+    j <- j + 1
     if (isa(f, "lgpfit")) {
       p <- lgpr::pred(f, x = x_star, reduce = NULL)
     } else {
-      p <- pred_approx(model, f, x_star, num_bf, scale_bf)
+      p <- pred_approx(f, x_star)
     }
-    PRED[[j]] <- p
+    preds[[j]] <- p
   }
-  names(PRED) <- names(fits)
-  return(PRED)
+  names(preds) <- names(fits)
+  return(preds)
 }

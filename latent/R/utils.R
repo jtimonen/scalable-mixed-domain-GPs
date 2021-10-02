@@ -149,8 +149,9 @@ do_transformed_data <- function(stan_data) {
 # Helper functions
 get_times <- function(x) {
   if (is(x, "lgpfit")) x <- x@stan_fit
-  if (is(x, "CmdStanMCMC")) {
-    tims <- x$time()$chains$total
+  if (is(x, "ApproxModelFit")) {
+    fit <- x@fit[[1]]
+    tims <- fit$time()$chains$total
   } else {
     tims <- rowSums(get_elapsed_time(x))
   }
@@ -160,19 +161,22 @@ t_mean <- function(x) mean(get_times(x))
 t_sd <- function(x) stats::sd(get_times(x))
 get_ndiv <- function(x) {
   if (is(x, "lgpfit")) x <- x@stan_fit
-  if (is(x, "CmdStanMCMC")) {
-    ndiv <- sum(x$sampler_diagnostics()[, , "divergent__"])
+  if (is(x, "ApproxModelFit")) {
+    fit <- x@fit[[1]]
+    ndiv <- sum(fit$sampler_diagnostics()[, , "divergent__"])
   } else {
     ndiv <- sum(rstan::get_divergent_iterations(x))
   }
   return(ndiv)
 }
 
+# Get param draws
 get_pars <- function(x) {
   pars <- c("alpha", "ell", "sigma")
   if (is(x, "lgpfit")) x <- x@stan_fit
-  if (is(x, "CmdStanMCMC")) {
-    d <- x$draws(pars)
+  if (is(x, "ApproxModelFit")) {
+    fit <- x@fit[[1]]
+    d <- fit$draws(pars)
   } else {
     d <- posterior::subset_draws(posterior::as_draws(x), pars)
   }

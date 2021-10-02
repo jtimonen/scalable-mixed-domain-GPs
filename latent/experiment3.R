@@ -55,51 +55,34 @@ if (N_train <= 200) {
   )
 }
 
-results <- list()
-j <- 0
-
 # Fit approximate models
-approx <- sample_approx(exact_model, confs,
+approx_fits <- sample_approx(exact_model, confs,
   backend = backend, refresh = 1000,
   adapt_delta = 0.95
 )
-
-for (su in setups) {
-  j <- j + 1
-
-  # Collect all fits
-  fits <- c(approx$fits, exact)
-  stan_dats <- approx$stan_dats
-
-  # Results
-  PRES[[j]] <- summarize_results(fits)
-}
-
-# names(PRES) <- conf_names
+fits <- c(approx_fits, exact)
+results <- summarize_results(fits)
+preds <- compute_predictions(fits, test_dat)
+y_star <- test_dat[["y"]]
 
 # Runtimes plot
 # rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
 # ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
 
-# Compute test elpd
-num_fits <- length(fits)
-ELPD <- rep(0.0, num_fits)
-PRED <- list()
-for (j in 1:num_fits) {
-  fit <- fits[[j]]
-  if (isa(fit, "lgpfit")) {
-    num_bf <- NULL
-  } else {
-    num_bf <- NUM_BF[j]
-  }
-  elp <- compute_elpd(model, fit, test_dat, num_bf, scale_bf)
-  ELPD[j] <- mean(elp$lpd)
-  PRED[[j]] <- elp$pred
-}
-names(ELPD) <- names(fits)
-names(PRED) <- names(fits)
 
-x_test <- lgpr::new_x(train_dat, seq(0, 10, 0.2))
+
+# Compute test elpds
+num_fits <- length(fits)
+elpds <- rep(0.0, num_fits)
+for (j in 1:num_fits) {
+  elpds[j] <- compute_elpd(fits[[j]], preds[[j]], y_star)
+}
+
+print(elpds)
+
+dat_dense <- lgpr::new_x(train_dat, seq(0, 8, 0.2))
+dat_dense$y <- rnorm(nrow(dat_dense))
+preds_dense <- compute_predictions(fits, dat_dense)
 
 # Function for plotting
 plot_pred_test <- function(train_dat, test_dat, PRED, cols) {
@@ -130,5 +113,33 @@ plot_pred_test <- function(train_dat, test_dat, PRED, cols) {
 
 plot_pred_test(
   train_dat, test_dat, PRED,
+  c("orange", "blue", "purple", "black")
+)
+
+
+# Function for plotting
+plot_pred_smooth <- function(test_dat, preds, cols) {
+  plt <- ggplot2::ggplot(test_dat, aes(x = age, y = y, group = id))
+  plt <- plt + geom_point() + facet_wrap(. ~ id)
+  j <- 0
+  for (p in preds) {
+    j <- j + 1
+    if (isa(p, "Prediction")) {
+      h <- colMeans(p@h)
+      pdat <- cbind(p@x, h)
+    } else {
+      h <- colMeans(p@y_mean)
+      pdat <- cbind(p@x, h)
+    }
+    plt <- plt + geom_line(
+      data = pdat, aes(x = age, y = h, group = id),
+      inherit.aes = FALSE, color = cols[j]
+    )
+  }
+  return(plt)
+}
+
+plot_pred_smooth(
+  dat_dense, preds_dense,
   c("orange", "blue", "purple", "black")
 )

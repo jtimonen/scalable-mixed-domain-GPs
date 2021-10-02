@@ -1,12 +1,3 @@
-# Compute log predictive density
-compute_lpd <- function(fit, df_star) {
-  stopifnot(is(fit, "lgpfit"))
-  p <- lgpr::pred(fit, x = df_star, reduce = NULL)
-  y_name <- fit@model@var_names$y
-  y_star <- df_star[[y_name]]
-  gaussian_lpd(p, y_star)
-}
-
 # Log predictive density (f marginalized)
 compute_lpd.marginal <- function(pred, y_star) {
   stopifnot(is(pred, "GaussianPrediction"))
@@ -40,19 +31,13 @@ compute_lpd.sampled_gaussian <- function(pred, y_star, s_draws) {
 
 
 # Compute expected log predictive density
-compute_elpd <- function(model, fit, df_star, num_bf = NULL, scale_bf = NULL) {
-  y_name <- lgpr:::get_y_name(model)
-  y_star <- df_star[[y_name]]
+compute_elpd <- function(fit, pred, y_star) {
   if (isa(fit, "lgpfit")) {
-    p <- lgpr::pred(fit, x = df_star, reduce = NULL)
-    lpd <- compute_lpd.marginal(p, y_star)
+    lpd <- compute_lpd.marginal(pred, y_star)
   } else {
-    p <- pred_approx(model, fit, df_star, num_bf, scale_bf)
-    s_draws <- as.vector(posterior::merge_chains(fit$draws("sigma")))
-    lpd <- compute_lpd.sampled_gaussian(p, y_star, s_draws)
+    fd <- fit@fit[[1]]
+    s_draws <- as.vector(posterior::merge_chains(fd$draws("sigma")))
+    lpd <- compute_lpd.sampled_gaussian(pred, y_star, s_draws)
   }
-  list(
-    pred = p,
-    lpd = lpd
-  )
+  mean(lpd)
 }
