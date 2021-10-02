@@ -69,3 +69,21 @@ pred_approx <- function(model, fit, df_star, num_bf, scale_bf,
     extrapolated = FALSE
   )
 }
+
+
+# Compute predictions using several fitted models
+compute_predictions <- function(model, fits, x_star,
+                                num_bf = NULL, scale_bf = NULL) {
+  PRED <- list()
+  j <- 0
+  for (f in fits) {
+    if (isa(f, "lgpfit")) {
+      p <- lgpr::pred(f, x = x_star, reduce = NULL)
+    } else {
+      p <- pred_approx(model, f, x_star, num_bf, scale_bf)
+    }
+    PRED[[j]] <- p
+  }
+  names(PRED) <- names(fits)
+  return(PRED)
+}
