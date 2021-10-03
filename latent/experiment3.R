@@ -8,7 +8,7 @@ outdir <- startup("experiment3", backend)
 # Settings
 confs <- list()
 j <- 0
-for (num_bf in c(8, 16, 32)) {
+for (num_bf in c(4, 12, 32)) {
   j <- j + 1
   confs[[j]] <- create_configuration(num_bf, 1.5)
 }
@@ -80,66 +80,7 @@ for (j in 1:num_fits) {
 
 print(elpds)
 
-dat_dense <- lgpr::new_x(train_dat, seq(0, 8, 0.2))
-dat_dense$y <- rnorm(nrow(dat_dense))
-preds_dense <- compute_predictions(fits, dat_dense)
-
-# Function for plotting
-plot_pred_test <- function(train_dat, test_dat, PRED, cols) {
-  N1 <- nrow(train_dat)
-  N2 <- nrow(test_dat)
-  dat <- rbind(train_dat, test_dat)
-  dtype <- as.factor(c(rep("train", N1), rep("test", N2)))
-  dat$dtype <- dtype
-  plt <- ggplot2::ggplot(dat, aes(x = age, y = y, group = id, color = dtype))
-  plt <- plt + geom_point() + facet_wrap(. ~ id)
-  j <- 0
-  for (p in PRED) {
-    j <- j + 1
-    if (isa(p, "Prediction")) {
-      h <- colMeans(p@h)
-      pdat <- cbind(p@x, h)
-    } else {
-      h <- colMeans(p@y_mean)
-      pdat <- cbind(p@x, h)
-    }
-    plt <- plt + geom_line(
-      data = pdat, aes(x = age, y = h, group = id),
-      inherit.aes = FALSE, color = cols[j]
-    )
-  }
-  return(plt)
-}
-
-plot_pred_test(
-  train_dat, test_dat, PRED,
-  c("orange", "blue", "purple", "black")
-)
-
-
-# Function for plotting
-plot_pred_smooth <- function(test_dat, preds, cols) {
-  plt <- ggplot2::ggplot(test_dat, aes(x = age, y = y, group = id))
-  plt <- plt + geom_point() + facet_wrap(. ~ id)
-  j <- 0
-  for (p in preds) {
-    j <- j + 1
-    if (isa(p, "Prediction")) {
-      h <- colMeans(p@h)
-      pdat <- cbind(p@x, h)
-    } else {
-      h <- colMeans(p@y_mean)
-      pdat <- cbind(p@x, h)
-    }
-    plt <- plt + geom_line(
-      data = pdat, aes(x = age, y = h, group = id),
-      inherit.aes = FALSE, color = cols[j]
-    )
-  }
-  return(plt)
-}
-
-plot_pred_smooth(
-  dat_dense, preds_dense,
-  c("orange", "blue", "purple", "black")
-)
+# Plot denser predictions
+x_dense <- lgpr::new_x(train_dat, seq(-2, 8, 0.2))
+preds_dense <- compute_predictions(fits, x_dense)
+plot_preds(train_dat, test_dat, preds_dense)

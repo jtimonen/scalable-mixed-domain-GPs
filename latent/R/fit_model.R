@@ -15,6 +15,7 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
 sample_approx <- function(exact_model, confs, backend, ...) {
   fits <- list()
   J <- length(confs)
+  nams <- c()
   for (j in 1:J) {
     cf <- confs[[j]]
     stopifnot(isa(cf, "ExperimentConfiguration"))
@@ -27,7 +28,9 @@ sample_approx <- function(exact_model, confs, backend, ...) {
       fit = list(fit),
       backend = backend
     )
+    nams <- c(nams, experiment_info(cf))
   }
+  names(fits) <- nams
   return(fits)
 }
 

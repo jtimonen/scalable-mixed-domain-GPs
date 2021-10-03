@@ -1,3 +1,24 @@
+# Create Stan input for pred
+create_pred_stan_input <- function(amodel, x_star) {
+  emodel <- amodel@exact_model
+  df_star <- x_star
+  df_star[[lgpr:::get_y_name(emodel)]] <- rnorm(nrow(x_star))
+  tmp_model <- lgpr::create_model(
+    formula = formula(emodel@model_formula@call),
+    data = df_star, prior = emodel@full_prior
+  )
+
+  # Replace parts of  original Stan input according to test points
+  si <- emodel@stan_input
+  to_replace <- c(
+    "x_cat", "x_cont", "x_cont_unnorm", "idx_expand",
+    "num_obs", "c_hat"
+  )
+  si[to_replace] <- tmp_model@stan_input[to_replace]
+  si_add <- amodel@add_stan_input
+  si <- c(si, si_add)
+}
+
 # Like  lgpr:::posterior_f but with approximate model fit
 posterior_f_approx <- function(fit, x_star, refresh = NULL) {
   amodel <- fit@model
@@ -8,13 +29,8 @@ posterior_f_approx <- function(fit, x_star, refresh = NULL) {
   ell <- posterior::merge_chains(fit$draws("ell"))
   S <- dim(alpha)[1]
   P <- nrow(x_star)
+  si <- create_pred_stan_input(amodel, x_star)
   J <- length(component_names(emodel))
-  pred_model <- lgpr::create_model(
-    formula = formula(emodel@model_formula@call),
-    data = x_star, prior = emodel@full_prior
-  )
-  si_add <- amodel@add_stan_input
-  si <- c(pred_model@stan_input, si_add)
   F_PRED <- array(0.0, dim = c(S, J, P))
   tdata <- do_transformed_data(si)
   as <- alpha[, 1, , drop = T]
@@ -24,7 +40,7 @@ posterior_f_approx <- function(fit, x_star, refresh = NULL) {
   es <- matrix_to_list(es)
   xis <- matrix_to_list(xis)
   if (is.null(refresh)) {
-    refresh <- round(S / 10)
+    refresh <- round(S / 4)
   }
   build_f_draws(si, tdata, as, es, xis, refresh)
 }
@@ -84,4 +100,47 @@ compute_predictions <- function(fits, x_star) {
   }
   names(preds) <- names(fits)
   return(preds)
+}
+
+
+# Create data frame for ggplot
+create_pred_plot_df <- function(preds) {
+  J <- length(preds)
+  df <- NULL
+  model <- c()
+  for (j in 1:J) {
+    p <- preds[[j]]
+    if (isa(p, "Prediction")) {
+      h <- colMeans(p@h)
+    } else {
+      h <- colMeans(p@y_mean)
+    }
+    df_add <- cbind(p@x, h)
+    df <- rbind(df, df_add)
+    model <- c(model, rep(names(preds)[j], nrow(df_add)))
+  }
+  df$model <- as.factor(model)
+  df$id_x_model <- paste(df$id, df$model)
+  return(df)
+}
+
+# Function for plotting predictions
+plot_preds <- function(train_dat, test_dat, preds) {
+  pdat <- create_pred_plot_df(preds)
+  plt <- ggplot2::ggplot(pdat, aes(
+    x = age, y = h, group = model,
+    color = model
+  )) +
+    geom_line() +
+    facet_wrap(. ~ id) +
+    theme(legend.position = "top")
+  plt <- plt + geom_point(
+    data = train_dat, aes(x = age, y = y), inherit.aes = FALSE,
+    col = "gray20", pch = 20
+  )
+  plt <- plt + geom_point(
+    data = test_dat, aes(x = age, y = y), inherit.aes = FALSE,
+    col = "black", pch = 4
+  )
+  return(plt)
 }
