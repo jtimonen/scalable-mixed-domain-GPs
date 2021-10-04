@@ -1,20 +1,16 @@
 # Create Stan input for pred
 create_pred_stan_input <- function(amodel, x_star) {
   emodel <- amodel@exact_model
-  df_star <- x_star
-  df_star[[lgpr:::get_y_name(emodel)]] <- rnorm(nrow(x_star))
-  tmp_model <- lgpr::create_model(
-    formula = formula(emodel@model_formula@call),
-    data = df_star, prior = emodel@full_prior
-  )
+  xs_parsed <- lgpr:::kernelcomp.input_x(emodel, x_star)
 
   # Replace parts of  original Stan input according to test points
   si <- emodel@stan_input
   to_replace <- c(
-    "x_cat", "x_cont", "x_cont_unnorm", "idx_expand",
-    "num_obs", "c_hat"
+    "num_obs", "x_cont", "x_cont_unnorm", "x_cont_mask",
+    "x_cat", "idx_expand"
   )
-  si[to_replace] <- tmp_model@stan_input[to_replace]
+  names(xs_parsed) <- to_replace
+  si[to_replace] <- xs_parsed
   si_add <- amodel@add_stan_input
   si <- c(si, si_add)
 }

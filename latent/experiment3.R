@@ -62,6 +62,8 @@ approx_fits <- sample_approx(exact_model, confs,
 )
 fits <- c(approx_fits, exact)
 results <- summarize_results(fits)
+
+# Predict
 preds <- compute_predictions(fits, test_dat)
 y_star <- test_dat[["y"]]
 
@@ -81,6 +83,6 @@ for (j in 1:num_fits) {
 print(elpds)
 
 # Plot denser predictions
-x_dense <- lgpr::new_x(train_dat, seq(-2, 8, 0.2))
+x_dense <- lgpr::new_x(train_dat, seq(-1, 8, 0.1))
 preds_dense <- compute_predictions(fits, x_dense)
 plot_preds(train_dat, test_dat, preds_dense)
