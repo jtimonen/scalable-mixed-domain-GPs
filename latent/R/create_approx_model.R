@@ -136,9 +136,12 @@ additional_stan_input <- function(model, num_bf, scale_bf, decs) {
 }
 
 # Create approximate model similar to exact model
-create_approx_model <- function(model, num_bf, scale_bf, stan_file = NULL) {
-  if (is.null(stan_file)) {
-    stan_file <- "stan/lgp_latent_approx.stan"
+create_approx_model <- function(model, num_bf, scale_bf, stan_dir = "stan") {
+  om <- lgpr:::get_obs_model(model)
+  if (om == "gaussian") {
+    stan_file <- file.path(stan_dir, "lgp_latent_gaussian_approx.stan")
+  } else {
+    stan_file <- file.path(stan_dir, "lgp_latent_nongaussian_approx.stan")
   }
   decs <- categorical_kernel_decompositions(model)
   si_add <- additional_stan_input(
@@ -147,7 +150,8 @@ create_approx_model <- function(model, num_bf, scale_bf, stan_file = NULL) {
   )
   new("ApproxModel",
     exact_model = model,
-    add_stan_input = si_add,
-    stan_file = stan_file
+    added_stan_input = si_add,
+    stan_file = stan_file,
+    obs_model = om
   )
 }

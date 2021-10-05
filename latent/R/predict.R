@@ -11,7 +11,7 @@ create_pred_stan_input <- function(amodel, x_star) {
   )
   names(xs_parsed) <- to_replace
   si[to_replace] <- xs_parsed
-  si_add <- amodel@add_stan_input
+  si_add <- amodel@added_stan_input
   si <- c(si, si_add)
 }
 
@@ -54,6 +54,8 @@ get_approx_component <- function(fp, j) {
 
 # Predict with approximate model
 pred_approx <- function(fit, x_star, refresh = NULL, c_hat_pred = NULL) {
+  stopifnot(isa(fit, "ApproxModelFit"))
+  om <- fit@model@obs_model
   fp <- posterior_f_approx(fit, x_star, refresh)
   emodel <- fit@model@exact_model
   S <- length(fp)
@@ -67,8 +69,16 @@ pred_approx <- function(fit, x_star, refresh = NULL, c_hat_pred = NULL) {
     f_sum <- f_sum + fj
   }
   names(f_comp) <- component_names(emodel)
-  c_hat_pred <- lgpr:::set_c_hat_pred(emodel, f_sum, c_hat_pred, TRUE)
-  h <- lgpr:::map_f_to_h(emodel, f_sum, c_hat_pred, reduce = NULL)
+  if (om == "gaussian") {
+    yscl <- emodel@var_scalings$y
+    h <- f_sum
+    for (r in seq_len(nrow(h))) {
+      h[r, ] <- lgpr:::apply_scaling(yscl, h[r, ], inverse = TRUE)
+    }
+  } else {
+    c_hat_pred <- lgpr:::set_c_hat_pred(emodel, f_sum, c_hat_pred, TRUE)
+    h <- lgpr:::map_f_to_h(emodel, f_sum, c_hat_pred, reduce = NULL)
+  }
 
   # Return
   new("Prediction",

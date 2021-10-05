@@ -45,6 +45,9 @@ compute_elpd <- function(fit, pred, y_star) {
   } else {
     fd <- fit@fit[[1]]
     s_draws <- as.vector(posterior::merge_chains(fd$draws("sigma")))
+    # scale variance to original data scale
+    y_scl <- fit@model@exact_model@var_scalings$y
+    s_draws <- s_draws * y_scl@scale
     lpd <- compute_lpd.sampled_gaussian(pred, y_star, s_draws)
   }
   mean(lpd)

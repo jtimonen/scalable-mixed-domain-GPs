@@ -12,16 +12,16 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
 }
 
 # Sample approximate model
-sample_approx <- function(exact_model, confs, backend, ...) {
+sample_approx <- function(exact_model, confs, ...) {
   fits <- list()
   J <- length(confs)
   nams <- c()
+  backend <- "cmdstanr"
   for (j in 1:J) {
     cf <- confs[[j]]
     stopifnot(isa(cf, "ExperimentConfiguration"))
     approx_model <- create_approx_model(exact_model, cf@num_bf, cf@scale_bf)
-    si_add <- approx_model@add_stan_input
-    stan_data <- c(exact_model@stan_input, si_add)
+    stan_data <- get_full_stan_input(approx_model)
     fit <- run_sampling(approx_model@stan_file, stan_data, backend, ...)
     fits[[j]] <- new("ApproxModelFit",
       model = approx_model,
@@ -39,29 +39,6 @@ create_fitname <- function(num_bf, scale_bf) {
   paste0("B = ", formatC(num_bf, width = 3))
 }
 
-# Sample approximate model with various configurations of num_bf
-sample_approx_alter_num_bf <- function(model, NUM_BF, scale_bf,
-                                       backend = "rstan", ...) {
-  stopifnot(is(model, "lgpmodel"))
-  J <- length(NUM_BF)
-  fits <- list()
-  stan_dats <- list()
-  nams <- c()
-  for (i in seq_len(J)) {
-    num_bf <- NUM_BF[i]
-    conf_str <- create_fitname(num_bf, scale_bf)
-    cat("* ", conf_str, "\n", sep = "")
-    sres <- sample_approx(model, num_bf, scale_bf, backend = backend, ...)
-    fits[[i]] <- sres$fit
-    stan_dats[[i]] <- sres$stan_data
-
-    nams <- c(nams, conf_str)
-  }
-  names(fits) <- nams
-  names(stan_dats) <- nams
-  list(fits = fits, stan_dats = stan_dats)
-}
-
 # Sample exact model(s) for comparison
 sample_exact <- function(model, latent = FALSE, marginal = TRUE,
                          backend = "rstan", ...) {
@@ -74,10 +51,6 @@ sample_exact <- function(model, latent = FALSE, marginal = TRUE,
     fits <- c(fits, list(fit))
   }
   if (marginal) {
-    fit <- lgpr::lgp(
-      formula = formula(model@model_formula@call),
-      data = model@data, prior = model@full_prior, ...
-    )
     nams <- c(nams, "marginal")
     fits <- c(fits, list(fit))
   }

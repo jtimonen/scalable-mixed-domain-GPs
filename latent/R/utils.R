@@ -31,21 +31,17 @@ check_lgpr_version <- function() {
 }
 
 # Startup for all experiments
-startup <- function(experiment_name = NULL, backend = "both") {
+startup <- function(experiment_name = NULL) {
   if (is.null(experiment_name)) stop("experiment_name is NULL!")
   library(lgpr)
   check_lgpr_version()
   library(ggplot2)
   library(ggpubr)
   library(posterior)
-  if (backend %in% c("cmdstanr", "both")) {
-    library(rstan)
-    rstan::rstan_options(javascript = FALSE)
-    rstan::rstan_options(auto_write = TRUE)
-  }
-  if (backend %in% c("cmdstanr", "both")) {
-    library(cmdstanr)
-  }
+  library(rstan)
+  rstan::rstan_options(javascript = FALSE)
+  rstan::rstan_options(auto_write = TRUE)
+  library(cmdstanr)
   outdir <- file.path("results", experiment_name)
   if (!dir.exists("results")) dir.create("results")
   if (!dir.exists(outdir)) dir.create(outdir)
@@ -83,10 +79,10 @@ normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 # Expose all Stan functions without creating a complete Stan model
 expose_stanfuns <- function(STAN_HOME = "stan") {
   FILES <- c(
-    "functions-utils.stan",
-    "functions-kernels.stan",
-    "functions-prior.stan",
-    "functions-approx.stan"
+    file.path("chunks", "functions-utils.stan"),
+    file.path("chunks", "functions-kernels.stan"),
+    file.path("chunks", "functions-prior.stan"),
+    file.path("chunks", "functions-approx.stan")
   )
 
   # Create Stan model containing only a functions block with all the functions
