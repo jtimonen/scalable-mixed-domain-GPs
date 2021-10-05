@@ -3,7 +3,7 @@ for (f in dir("R")) {
   source(file.path("R", f))
 }
 outdir <- startup("experiment3")
-set.seed(432) # for reproducibility of data simulation
+set.seed(132) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -28,7 +28,7 @@ sd <- lgpr::simulate_data(
   relevances = c(0, 1, 1),
   covariates = c(2),
   n_categs = c(3),
-  lengthscales = c(0.5, 0.75, 0.75), t_jitter = 0.1,
+  lengthscales = c(0.5, 0.75, 0.75), t_jitter = 0.3,
   snr = 10
 )
 dat <- sd@data
@@ -66,13 +66,14 @@ y_star <- test_dat[["y"]]
 num_fits <- length(fits)
 elpds <- rep(0.0, num_fits)
 for (j in 1:num_fits) {
-  elpds[j] <- compute_elpd(fits[[j]], preds[[j]], y_star)
+  elpds[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 1)
 }
 
 print(elpds)
 
 # Plot denser predictions
-x_dense <- lgpr::new_x(train_dat, seq(0, 6, 0.1))
+arange <- range(dat$age)
+x_dense <- lgpr::new_x(train_dat, seq(arange[1] - 0.3, arange[2] + 0.3, 0.1))
 preds_dense <- compute_predictions(fits, x_dense)
 plot_preds(train_dat, test_dat, preds_dense)
 
