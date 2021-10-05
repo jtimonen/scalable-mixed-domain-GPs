@@ -16,9 +16,9 @@ for (num_bf in c(4, 12, 32)) {
 # Global setup
 model_formula <- y ~ age + age | z
 prior <- list(ell = normal(0, 1))
-N_train <- 60
-N_indiv <- N_train / 10
-N_test <- 30
+N_train <- 120
+N_indiv <- 6 # N_train / 10
+N_test <- 120
 chains <- 4
 N <- N_train + N_test
 
@@ -28,10 +28,11 @@ sd <- simulate_data(
   relevances = c(0, 1, 1),
   covariates = c(2),
   n_categs = c(3),
-  lengthscales = c(0.5, 0.75, 0.75), t_jitter = 0.2
+  lengthscales = c(0.5, 0.75, 0.75), t_jitter = 0.2,
+  snr = 10
 )
 dat <- sd@data
-dat$y <- normalize_var(dat$y)
+dat$y <- 100 + 10 * dat$y
 
 # Split to train and test data
 split <- lgpr:::split_random(dat, p_test = N_test / N)
@@ -83,6 +84,6 @@ for (j in 1:num_fits) {
 print(elpds)
 
 # Plot denser predictions
-x_dense <- lgpr::new_x(train_dat, seq(-1, 8, 0.1))
+x_dense <- lgpr::new_x(train_dat, seq(0, 6, 0.1))
 preds_dense <- compute_predictions(fits, x_dense)
 plot_preds(train_dat, test_dat, preds_dense)

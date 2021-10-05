@@ -12,6 +12,9 @@ compute_lpd.marginal <- function(pred, y_star) {
     log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
   }
   return(rowMeans(log_pds))
+  # sig <- mean(s_draws) # estimate for sigma
+  # mu <- colMeans(pred@f) # estimate for f
+  # log_pds <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
 }
 
 # Log predictive density (f sampled)
@@ -21,12 +24,17 @@ compute_lpd.sampled_gaussian <- function(pred, y_star, s_draws) {
   S <- lgpr::num_paramsets(pred)
   y_means <- pred@f
   log_pds <- array(0.0, dim = dim(y_means))
-  for (s in seq_len(S)) {
-    mu <- y_means[s, ]
-    sig <- s_draws[s]
-    log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
-  }
-  return(rowMeans(log_pds))
+  sig <- mean(s_draws) # estimate for sigma
+  h_means <- colMeans(pred@h)
+  h_std <- apply(pred@h, 2, stats::sd)
+  # for (s in seq_len(S)) {
+  #  mu <- y_means[s, ]
+  #  sig <- s_draws[s]
+  #  log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
+  # }
+  # return(rowMeans(log_pds))
+  log_pds <- stats::dnorm(y_star, mean = h_means, sd = h_std + sig, log = TRUE)
+  return(log_pds)
 }
 
 
