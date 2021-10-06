@@ -3,7 +3,7 @@ for (f in dir("R")) {
   source(file.path("R", f))
 }
 outdir <- startup("experiment3")
-set.seed(98342) # for reproducibility of data simulation
+set.seed(123) # for reproducibility of data simulation
 
 # More functions
 
@@ -91,29 +91,21 @@ for (scale_bf in c(1.5, 2.5)) {
 
 # Global setup
 model_formula <- y ~ age + age | z
-N <- 120
-N_indiv <- 12 #
+N <- 180
+N_indiv <- 9 #
 N_train <- N - N / N_indiv
 N_test <- N - N_train
 chains <- 4
-iter <- 100
+iter <- 2000
 refresh <- iter
 
-
-# Simulate data using lgpr
-sd <- lgpr::simulate_data(
-  N = N_indiv, t_data = seq(1, 5, length.out = N / N_indiv),
-  relevances = c(0, 1, 1),
-  covariates = c(2),
-  n_categs = c(3),
-  lengthscales = c(0.6, 0.3, 0.3), t_jitter = 0.3,
-  snr = 10
-)
-dat <- sd@data
+# Generate data
+sd <- simulate_data(N, N_indiv, 0.3)
+dat <- sd$data
 
 # Split to train and test data
-test_id <- 1
-split <- lgpr:::split_by_factor(dat, test = test_id, var_name = "id")
+i_test <- which(dat$id %in% c(3, 6, 9))
+split <- lgpr:::split_data(dat, i_test = i_test)
 train_dat <- split$train
 test_dat <- split$test
 N_train <- nrow(train_dat)
@@ -164,10 +156,12 @@ names(em) <- names(afits)
 
 # Plot denser predictions
 arange <- range(dat$age)
-x_dense <- lgpr::new_x(train_dat, seq(arange[1] - 0.5, arange[2] + 0.5, 0.05))
-na_inds <- is.na(x_dense$id)
-x_dense$id[na_inds] <- test_id
-x_dense$z[na_inds] <- test_z
+xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.05)
+age_dense <- rep(xvals, times = N_indiv)
+id_dense <- rep(1:N_indiv, each = length(xvals))
+z_dense <- rep(1:3, each = 3 * length(xvals))
+x_dense <- data.frame(as.factor(id_dense), age_dense, as.factor(z_dense))
+colnames(x_dense) <- c("id", "age", "z")
 apreds_dense <- lapply(afits, function(x) {
   compute_predictions(x, x_dense)
 })
@@ -193,7 +187,7 @@ for (pp in pred_plots) {
   np <- gsub("=", "_", gsub("[.]", "-", gsub(" ", "_", nam)))
   fn <- file.path(outdir, paste0("preds_", N, "_", np, ".pdf"))
   cat("Saving", fn, "\n")
-  ggsave(fn, plot = pp, width = 6.7, height = 4.8)
+  ggsave(fn, plot = pp, width = 5.28, height = 4.75)
 }
 
 # Runtimes plot
