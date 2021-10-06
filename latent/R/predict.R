@@ -130,23 +130,38 @@ create_pred_plot_df <- function(preds) {
   return(df)
 }
 
+# Modify id factor for labeling
+modify_id_label <- function(df, levels, labels) {
+  df$id <- factor(df$id,
+    levels = levels(df$id),
+    labels = levels(labels)
+  )
+  return(df)
+}
+
 # Function for plotting predictions
 plot_preds <- function(train_dat, test_dat, preds) {
   pdat <- create_pred_plot_df(preds)
+  labels <- as.factor(paste(paste("id =", pdat$id), paste("z =", pdat$z),
+    sep = ", "
+  ))
+  levels <- levels(labels)
+  pdat <- modify_id_label(pdat, levels, labels)
+  train_dat <- modify_id_label(train_dat, levels, labels)
+  test_dat <- modify_id_label(test_dat, levels, labels)
   plt <- ggplot2::ggplot(pdat, aes(
     x = age, y = h, group = model,
     color = model
   )) +
     geom_line() +
-    facet_wrap(. ~ id) +
-    theme(legend.position = "top")
+    facet_wrap(. ~ id)
   plt <- plt + geom_point(
     data = train_dat, aes(x = age, y = y), inherit.aes = FALSE,
     col = "gray20", pch = 20
   )
   plt <- plt + geom_point(
     data = test_dat, aes(x = age, y = y), inherit.aes = FALSE,
-    col = "black", pch = 4
+    col = "red", pch = 4
   )
   return(plt)
 }

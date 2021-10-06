@@ -143,18 +143,16 @@ do_transformed_data <- function(stan_data) {
 # SUMMARIZING RESULTS --------------------------------------------------------
 
 # Helper functions
-get_times <- function(x) {
+get_runtimes <- function(x) {
   if (is(x, "lgpfit")) x <- x@stan_fit
   if (is(x, "ApproxModelFit")) {
-    fit <- x@fit[[1]]
+    fit <- get_cmdstanfit(x)
     tims <- fit$time()$chains$total
   } else {
-    tims <- rowSums(get_elapsed_time(x))
+    tims <- as.numeric(rowSums(get_elapsed_time(x)))
   }
   return(tims)
 }
-t_mean <- function(x) mean(get_times(x))
-t_sd <- function(x) stats::sd(get_times(x))
 get_ndiv <- function(x) {
   if (is(x, "lgpfit")) x <- x@stan_fit
   if (is(x, "ApproxModelFit")) {
@@ -191,8 +189,7 @@ summarize_results <- function(fits) {
     draws = draws,
     p_means = p_means,
     p_sds = p_sds,
-    t_means = sapply(fits, t_mean),
-    t_sds = sapply(fits, t_sd),
+    runtimes = sapply(fits, get_runtimes),
     num_div = sapply(fits, get_ndiv)
   )
 }

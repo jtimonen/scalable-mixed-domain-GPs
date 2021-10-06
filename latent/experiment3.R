@@ -3,7 +3,7 @@ for (f in dir("R")) {
   source(file.path("R", f))
 }
 outdir <- startup("experiment3")
-set.seed(3432) # for reproducibility of data simulation
+set.seed(2432) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -20,7 +20,9 @@ N_indiv <- 12 #
 N_train <- N - N / N_indiv
 N_test <- N - N_train
 chains <- 4
-refresh <- 1000
+iter <- 100
+refresh <- iter
+
 
 # Simulate data using lgpr
 sd <- lgpr::simulate_data(
@@ -32,7 +34,6 @@ sd <- lgpr::simulate_data(
   snr = 10
 )
 dat <- sd@data
-dat$y <- 100 + 10 * dat$y
 
 # Split to train and test data
 test_id <- 1
@@ -46,13 +47,18 @@ test_z <- test_dat$z[1]
 
 # Create and fit exact model using lgpr
 exact_model <- lgpr::create_model(model_formula, train_dat)
-efit <- lgpr::sample_model(exact_model, chains = chains, refresh = refresh)
+efit <- lgpr::sample_model(exact_model,
+  chains = chains, refresh = refresh,
+  iter = iter
+)
 
 # Fit approximate model with different configurations
 afits <- sample_approx(exact_model, confs,
   refresh = refresh,
   chains = chains,
-  adapt_delta = 0.95
+  adapt_delta = 0.95,
+  iter_warmup = iter,
+  iter_sampling = iter
 )
 
 # Collect results
@@ -79,13 +85,13 @@ colnames(res) <- names(fits)
 
 # Plot denser predictions
 arange <- range(dat$age)
-x_dense <- lgpr::new_x(train_dat, seq(arange[1] - 0.3, arange[2] + 0.3, 0.1))
+x_dense <- lgpr::new_x(train_dat, seq(arange[1] - 0.3, arange[2] + 0.3, 0.05))
 na_inds <- is.na(x_dense$id)
 x_dense$id[na_inds] <- test_id
 x_dense$z[na_inds] <- test_z
 preds_dense <- compute_predictions(fits, x_dense)
-plot_preds(train_dat, test_dat, preds_dense) + theme_bw() +
-  theme(legend.position = "top")
+plt_pred <- plot_preds(train_dat, test_dat, preds_dense) + theme_bw() +
+  theme(legend.position = "top") + ylab("")
 
 # Runtimes plot
 # rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
