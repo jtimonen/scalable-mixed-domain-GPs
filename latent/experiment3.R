@@ -125,8 +125,8 @@ afits <- sample_approx(exact_model, confs,
   refresh = refresh,
   chains = chains,
   adapt_delta = 0.95,
-  iter_warmup = iter,
-  iter_sampling = iter
+  iter_warmup = iter/2,
+  iter_sampling = iter/2
 )
 
 # Collect results
@@ -197,3 +197,8 @@ for (pp in pred_plots) {
 # Save results in Rdata
 res_to_save <- results[c("runtimes", "num_div")]
 res_to_save$metrics <- em
+
+# Create latex table
+library(xtable)
+xtable(em[[1]])
+xtable(em[[2]])
