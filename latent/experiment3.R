@@ -8,7 +8,7 @@ set.seed(2432) # for reproducibility of data simulation
 # Settings
 confs <- list()
 j <- 0
-for (num_bf in c(4, 8, 16, 32)) {
+for (num_bf in c(6, 12, 24, 48)) {
   j <- j + 1
   confs[[j]] <- create_configuration(num_bf, 1.5)
 }
@@ -85,7 +85,7 @@ colnames(res) <- names(fits)
 
 # Plot denser predictions
 arange <- range(dat$age)
-x_dense <- lgpr::new_x(train_dat, seq(arange[1] - 0.3, arange[2] + 0.3, 0.05))
+x_dense <- lgpr::new_x(train_dat, seq(arange[1] - 0.5, arange[2] + 0.5, 0.05))
 na_inds <- is.na(x_dense$id)
 x_dense$id[na_inds] <- test_id
 x_dense$z[na_inds] <- test_z
