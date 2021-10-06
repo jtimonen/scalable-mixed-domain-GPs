@@ -40,12 +40,15 @@ setClass(
 )
 
 # Get brief experiment info
-experiment_info <- function(object) {
+num_bf_string <- function(object) {
   nbf <- formatC(object@num_bf, width = 3)
-  desc <- paste0(
-    "B =", nbf, ", c = ", object@scale_bf
-  )
-  return(desc)
+  paste0("B =", nbf)
+}
+scale_string <- function(object) {
+  paste0("c = ", object@scale_bf)
+}
+experiment_info <- function(object) {
+  paste0(num_bf_string(object), ", ", scale_string(object))
 }
 
 #' Print info

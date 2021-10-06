@@ -39,6 +39,7 @@ startup <- function(experiment_name = NULL) {
   library(ggpubr)
   library(posterior)
   library(rstan)
+  library(RColorBrewer)
   rstan::rstan_options(javascript = FALSE)
   rstan::rstan_options(auto_write = TRUE)
   library(cmdstanr)
@@ -192,4 +193,11 @@ summarize_results <- function(fits) {
     runtimes = sapply(fits, get_runtimes),
     num_div = sapply(fits, get_ndiv)
   )
+}
+
+# Get all results
+get_results <- function(afits, efit) {
+  fits <- c(afits, list(efit))
+  names(fits)[length(fits)] <- "exact"
+  summarize_results(fits)
 }

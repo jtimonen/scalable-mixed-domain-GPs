@@ -109,3 +109,19 @@ compute_rmse <- function(fit, pred, y_star) {
   }
   return(rmse)
 }
+
+# Compute all evaluation metrics
+compute_metrics <- function(fits, preds, y_star) {
+  num_fits <- length(fits)
+  elpds_w1 <- rep(0.0, num_fits)
+  elpds_w2 <- rep(0.0, num_fits)
+  rmses <- rep(0.0, num_fits)
+  for (j in 1:num_fits) {
+    elpds_w1[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 1)
+    elpds_w2[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 2)
+    rmses[j] <- compute_rmse(fits[[j]], preds[[j]], y_star)
+  }
+  res <- rbind(elpds_w1, elpds_w2, rmses)
+  colnames(res) <- names(fits)
+  return(res)
+}
