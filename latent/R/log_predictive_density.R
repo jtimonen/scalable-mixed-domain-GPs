@@ -69,9 +69,9 @@ compute_elpd <- function(fit, pred, y_star, way = 1) {
   if (isa(fit, "lgpfit")) {
     lpd <- compute_lpd.marginal(pred, y_star)
   } else {
-    fd <- fit@fit[[1]]
+    fd <- get_cmdstanfit(fit)
     s_draws <- as.vector(posterior::merge_chains(fd$draws("sigma")))
-    # scale variance to original data scale
+    # scale std to original data scale
     y_scl <- fit@model@exact_model@var_scalings$y
     s_draws <- s_draws * y_scl@scale
     lpd <- compute_lpd.sampled_gaussian(pred, y_star, s_draws)
@@ -82,4 +82,30 @@ compute_elpd <- function(fit, pred, y_star, way = 1) {
     field <- "way1"
   }
   mean(lpd[[field]])
+}
+
+# Root mean squared error (f marginalized)
+compute_rmse.marginal <- function(pred, y_star) {
+  stopifnot(is(pred, "GaussianPrediction"))
+  mu <- colMeans(pred@y_mean) # mean estimates
+  se <- (mu - y_star)**2
+  return(sqrt(mean(se)))
+}
+
+# Root mean squared error (f sampled)
+compute_rmse.sampled <- function(pred, y_star) {
+  stopifnot(is(pred, "Prediction"))
+  mu <- colMeans(pred@h) # mean estimates
+  se <- (mu - y_star)**2
+  return(sqrt(mean(se)))
+}
+
+# Compute root mean squared error
+compute_rmse <- function(fit, pred, y_star) {
+  if (isa(fit, "lgpfit")) {
+    rmse <- compute_rmse.marginal(pred, y_star)
+  } else {
+    rmse <- compute_rmse.sampled(pred, y_star)
+  }
+  return(rmse)
 }

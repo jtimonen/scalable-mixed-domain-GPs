@@ -3,7 +3,7 @@ for (f in dir("R")) {
   source(file.path("R", f))
 }
 outdir <- startup("experiment3")
-set.seed(372) # for reproducibility of data simulation
+set.seed(3432) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -64,14 +64,18 @@ results <- summarize_results(fits)
 preds <- compute_predictions(fits, test_dat)
 y_star <- test_dat[["y"]]
 
-# Compute test elpds
+# Compute test elpds and rmse
 num_fits <- length(fits)
-elpds <- rep(0.0, num_fits)
+elpds_w1 <- rep(0.0, num_fits)
+elpds_w2 <- rep(0.0, num_fits)
+rmses <- rep(0.0, num_fits)
 for (j in 1:num_fits) {
-  elpds[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 1)
+  elpds_w1[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 1)
+  elpds_w2[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 2)
+  rmses[j] <- compute_rmse(fits[[j]], preds[[j]], y_star)
 }
-
-print(elpds)
+res <- rbind(elpds_w1, elpds_w2, rmses)
+colnames(res) <- names(fits)
 
 # Plot denser predictions
 arange <- range(dat$age)
@@ -80,7 +84,8 @@ na_inds <- is.na(x_dense$id)
 x_dense$id[na_inds] <- test_id
 x_dense$z[na_inds] <- test_z
 preds_dense <- compute_predictions(fits, x_dense)
-plot_preds(train_dat, test_dat, preds_dense)
+plot_preds(train_dat, test_dat, preds_dense) + theme_bw() +
+  theme(legend.position = "top")
 
 # Runtimes plot
 # rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
