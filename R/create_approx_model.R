@@ -136,7 +136,7 @@ additional_stan_input <- function(model, num_bf, scale_bf, decs) {
 }
 
 # Create approximate model similar to exact model
-create_approx_model <- function(model, num_bf, scale_bf, stan_dir = "stan") {
+create_approx_model <- function(model, num_bf, scale_bf, stan_dir) {
   om <- lgpr:::get_obs_model(model)
   if (om == "gaussian") {
     stan_file <- file.path(stan_dir, "lgp_latent_gaussian_approx.stan")

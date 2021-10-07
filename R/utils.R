@@ -31,8 +31,7 @@ check_lgpr_version <- function() {
 }
 
 # Startup for all experiments
-startup <- function(experiment_name = NULL) {
-  if (is.null(experiment_name)) stop("experiment_name is NULL!")
+startup <- function() {
   library(lgpr)
   check_lgpr_version()
   library(ggplot2)
@@ -43,8 +42,7 @@ startup <- function(experiment_name = NULL) {
   rstan::rstan_options(javascript = FALSE)
   rstan::rstan_options(auto_write = TRUE)
   library(cmdstanr)
-  outdir <- file.path("results", experiment_name)
-  if (!dir.exists("results")) dir.create("results")
+  outdir <- file.path("results")
   if (!dir.exists(outdir)) dir.create(outdir)
   return(outdir)
 }

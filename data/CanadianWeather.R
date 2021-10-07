@@ -9,6 +9,7 @@ stations <- rep(as.factor(CanadianWeather$place), each = n_days)
 day <- rep(c(1:n_days), times = n_stations)
 dat <- data.frame(day, as.vector(temp), as.vector(precip), stations, regions)
 colnames(dat) <- c("day", "temperature", "precipitation", "station", "region")
+p1
 
 # Plot
 p1 <- plot_data(dat,

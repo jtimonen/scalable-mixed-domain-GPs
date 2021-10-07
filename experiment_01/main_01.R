@@ -1,79 +1,12 @@
 # Startup
-for (f in dir("R")) {
-  source(file.path("R", f))
+r_dir <- "../R/"
+stan_dir <- "../stan/"
+for (f in dir(r_dir)) {
+  source(file.path(r_dir, f))
 }
-outdir <- startup("experiment3")
+source("plotting_01.R")
+outdir <- startup()
 set.seed(123) # for reproducibility of data simulation
-
-# More functions
-
-# Create data frame for ggplot
-create_pred_plot_df <- function(preds) {
-  J <- length(preds)
-  df <- NULL
-  model <- c()
-  for (j in 1:J) {
-    p <- preds[[j]]
-    if (isa(p, "Prediction")) {
-      h <- colMeans(p@h)
-    } else {
-      h <- colMeans(p@y_mean)
-    }
-    df_add <- cbind(p@x, h)
-    df <- rbind(df, df_add)
-    model <- c(model, rep(names(preds)[j], nrow(df_add)))
-  }
-  df$model <- as.factor(model)
-  df$id_x_model <- paste(df$id, df$model)
-  return(df)
-}
-
-# Modify id factor for labeling
-modify_id_label <- function(df, levels, labels) {
-  df$id <- factor(df$id,
-    levels = levels(df$id),
-    labels = levels(labels)
-  )
-  return(df)
-}
-
-# Function for plotting predictions
-plot_preds <- function(train_dat, test_dat, preds) {
-  pdat <- create_pred_plot_df(preds)
-  labels <- as.factor(paste(paste("id =", formatC(pdat$id, width = 2)),
-    paste("z =", pdat$z),
-    sep = ", "
-  ))
-  levels <- levels(labels)
-  pdat <- modify_id_label(pdat, levels, labels)
-  pdat_exact <- pdat[which(pdat$model == "exact"), ]
-  pdat_approx <- pdat[which(pdat$model != "exact"), ]
-  train_dat <- modify_id_label(train_dat, levels, labels)
-  test_dat <- modify_id_label(test_dat, levels, labels)
-  num_fits <- length(levels(pdat_approx$model))
-  my_colors <- RColorBrewer::brewer.pal(num_fits, "PuBu")[2:num_fits]
-  plt <- ggplot2::ggplot(pdat_approx, aes(
-    x = age, y = h, group = model,
-    color = model
-  )) +
-    geom_line(lwd = 0.8) +
-    facet_wrap(. ~ id) +
-    scale_color_manual(values = my_colors)
-  plt <- plt + geom_line(
-    data = pdat_exact, aes(x = age, y = h),
-    color = "orange", lty = 1, inherit.aes = FALSE,
-    lwd = 0.3
-  )
-  plt <- plt + geom_point(
-    data = train_dat, aes(x = age, y = y), inherit.aes = FALSE,
-    col = "black", pch = 20
-  )
-  plt <- plt + geom_point(
-    data = test_dat, aes(x = age, y = y), inherit.aes = FALSE,
-    col = "black", pch = 4
-  )
-  return(plt)
-}
 
 # Settings
 confs <- list()
@@ -91,7 +24,7 @@ for (scale_bf in c(1.5, 2.5)) {
 
 # Global setup
 model_formula <- y ~ age + age | z
-N <- 180
+N <- 90
 N_indiv <- 9 #
 N_train <- N - N / N_indiv
 N_test <- N - N_train
@@ -122,11 +55,12 @@ efit <- lgpr::sample_model(exact_model,
 
 # Fit approximate model with different configurations
 afits <- sample_approx(exact_model, confs,
+  stan_dir = stan_dir,
   refresh = refresh,
   chains = chains,
   adapt_delta = 0.95,
-  iter_warmup = iter/2,
-  iter_sampling = iter/2
+  iter_warmup = iter / 2,
+  iter_sampling = iter / 2
 )
 
 # Collect results
@@ -202,3 +136,11 @@ res_to_save$metrics <- em
 library(xtable)
 xtable(em[[1]])
 xtable(em[[2]])
+
+# Brms
+# library(brms)
+# a <- brm(y ~  gp(age), data=train_dat)
+# b <- brm(y ~  gp(age) + gp(age, by=z) + gp(age, by=id), data=train_dat,
+#         iter=10, chains=2)
+# cat(a$fit@stanmodel@model_code, file="a.stan")
+# cat(b$fit@stanmodel@model_code, file="b.stan")
