@@ -194,9 +194,3 @@ summarize_results <- function(fits) {
   )
 }
 
-# Get all results
-get_results <- function(afits, efit) {
-  fits <- c(afits, list(efit))
-  names(fits)[length(fits)] <- "exact"
-  summarize_results(fits)
-}

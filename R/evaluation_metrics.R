@@ -110,8 +110,21 @@ compute_rmse <- function(fit, pred, y_star) {
   return(rmse)
 }
 
+# Formatting
+format_metrics_result <- function(res, scales, num_bfs) {
+  N1 <- length(scales)
+  N2 <- length(num_bfs)
+  M <-  matrix(res[1:(N1*N2)], N1, N2, byrow = TRUE)
+  rownames(M) <- paste0("c = ", scales)
+  colnames(M) <- paste0("B = ", num_bfs)
+  list(
+    approx = M,
+    exact = res[N1*N2+1]
+  )
+}
+
 # Compute all evaluation metrics
-compute_metrics <- function(fits, preds, y_star) {
+compute_metrics <- function(fits, preds, y_star, scales, num_bfs) {
   num_fits <- length(fits)
   elpds_w1 <- rep(0.0, num_fits)
   elpds_w2 <- rep(0.0, num_fits)
@@ -122,6 +135,11 @@ compute_metrics <- function(fits, preds, y_star) {
     rmses[j] <- compute_rmse(fits[[j]], preds[[j]], y_star)
   }
   res <- rbind(elpds_w1, elpds_w2, rmses)
-  colnames(res) <- names(fits)
-  return(res)
+  J <- nrow(res)
+  out <- list()
+  for(j in 1:J) {
+    out[[j]] <- format_metrics_result(res[j,], scales, num_bfs)
+  }
+  names(out) <- rownames(res)
+  return(out)
 }

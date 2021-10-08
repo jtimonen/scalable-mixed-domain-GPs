@@ -15,33 +15,27 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
 # Sample approximate model
 sample_approx <- function(exact_model, confs, ...) {
   fits <- list()
-  JS <- length(confs)
+  J <- length(confs)
   backend <- "cmdstanr"
   fits <- list()
-  for (js in 1:JS) {
-    JB <- length(confs[[js]])
-    fits_js <- list()
-    for (jb in 1:JB) {
-      cf <- confs[[js]][[jb]]
-      print(cf)
-      stopifnot(isa(cf, "ExperimentConfiguration"))
-      approx_model <- create_approx_model(
-        exact_model, cf@num_bf, cf@scale_bf
-      )
-      stan_data <- get_full_stan_input(approx_model)
-      fit <- run_sampling(
-        approx_model@stan_file, stan_data,
-        backend, ...
-      )
-      fits_js[[jb]] <- new("ApproxModelFit",
-        model = approx_model,
-        fit = list(fit),
-        backend = backend
-      )
-      names(fits_js)[jb] <- num_bf_string(cf)
-    }
-    fits[[js]] <- fits_js
-    names(fits)[js] <- scale_string(cf)
+  for (j in 1:J) {
+    cf <- confs[[j]]
+    print(cf)
+    stopifnot(isa(cf, "ExperimentConfiguration"))
+    approx_model <- create_approx_model(
+      exact_model, cf@num_bf, cf@scale_bf
+    )
+    stan_data <- get_full_stan_input(approx_model)
+    fit <- run_sampling(
+      approx_model@stan_file, stan_data,
+      backend, ...
+    )
+    fits[[j]] <- new("ApproxModelFit",
+                     model = approx_model,
+                     fit = list(fit),
+                     backend = backend
+    )
+    names(fits)[j] <- experiment_info(cf)
   }
   return(fits)
 }
