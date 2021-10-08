@@ -7,11 +7,12 @@ simulate_data_x <- function(N_train, N_test) {
     if (idx %in% c(7, 8, 9)) {
       k <- N_test_tp
       is_test <- rep(TRUE, k)
+      ages <- sort(runif(k, 0, 10))
     } else {
       k <- N_train_tp
       is_test <- rep(FALSE, k)
+      ages <- sort(runif(k, 0, 10))
     }
-    ages <- sort(runif(k, 0, 10))
     ids <- rep(idx, k)
     z_val <- idx %% 3
     if (z_val == 0) {
@@ -39,6 +40,7 @@ simulate_data <- function(N_train, N_test, sigma) {
   f2 <- MASS::mvrnorm(n = 1, mu0, K2_a * K2_b)
   effects <- list(f1 = f1, f2 = f2, f = f1 + f2)
   dat$y <- f1 + f2 + rnorm(length(f1), sd = sigma)
+  dat$y <- 100 + 40 * dat$y
 
   # Split to train and test data
   i_test <- which(dat$is_test == TRUE)

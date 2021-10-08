@@ -21,6 +21,20 @@ lpd_m_way2 <- function(pred, y_star) {
   return(log_pds)
 }
 
+# Third way
+lpd_m_way3 <- function(pred, y_star) {
+  S <- lgpr::num_paramsets(pred)
+  y_means <- pred@y_mean
+  y_stds <- pred@y_std
+  log_pds <- array(0.0, dim = dim(y_means))
+  for (s in seq_len(S)) {
+    mu <- y_means[s, ]
+    sig <- y_stds[s, ]
+    log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
+  }
+  return(rowMeans(log_pds))
+}
+
 # Log predictive density (f marginalized)
 compute_lpd.marginal <- function(pred, y_star) {
   stopifnot(is(pred, "GaussianPrediction"))
@@ -48,10 +62,10 @@ lpd_sg_way2 <- function(pred, y_star, s_draws) {
   S <- lgpr::num_paramsets(pred)
   log_pds <- array(0.0, dim = dim(pred@h))
   sig2 <- mean(s_draws**2) # estimate for sigma2
-  sig <- sqrt(sig2)
   h_means <- colMeans(pred@h)
   h_std <- apply(pred@h, 2, stats::sd)
-  log_pds <- stats::dnorm(y_star, mean = h_means, sd = h_std + sig, log = TRUE)
+  sd <- sqrt(h_std**2 + sig2)
+  log_pds <- stats::dnorm(y_star, mean = h_means, sd = sd, log = TRUE)
   return(log_pds)
 }
 
@@ -64,15 +78,30 @@ compute_lpd.sampled_gaussian <- function(pred, y_star, s_draws) {
   )
 }
 
+# Get draws of sigma
+get_sigma_draws <- function(fit) {
+  if (isa(fit, "ApproxModelFit")) {
+    fd <- get_cmdstanfit(fit)
+    s_draws <- posterior::merge_chains(fd$draws("sigma"))
+  } else {
+    s_draws <- lgpr::get_draws(fit, pars = "sigma")
+  }
+  return(as.vector(s_draws))
+}
+
 # Compute expected log predictive density
 compute_elpd <- function(fit, pred, y_star, way = 1) {
-  if (isa(fit, "lgpfit")) {
+  if (isa(pred, "GaussianPrediction")) {
     lpd <- compute_lpd.marginal(pred, y_star)
   } else {
-    fd <- get_cmdstanfit(fit)
-    s_draws <- as.vector(posterior::merge_chains(fd$draws("sigma")))
+    s_draws <- get_sigma_draws(fit)
     # scale std to original data scale
-    y_scl <- fit@model@exact_model@var_scalings$y
+    if (isa(fit, "lgpfit")) {
+      emodel <- fit@model
+    } else {
+      emodel <- fit@model@exact_model
+    }
+    y_scl <- emodel@var_scalings$y
     s_draws <- s_draws * y_scl@scale
     lpd <- compute_lpd.sampled_gaussian(pred, y_star, s_draws)
   }
@@ -102,7 +131,7 @@ compute_rmse.sampled <- function(pred, y_star) {
 
 # Compute root mean squared error
 compute_rmse <- function(fit, pred, y_star) {
-  if (isa(fit, "lgpfit")) {
+  if (isa(pred, "GaussianPrediction")) {
     rmse <- compute_rmse.marginal(pred, y_star)
   } else {
     rmse <- compute_rmse.sampled(pred, y_star)

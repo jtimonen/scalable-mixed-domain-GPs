@@ -7,7 +7,7 @@ for (f in dir(r_dir)) {
 source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(892) # for reproducibility of data simulation
+set.seed(3922) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -56,10 +56,36 @@ names(fits)[length(fits)] <- "exact"
 results <- summarize_results(fits)
 
 # Predict
-preds <- compute_predictions(fits, test_dat)
+apreds <- compute_predictions(afits, test_dat)
+epred <- pred_exact(efit, test_dat) # takes long
+preds <- c(apreds, list(pe))
+names(preds)[length(preds)] <- "exact"
 y_star <- test_dat[["y"]]
 em <- compute_metrics(fits, preds, y_star)
 rtables <- format_results(em, SCALES, NBFS)
+
+# Exact
+# fe <- fits[["exact"]]
+# pe <- preds[["exact"]]
+# mu <- colMeans(pe@y_mean) # mean estimates
+# y_std_e <- colMeans(pe@y_std) # variance estimates
+# y_std_e <- sqrt(sig2)
+# sig <- lgpr::get_draws(fe, pars="sigma")
+# sig <- fe@model@var_scalings$y@scale * sig
+
+# Approx
+# fa <- fits[[8]]
+# pa <- preds[[8]]
+# sf <- get_cmdstanfit(fa)
+# y_scl <- fa@model@exact_model@var_scalings$y
+# s_draws <- as.vector(posterior::merge_chains(sf$draws("sigma")))
+# s_draws <- s_draws * y_scl@scale
+# h_mean <- colMeans(pa@h)
+# h_std <- apply(pa@h, 2, stats::sd)
+# y_std_a <- sqrt(h_std**2 + mean(s_draws)**2)
+# lpd <- compute_lpd.sampled_gaussian(pa, y_star, s_draws)[["way2"]]
+# plot(y_std_a, ylim=c(0,1.5))
+# lines(y_std_e, col="red")
 
 
 # Plot denser predictions
@@ -67,10 +93,10 @@ x_dense <- create_x_dense(train_dat, test_dat)
 preds_dense <- compute_predictions(fits, x_dense)
 
 # Plots
-pd <- preds_dense[c(1:4, length(preds_dense))]
-plt_pred <- plot_preds(train_dat, test_dat, pd) + theme_bw() +
-  theme(legend.position = "top") + ylab("")
-
+plt1 <- plot_against_exact(1:4, train_dat, test_dat, preds_dense)
+plt2 <- plot_against_exact(5:8, train_dat, test_dat, preds_dense)
+plt3 <- plot_against_exact(9:12, train_dat, test_dat, preds_dense)
+plt4 <- plot_against_exact(13:16, train_dat, test_dat, preds_dense)
 
 # Save plot
 j <- 0

@@ -102,3 +102,10 @@ plot_f_draws <- function(train_dat, test_dat, pred) {
   )
   return(plt)
 }
+
+# Plot some approximate fits against exact
+plot_against_exact <- function(inds, train_dat, test_dat, preds) {
+  pd <- preds[c(inds, length(preds))]
+  plot_preds(train_dat, test_dat, pd) + theme_bw() +
+    theme(legend.position = "top") + ylab("")
+}
