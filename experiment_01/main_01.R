@@ -7,7 +7,7 @@ for (f in dir(r_dir)) {
 source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(28392) # for reproducibility of data simulation
+set.seed(892) # for reproducibility of data simulation
 
 # Settings
 confs <- list()

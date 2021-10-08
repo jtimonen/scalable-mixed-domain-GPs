@@ -11,9 +11,13 @@ simulate_data_x <- function(N_train, N_test) {
       k <- N_train_tp
       is_test <- rep(FALSE, k)
     }
-    ages <- sort(runif(k, 0, 8))
+    ages <- sort(runif(k, 0, 10))
     ids <- rep(idx, k)
-    zs <- rep(idx %% 3 + 1, k)
+    z_val <- idx %% 3
+    if (z_val == 0) {
+      z_val <- 3
+    }
+    zs <- rep(z_val, k)
     df_idx <- data.frame(ids, zs, ages, is_test)
     df <- rbind(df, df_idx)
   }

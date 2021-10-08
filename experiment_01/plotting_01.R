@@ -51,16 +51,16 @@ modify_id_label <- function(df, levels, labels) {
 # Function for plotting predictions
 plot_preds <- function(train_dat, test_dat, preds) {
   pdat <- create_pred_plot_df(preds)
-  # labels <- as.factor(paste(paste("id =", formatC(pdat$id, width = 2)),
-  #  paste("z =", pdat$z),
-  #  sep = ", "
-  # ))
-  # levels <- levels(labels)
-  # pdat <- modify_id_label(pdat, levels, labels)
+  labels <- as.factor(paste(paste("id =", formatC(pdat$id, width = 2)),
+    paste("z =", pdat$z),
+    sep = ", "
+  ))
+  levels <- levels(labels)
+  pdat <- modify_id_label(pdat, levels, labels)
   pdat_exact <- pdat[which(pdat$model == "exact"), ]
   pdat_approx <- pdat[which(pdat$model != "exact"), ]
-  # train_dat <- modify_id_label(train_dat, levels, labels)
-  # test_dat <- modify_id_label(test_dat, levels, labels)
+  train_dat <- modify_id_label(train_dat, levels, labels)
+  test_dat <- modify_id_label(test_dat, levels, labels)
   num_fits <- length(levels(pdat_approx$model))
   my_colors <- RColorBrewer::brewer.pal(num_fits, "PuBu")[2:num_fits]
   plt <- ggplot2::ggplot(pdat_approx, aes(
