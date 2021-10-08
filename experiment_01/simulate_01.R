@@ -13,7 +13,7 @@ simulate_data_x <- function(N_train, N_test) {
     }
     ages <- sort(runif(k, 0, 8))
     ids <- rep(idx, k)
-    zs <- rep(idx %% 3, k)
+    zs <- rep(idx %% 3 + 1, k)
     df_idx <- data.frame(ids, zs, ages, is_test)
     df <- rbind(df, df_idx)
   }
@@ -49,4 +49,17 @@ simulate_data <- function(N_train, N_test, sigma) {
     test_dat = test_dat,
     effects = effects
   )
+}
+
+# Denser set of prediction points for visualization
+create_x_dense <- function(train_dat, test_dat) {
+  dat <- rbind(train_dat, test_dat)
+  arange <- range(dat$age)
+  xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.05)
+  age_dense <- rep(xvals, times = 9)
+  id_dense <- rep(1:9, each = length(xvals))
+  z_dense <- rep(c(1, 2, 3, 1, 2, 3, 1, 2, 3), each = length(xvals))
+  x_dense <- data.frame(as.factor(id_dense), age_dense, as.factor(z_dense))
+  colnames(x_dense) <- c("id", "age", "z")
+  return(x_dense)
 }

@@ -95,7 +95,7 @@ compute_predictions <- function(fits, x_star) {
   nams <- names(fits)
   for (f in fits) {
     j <- j + 1
-    msg <- paste0("computing predictions for: ", nams[j], "\n")
+    msg <- paste0("computing predictions for: ", nams[j])
     message(msg)
     if (isa(f, "lgpfit")) {
       p <- lgpr::pred(f, x = x_star, reduce = NULL)

@@ -7,7 +7,7 @@ for (f in dir(r_dir)) {
 source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(8392) # for reproducibility of data simulation
+set.seed(28392) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -63,26 +63,13 @@ rtables <- format_results(em, SCALES, NBFS)
 
 
 # Plot denser predictions
-dat <- rbind(train_dat, test_dat)
-arange <- range(dat$age)
-xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.05)
-age_dense <- rep(xvals, times = N_indiv)
-id_dense <- rep(1:N_indiv, each = length(xvals))
-z_dense <- rep(1:3, each = 3 * length(xvals))
-x_dense <- data.frame(as.factor(id_dense), age_dense, as.factor(z_dense))
-colnames(x_dense) <- c("id", "age", "z")
+x_dense <- create_x_dense(train_dat, test_dat)
 preds_dense <- compute_predictions(fits, x_dense)
 
 # Plots
-# pred_plots <- list()
-# for (j in 1:length(apreds_dense)) {
-#  pd <- c(apreds_dense[[j]], epred_dense)
-#  names(pd) <- c(names(apreds_dense[[j]]), "exact")
-#  plt_pred <- plot_preds(train_dat, test_dat, pd) + theme_bw() +
-#    theme(legend.position = "top") + ylab("")
-#  pred_plots[[j]] <- plt_pred
-# }
-# names(pred_plots) <- names(apreds_dense)
+pd <- preds_dense[c(1:4, length(preds_dense))]
+plt_pred <- plot_preds(train_dat, test_dat, pd) + theme_bw() +
+  theme(legend.position = "top") + ylab("")
 
 
 # Save plot
