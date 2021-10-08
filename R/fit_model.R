@@ -2,7 +2,8 @@
 # Run sampling in either backend
 run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
   if (backend == "cmdstanr") {
-    sm <- cmdstanr::cmdstan_model(MODEL_FILE, include_paths = "stan")
+    stan_dir <- getOption("stan_dir")
+    sm <- cmdstanr::cmdstan_model(MODEL_FILE, include_paths = stan_dir)
     fit <- sm$sample(data = stan_data, ...)
   } else {
     sm <- rstan::stan_model(MODEL_FILE)
@@ -12,7 +13,7 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
 }
 
 # Sample approximate model
-sample_approx <- function(exact_model, confs, stan_dir, ...) {
+sample_approx <- function(exact_model, confs, ...) {
   fits <- list()
   JS <- length(confs)
   backend <- "cmdstanr"
@@ -25,11 +26,13 @@ sample_approx <- function(exact_model, confs, stan_dir, ...) {
       print(cf)
       stopifnot(isa(cf, "ExperimentConfiguration"))
       approx_model <- create_approx_model(
-        exact_model, cf@num_bf, cf@scale_bf,
-        stan_dir
+        exact_model, cf@num_bf, cf@scale_bf
       )
       stan_data <- get_full_stan_input(approx_model)
-      fit <- run_sampling(approx_model@stan_file, stan_data, backend, ...)
+      fit <- run_sampling(
+        approx_model@stan_file, stan_data,
+        backend, ...
+      )
       fits_js[[jb]] <- new("ApproxModelFit",
         model = approx_model,
         fit = list(fit),

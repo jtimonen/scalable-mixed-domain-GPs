@@ -76,7 +76,8 @@ normalize_var <- function(x) (x - mean(x)) / stats::sd(x)
 # WRAPPING STAN FUNCTIONS -------------------------------------------------
 
 # Expose all Stan functions without creating a complete Stan model
-expose_stanfuns <- function(STAN_HOME = "stan") {
+expose_stanfuns <- function() {
+  stan_dir <- getOption("stan_dir")
   FILES <- c(
     file.path("chunks", "functions-utils.stan"),
     file.path("chunks", "functions-kernels.stan"),
@@ -86,7 +87,7 @@ expose_stanfuns <- function(STAN_HOME = "stan") {
 
   # Create Stan model containing only a functions block with all the functions
   two_spaces <- "  "
-  f_list <- lapply(file.path(STAN_HOME, FILES), FUN = readLines)
+  f_list <- lapply(file.path(stan_dir, FILES), FUN = readLines)
   functions <- paste(unlist(f_list), collapse = paste0("\n", two_spaces))
   functions <- paste0(two_spaces, functions)
   model_code <- paste(c("functions {", functions, "}"), collapse = "\n")
@@ -94,7 +95,7 @@ expose_stanfuns <- function(STAN_HOME = "stan") {
   model_code <- paste0(header, model_code, "\n")
 
   # Write Stan code to file and expose
-  fn <- file.path(STAN_HOME, "all_functions.stan")
+  fn <- file.path(stan_dir, "all_functions.stan")
   cat(model_code, file = fn)
   rstan::expose_stan_functions(fn, verbose = TRUE)
   file.remove(fn)

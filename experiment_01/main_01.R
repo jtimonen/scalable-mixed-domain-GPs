@@ -1,12 +1,12 @@
 # Startup
 r_dir <- "../R/"
-stan_dir <- "../stan/"
+options(stan_dir = "../stan/")
 for (f in dir(r_dir)) {
   source(file.path(r_dir, f))
 }
 source("plotting_01.R")
 outdir <- startup()
-set.seed(123) # for reproducibility of data simulation
+set.seed(13923) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -55,7 +55,6 @@ efit <- lgpr::sample_model(exact_model,
 
 # Fit approximate model with different configurations
 afits <- sample_approx(exact_model, confs,
-  stan_dir = stan_dir,
   refresh = refresh,
   chains = chains,
   adapt_delta = 0.95,
@@ -134,8 +133,8 @@ res_to_save$metrics <- em
 
 # Create latex table
 library(xtable)
-xtable(em[[1]])
-xtable(em[[2]])
+xtable(em[[1]], digits=4)
+xtable(em[[2]], digits=4)
 
 # Brms
 # library(brms)
