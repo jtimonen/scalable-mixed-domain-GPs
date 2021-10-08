@@ -31,9 +31,9 @@ sample_approx <- function(exact_model, confs, ...) {
       backend, ...
     )
     fits[[j]] <- new("ApproxModelFit",
-                     model = approx_model,
-                     fit = list(fit),
-                     backend = backend
+      model = approx_model,
+      fit = list(fit),
+      backend = backend
     )
     names(fits)[j] <- experiment_info(cf)
   }

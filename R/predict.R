@@ -16,7 +16,7 @@ create_pred_stan_input <- function(amodel, x_star) {
 }
 
 # Like  lgpr:::posterior_f but with approximate model fit
-posterior_f_approx <- function(fit, x_star, refresh = NULL) {
+posterior_f_approx <- function(fit, x_star) {
   amodel <- fit@model
   emodel <- amodel@exact_model
   fit <- fit@fit[[1]]
@@ -35,10 +35,7 @@ posterior_f_approx <- function(fit, x_star, refresh = NULL) {
   as <- matrix_to_list(as)
   es <- matrix_to_list(es)
   xis <- matrix_to_list(xis)
-  if (is.null(refresh)) {
-    refresh <- round(S / 4)
-  }
-  build_f_draws(si, tdata, as, es, xis, refresh)
+  build_f_draws(si, tdata, as, es, xis)
 }
 
 # Extract draws of one component
@@ -53,10 +50,10 @@ get_approx_component <- function(fp, j) {
 }
 
 # Predict with approximate model
-pred_approx <- function(fit, x_star, refresh = NULL, c_hat_pred = NULL) {
+pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
   stopifnot(isa(fit, "ApproxModelFit"))
   om <- fit@model@obs_model
-  fp <- posterior_f_approx(fit, x_star, refresh)
+  fp <- posterior_f_approx(fit, x_star)
   emodel <- fit@model@exact_model
   S <- length(fp)
   J <- length(fp[[1]])
@@ -95,8 +92,11 @@ pred_approx <- function(fit, x_star, refresh = NULL, c_hat_pred = NULL) {
 compute_predictions <- function(fits, x_star) {
   preds <- list()
   j <- 0
+  nams <- names(fits)
   for (f in fits) {
     j <- j + 1
+    msg <- paste0("computing predictions for: ", nams[j], "\n")
+    message(msg)
     if (isa(f, "lgpfit")) {
       p <- lgpr::pred(f, x = x_star, reduce = NULL)
     } else {
@@ -104,6 +104,6 @@ compute_predictions <- function(fits, x_star) {
     }
     preds[[j]] <- p
   }
-  names(preds) <- names(fits)
+  names(preds) <- nams
   return(preds)
 }

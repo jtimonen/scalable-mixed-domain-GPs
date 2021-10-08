@@ -193,4 +193,3 @@ summarize_results <- function(fits) {
     num_div = sapply(fits, get_ndiv)
   )
 }
-

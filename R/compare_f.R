@@ -14,7 +14,7 @@ build_f <- function(stan_data, tdata, alpha, ell, xi) {
 }
 
 # Wraps STAN_build_f_draws
-build_f_draws <- function(stan_data, tdata, ALPHA, ELL, XI, refresh) {
+build_f_draws <- function(stan_data, tdata, ALPHA, ELL, XI) {
   expose_stanfuns()
   N <- stan_data$num_obs
   seq_M <- STAN_seq_len(stan_data$num_bf)
@@ -23,8 +23,7 @@ build_f_draws <- function(stan_data, tdata, ALPHA, ELL, XI, refresh) {
   comps <- matrix_to_list(stan_data$components)
   C_ranks <- as.array(stan_data$C_ranks)
   STAN_build_f_draws(
-    comps, num_xi, C_ranks, seq_M, tdata$L, tdata$PSI, ALPHA, ELL, XI,
-    refresh
+    comps, num_xi, C_ranks, seq_M, tdata$L, tdata$PSI, ALPHA, ELL, XI
   )
 }
 

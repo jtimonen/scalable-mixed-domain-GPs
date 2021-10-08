@@ -4,9 +4,10 @@ options(stan_dir = "../stan/")
 for (f in dir(r_dir)) {
   source(file.path(r_dir, f))
 }
+source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(38832) # for reproducibility of data simulation
+set.seed(8392) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -22,27 +23,16 @@ for (scale_bf in SCALES) {
 
 # Global setup
 model_formula <- y ~ age + age | z
-N <- 90
-N_indiv <- 9 #
-N_train <- N - N / N_indiv
-N_test <- N - N_train
+N_train <- 90
+N_test <- 150
 chains <- 4
 iter <- 200
 refresh <- iter
 
 # Generate data
-sd <- simulate_data(N, N_indiv, 0.3)
-dat <- sd$data
-
-# Split to train and test data
-i_test <- which(dat$id %in% c(3, 6, 9))
-split <- lgpr:::split_data(dat, i_test = i_test)
-train_dat <- split$train
-test_dat <- split$test
-N_train <- nrow(train_dat)
-N_test <- nrow(test_dat)
-cat("N_train=", N_train, ", N_test=", N_test, "\n", sep = "")
-test_z <- test_dat$z[1]
+sd <- simulate_data(N_train, N_test, 0.5)
+train_dat <- sd$train_dat
+test_dat <- sd$test_dat
 
 # Create and fit exact model using lgpr
 exact_model <- lgpr::create_model(model_formula, train_dat)
@@ -68,10 +58,12 @@ results <- summarize_results(fits)
 # Predict
 preds <- compute_predictions(fits, test_dat)
 y_star <- test_dat[["y"]]
-em <- compute_metrics(fits, preds, y_star, SCALES, NBFS)
+em <- compute_metrics(fits, preds, y_star)
+rtables <- format_results(em, SCALES, NBFS)
 
 
 # Plot denser predictions
+dat <- rbind(train_dat, test_dat)
 arange <- range(dat$age)
 xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.05)
 age_dense <- rep(xvals, times = N_indiv)
