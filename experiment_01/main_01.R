@@ -7,13 +7,13 @@ for (f in dir(r_dir)) {
 source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(3922) # for reproducibility of data simulation
+set.seed(8922) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
 j <- 0
 SCALES <- c(1.5, 2.5, 5, 10)
-NBFS <- c(4, 8, 16, 64)
+NBFS <- c(4, 16, 64, 128)
 for (scale_bf in SCALES) {
   for (num_bf in NBFS) {
     j <- j + 1
@@ -26,7 +26,7 @@ model_formula <- y ~ age + age | z
 N_train <- 90
 N_test <- 150
 chains <- 4
-iter <- 200
+iter <- 2000
 refresh <- iter
 
 # Generate data
@@ -58,8 +58,9 @@ results <- summarize_results(fits)
 # Predict
 apreds <- compute_predictions(afits, test_dat)
 epred <- pred_exact(efit, test_dat) # takes long
-preds <- c(apreds, list(pe))
+preds <- c(apreds, list(epred))
 names(preds)[length(preds)] <- "exact"
+# preds <- compute_predictions(fits, test_dat)
 y_star <- test_dat[["y"]]
 em <- compute_metrics(fits, preds, y_star)
 rtables <- format_results(em, SCALES, NBFS)
@@ -119,5 +120,9 @@ res_to_save$metrics <- em
 
 # Create latex table
 library(xtable)
-xtable(em[[1]], digits = 4)
-xtable(em[[2]], digits = 4)
+c1 <- paste0("exact = ", rtables$elpds_w1$exact)
+c2 <- paste0("exact = ", rtables$elpds_w2$exact)
+c3 <- paste0("exact = ", rtables$rmses$exact)
+xtable(rtables$elpds_w1$approx, digits = 4, caption = c1)
+xtable(rtables$elpds_w2$approx, digits = 4, caption = c2)
+xtable(rtables$rmses$approx, digits = 4, caption = c3)

@@ -101,29 +101,34 @@ pred_exact <- function(fit, x_star) {
   z <- x$z
   zs <- x_star$z
   y <- x$y
-  compute_kernel <- function(alpha, ell, x1, x2, z1, z2) {
+  compute_kernel <- function(alpha, ell, x1, x2, K_zs) {
     K1 <- alpha[1]^2 * lgpr:::kernel_eq(x1, x2, ell = ell[1])
-    K2_a <- lgpr:::kernel_zerosum(z1, z2, 3)
     K2_b <- lgpr:::kernel_eq(x1, x2, ell = ell[2])
-    K2 <- alpha[2] * K2_a * K2_b
+    K2 <- alpha[2]^2 * K_zs * K2_b
     return(K1 + K2)
   }
   N <- length(age)
   P <- length(ages)
   f_draws <- matrix(0.0, S, P)
+  K_zs <- lgpr:::kernel_zerosum(z, z, 3)
+  K_zs_s <- lgpr:::kernel_zerosum(zs, z, 3)
+  K_zs_ss <- lgpr:::kernel_zerosum(zs, zs, 3)
   for (s in 1:S) {
     alpha_s <- alpha[s, ]
     ell_s <- ell[s, ]
-    K <- compute_kernel(alpha_s, ell_s, age, age, z, z)
-    Ks <- compute_kernel(alpha_s, ell_s, ages, age, zs, z)
-    Kss <- compute_kernel(alpha_s, ell_s, ages, ages, zs, zs)
+    K <- compute_kernel(alpha_s, ell_s, age, age, K_zs)
+    Ks <- compute_kernel(alpha_s, ell_s, ages, age, K_zs_s)
+    Kss <- compute_kernel(alpha_s, ell_s, ages, ages, K_zs_ss)
     sig_s <- sig[s, 1]
     K_y <- K + sig_s**2 * diag(N)
     mu <- Ks %*% solve(K_y, y)
     Sigma <- Kss - Ks %*% solve(K_y, t(Ks))
     f_draws[s, ] <- MASS::mvrnorm(n = 1, mu, Sigma)
-    cat("s=", s, "/", S, "\n")
+    if (s %% 400 == 0) {
+      cat(s, " ")
+    }
   }
+  cat("\n")
   c_hat <- rep(0.0, P)
   h <- lgpr:::map_f_to_h(fit@model, f_draws, c_hat, NULL)
   # Return
@@ -148,7 +153,8 @@ compute_predictions <- function(fits, x_star) {
     msg <- paste0("computing predictions for: ", nams[j])
     message(msg)
     if (isa(f, "lgpfit")) {
-      p <- pred_exact(f, x_star)
+      # p <- pred_exact(f, x_star)
+      p <- lgpr::pred(f, x = x_star, reduce = NULL)
     } else {
       p <- pred_approx(f, x_star)
     }
