@@ -66,7 +66,7 @@ y_star <- test_dat[["y"]]
 num_fits <- length(fits)
 elpds <- rep(0.0, num_fits)
 for (j in 1:num_fits) {
-  elpds[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 1)
+  elpds[j] <- compute_lpd(fits[[j]], preds[[j]], y_star, 1)
 }
 
 print(elpds)

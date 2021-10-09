@@ -153,8 +153,7 @@ compute_predictions <- function(fits, x_star) {
     msg <- paste0("computing predictions for: ", nams[j])
     message(msg)
     if (isa(f, "lgpfit")) {
-      # p <- pred_exact(f, x_star)
-      p <- lgpr::pred(f, x = x_star, reduce = NULL)
+      p <- pred_exact(f, x_star)
     } else {
       p <- pred_approx(f, x_star)
     }

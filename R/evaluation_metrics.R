@@ -1,52 +1,6 @@
-# First way
-lpd_m_way1 <- function(pred, y_star) {
-  S <- lgpr::num_paramsets(pred)
-  y_means <- pred@y_mean
-  y_stds <- pred@y_std
-  log_pds <- array(0.0, dim = dim(y_means))
-  for (s in seq_len(S)) {
-    mu <- y_means[s, ]
-    sig <- y_stds[s, ]
-    log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
-  }
-  return(rowMeans(log_pds))
-}
-
-# Second way
-lpd_m_way2 <- function(pred, y_star) {
-  mu <- colMeans(pred@y_mean) # mean estimates
-  sig2 <- colMeans(pred@y_std**2) # variance estimates
-  sig <- sqrt(sig2)
-  log_pds <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
-  return(log_pds)
-}
-
-# Third way
-lpd_m_way3 <- function(pred, y_star) {
-  S <- lgpr::num_paramsets(pred)
-  y_means <- pred@y_mean
-  y_stds <- pred@y_std
-  log_pds <- array(0.0, dim = dim(y_means))
-  for (s in seq_len(S)) {
-    mu <- y_means[s, ]
-    sig <- y_stds[s, ]
-    log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
-  }
-  return(rowMeans(log_pds))
-}
-
-# Log predictive density (f marginalized)
-compute_lpd.marginal <- function(pred, y_star) {
-  stopifnot(is(pred, "GaussianPrediction"))
-  list(
-    way1 = lpd_m_way1(pred, y_star),
-    way2 = lpd_m_way2(pred, y_star)
-  )
-}
-
-
-# First way
-lpd_sg_way1 <- function(pred, y_star, s_draws) {
+# Log predictive density (using f samples)
+compute_lpd.sampled_gaussian <- function(pred, y_star, s_draws) {
+  stopifnot(is(pred, "Prediction"))
   S <- lgpr::num_paramsets(pred)
   log_pds <- array(0.0, dim = dim(pred@h))
   for (s in seq_len(S)) {
@@ -55,27 +9,6 @@ lpd_sg_way1 <- function(pred, y_star, s_draws) {
     log_pds[s, ] <- stats::dnorm(y_star, mean = mu, sd = sig, log = TRUE)
   }
   return(rowMeans(log_pds))
-}
-
-# Second way
-lpd_sg_way2 <- function(pred, y_star, s_draws) {
-  S <- lgpr::num_paramsets(pred)
-  log_pds <- array(0.0, dim = dim(pred@h))
-  sig2 <- mean(s_draws**2) # estimate for sigma2
-  h_means <- colMeans(pred@h)
-  h_std <- apply(pred@h, 2, stats::sd)
-  sd <- sqrt(h_std**2 + sig2)
-  log_pds <- stats::dnorm(y_star, mean = h_means, sd = sd, log = TRUE)
-  return(log_pds)
-}
-
-# Log predictive density (f sampled)
-compute_lpd.sampled_gaussian <- function(pred, y_star, s_draws) {
-  stopifnot(is(pred, "Prediction"))
-  list(
-    way1 = lpd_sg_way1(pred, y_star, s_draws),
-    way2 = lpd_sg_way2(pred, y_star, s_draws)
-  )
 }
 
 # Get draws of sigma
@@ -89,56 +22,29 @@ get_sigma_draws <- function(fit) {
   return(as.vector(s_draws))
 }
 
-# Compute expected log predictive density
-compute_elpd <- function(fit, pred, y_star, way = 1) {
-  if (isa(pred, "GaussianPrediction")) {
-    lpd <- compute_lpd.marginal(pred, y_star)
+# Compute mean log predictive density
+compute_mlpd <- function(fit, pred, y_star, way = 1) {
+  stopifnot(isa(pred, "Prediction"))
+  s_draws <- get_sigma_draws(fit)
+  # scale std to original data scale
+  if (isa(fit, "lgpfit")) {
+    emodel <- fit@model
   } else {
-    s_draws <- get_sigma_draws(fit)
-    # scale std to original data scale
-    if (isa(fit, "lgpfit")) {
-      emodel <- fit@model
-    } else {
-      emodel <- fit@model@exact_model
-    }
-    y_scl <- emodel@var_scalings$y
-    s_draws <- s_draws * y_scl@scale
-    lpd <- compute_lpd.sampled_gaussian(pred, y_star, s_draws)
+    emodel <- fit@model@exact_model
   }
-  if (way == 2) {
-    field <- "way2"
-  } else {
-    field <- "way1"
-  }
-  mean(lpd[[field]])
+  y_scl <- emodel@var_scalings$y
+  s_draws <- s_draws * y_scl@scale
+  lpd <- compute_lpd.sampled_gaussian(pred, y_star, s_draws)
+  mean(lpd)
 }
 
-# Root mean squared error (f marginalized)
-compute_rmse.marginal <- function(pred, y_star) {
-  stopifnot(is(pred, "GaussianPrediction"))
-  mu <- colMeans(pred@y_mean) # mean estimates
-  se <- (mu - y_star)**2
-  return(sqrt(mean(se)))
-}
-
-# Root mean squared error (f sampled)
-compute_rmse.sampled <- function(pred, y_star) {
+# Compute root mean squared error
+compute_rmse <- function(fit, pred, y_star) {
   stopifnot(is(pred, "Prediction"))
   mu <- colMeans(pred@h) # mean estimates
   se <- (mu - y_star)**2
   return(sqrt(mean(se)))
 }
-
-# Compute root mean squared error
-compute_rmse <- function(fit, pred, y_star) {
-  if (isa(pred, "GaussianPrediction")) {
-    rmse <- compute_rmse.marginal(pred, y_star)
-  } else {
-    rmse <- compute_rmse.sampled(pred, y_star)
-  }
-  return(rmse)
-}
-
 
 # Formatting
 format_result_row <- function(res, scales, num_bfs) {
@@ -170,15 +76,13 @@ format_results <- function(res, scales, num_bfs) {
 # Compute all evaluation metrics
 compute_metrics <- function(fits, preds, y_star) {
   num_fits <- length(fits)
-  elpds_w1 <- rep(0.0, num_fits)
-  elpds_w2 <- rep(0.0, num_fits)
-  rmses <- rep(0.0, num_fits)
+  mlpd <- rep(0.0, num_fits)
+  rmse <- rep(0.0, num_fits)
   for (j in 1:num_fits) {
-    elpds_w1[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 1)
-    elpds_w2[j] <- compute_elpd(fits[[j]], preds[[j]], y_star, 2)
-    rmses[j] <- compute_rmse(fits[[j]], preds[[j]], y_star)
+    mlpd[j] <- compute_mlpd(fits[[j]], preds[[j]], y_star)
+    rmse[j] <- compute_rmse(fits[[j]], preds[[j]], y_star)
   }
-  res <- rbind(elpds_w1, elpds_w2, rmses)
+  res <- rbind(mlpd, rmse)
   colnames(res) <- names(fits)
   return(res)
 }

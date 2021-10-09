@@ -7,13 +7,13 @@ for (f in dir(r_dir)) {
 source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(8922) # for reproducibility of data simulation
+set.seed(9262) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
 j <- 0
-SCALES <- c(1.5, 2.5, 5, 10)
-NBFS <- c(4, 16, 64, 128)
+SCALES <- c(1.5, 2.5, 4)
+NBFS <- c(4, 8, 16, 32, 64)
 for (scale_bf in SCALES) {
   for (num_bf in NBFS) {
     j <- j + 1
@@ -56,11 +56,7 @@ names(fits)[length(fits)] <- "exact"
 results <- summarize_results(fits)
 
 # Predict
-apreds <- compute_predictions(afits, test_dat)
-epred <- pred_exact(efit, test_dat) # takes long
-preds <- c(apreds, list(epred))
-names(preds)[length(preds)] <- "exact"
-# preds <- compute_predictions(fits, test_dat)
+preds <- compute_predictions(fits, test_dat)
 y_star <- test_dat[["y"]]
 em <- compute_metrics(fits, preds, y_star)
 rtables <- format_results(em, SCALES, NBFS)
