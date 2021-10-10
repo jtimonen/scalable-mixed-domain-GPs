@@ -77,7 +77,8 @@ for (N_train in N_TRAIN) {
     summary = sumr,
     preds_train = preds_train,
     preds_test = preds_test,
-    fits = fits
+    fits = fits,
+    sess_info = sessionInfo()
   )
   fn <- file.path(outdir, paste0("res_", N_train, ".rds"))
   cat(" * Saving to", fn, "\n")
