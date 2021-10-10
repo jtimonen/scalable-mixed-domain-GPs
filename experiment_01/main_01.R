@@ -34,7 +34,7 @@ for (scale_bf in SCALES) {
 model_formula <- y ~ age + age | z
 N_test <- 150
 chains <- 4
-iter <- 2000
+iter <- 200
 refresh <- iter
 
 N_TRAIN <- c(60, 90, 120, 150, 180, 210)
