@@ -77,13 +77,13 @@ setClass(
 
 # Get the CmdStanFit of an ApproxModelFit
 get_cmdstanfit <- function(fit) {
-  stopifnot(isa(fit, "ApproxModelFit"))
+  stopifnot(is(fit, "ApproxModelFit"))
   fit@fit[[1]]
 }
 
 # Get full 'Stan' input of an ApproxModel
 get_full_stan_input <- function(approx_model) {
-  stopifnot(isa(approx_model, "ApproxModel"))
+  stopifnot(is(approx_model, "ApproxModel"))
   si <- approx_model@exact_model@stan_input
   si_add <- approx_model@added_stan_input
   c(si, si_add)
