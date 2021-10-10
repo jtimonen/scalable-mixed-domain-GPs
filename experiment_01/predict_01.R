@@ -51,7 +51,7 @@ get_approx_component <- function(fp, j) {
 
 # Predict with approximate model
 pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
-  stopifnot(isa(fit, "ApproxModelFit"))
+  stopifnot(is(fit, "ApproxModelFit"))
   om <- fit@model@obs_model
   fp <- posterior_f_approx(fit, x_star)
   emodel <- fit@model@exact_model
@@ -163,7 +163,7 @@ compute_predictions <- function(fits, x_star) {
     j <- j + 1
     msg <- paste0("computing predictions for: ", nams[j])
     message(msg)
-    if (isa(f, "lgpfit")) {
+    if (is(f, "lgpfit")) {
       p <- pred_exact(f, x_star)
     } else {
       p <- pred_approx(f, x_star)

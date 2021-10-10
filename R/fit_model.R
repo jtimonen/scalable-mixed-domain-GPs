@@ -21,7 +21,7 @@ sample_approx <- function(exact_model, confs, ...) {
   for (j in 1:J) {
     cf <- confs[[j]]
     print(cf)
-    stopifnot(isa(cf, "ExperimentConfiguration"))
+    stopifnot(is(cf, "ExperimentConfiguration"))
     approx_model <- create_approx_model(
       exact_model, cf@num_bf, cf@scale_bf
     )

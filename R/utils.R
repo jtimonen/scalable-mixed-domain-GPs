@@ -39,6 +39,7 @@ startup <- function(replication_idx) {
   library(posterior)
   library(rstan)
   library(RColorBrewer)
+  library(methods)
   rstan::rstan_options(javascript = FALSE)
   rstan::rstan_options(auto_write = TRUE)
   library(cmdstanr)

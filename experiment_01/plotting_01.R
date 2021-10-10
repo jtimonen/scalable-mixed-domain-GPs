@@ -6,7 +6,7 @@ create_pred_plot_df <- function(preds) {
   model <- c()
   for (j in 1:J) {
     p <- preds[[j]]
-    if (isa(p, "Prediction")) {
+    if (is(p, "Prediction")) {
       h <- colMeans(p@h)
     } else {
       h <- colMeans(p@y_mean)
@@ -23,7 +23,7 @@ create_pred_plot_df <- function(preds) {
 # Create data frame for ggplot
 create_f_plot_df <- function(pred) {
   df <- NULL
-  if (isa(pred, "Prediction")) {
+  if (is(pred, "Prediction")) {
     h <- pred@h
   } else {
     stop("pred must be a Prediction object")

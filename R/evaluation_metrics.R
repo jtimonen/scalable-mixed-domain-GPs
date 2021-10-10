@@ -13,7 +13,7 @@ compute_lpd.sampled_gaussian <- function(pred, y_star, s_draws) {
 
 # Get draws of sigma
 get_sigma_draws <- function(fit) {
-  if (isa(fit, "ApproxModelFit")) {
+  if (is(fit, "ApproxModelFit")) {
     fd <- get_cmdstanfit(fit)
     s_draws <- posterior::merge_chains(fd$draws("sigma"))
   } else {
@@ -24,10 +24,10 @@ get_sigma_draws <- function(fit) {
 
 # Compute mean log predictive density
 compute_mlpd <- function(fit, pred, y_star, way = 1) {
-  stopifnot(isa(pred, "Prediction"))
+  stopifnot(is(pred, "Prediction"))
   s_draws <- get_sigma_draws(fit)
   # scale std to original data scale
-  if (isa(fit, "lgpfit")) {
+  if (is(fit, "lgpfit")) {
     emodel <- fit@model
   } else {
     emodel <- fit@model@exact_model
