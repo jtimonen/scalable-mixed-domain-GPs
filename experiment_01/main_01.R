@@ -1,3 +1,11 @@
+#!/usr/bin/env Rscript
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) == 0) {
+  replication_idx <- 0
+} else {
+  replication_idx <- as.numeric(args[1])
+}
+
 # Startup
 r_dir <- "../R/"
 options(stan_dir = "../stan/")
@@ -6,8 +14,9 @@ for (f in dir(r_dir)) {
 }
 source("simulate_01.R")
 source("plotting_01.R")
-outdir <- startup()
-set.seed(142) # for reproducibility of data simulation
+source("predict_01.R")
+outdir <- startup(replication_idx)
+cat("\n * Results will be saved to:", outdir, "\n")
 
 # Settings
 confs <- list()
@@ -23,101 +32,54 @@ for (scale_bf in SCALES) {
 
 # Global setup
 model_formula <- y ~ age + age | z
-N_train <- 90
 N_test <- 150
 chains <- 4
 iter <- 2000
 refresh <- iter
 
-# Generate data
-sd <- simulate_data(N_train, N_test, 0.5)
-train_dat <- sd$train_dat
-test_dat <- sd$test_dat
+N_TRAIN <- c(60, 90) # , 120, 150, 180, 210)
+for (N_train in N_TRAIN) {
 
-# Create and fit exact model using lgpr
-exact_model <- lgpr::create_model(model_formula, train_dat)
-efit <- lgpr::sample_model(exact_model,
-  chains = chains, refresh = refresh,
-  iter = iter
-)
+  # Generate data
+  sd <- simulate_data(N_train, N_test, 0.5)
+  train_dat <- sd$train_dat
+  test_dat <- sd$test_dat
 
-# Fit approximate model with different configurations
-afits <- sample_approx(exact_model, confs,
-  refresh = refresh,
-  chains = chains,
-  adapt_delta = 0.95,
-  iter_warmup = iter / 2,
-  iter_sampling = iter / 2
-)
+  # Create and fit exact model using lgpr
+  exact_model <- lgpr::create_model(model_formula, train_dat)
+  efit <- lgpr::sample_model(exact_model,
+    chains = chains, refresh = refresh,
+    iter = iter
+  )
 
-# Collect results
-fits <- c(afits, list(efit))
-names(fits)[length(fits)] <- "exact"
-results <- summarize_results(fits)
+  # Fit approximate model with different configurations
+  afits <- sample_approx(exact_model, confs,
+    refresh = refresh,
+    chains = chains,
+    adapt_delta = 0.95,
+    iter_warmup = iter / 2,
+    iter_sampling = iter / 2
+  )
 
-# Predict
-preds <- compute_predictions(fits, test_dat)
-y_star <- test_dat[["y"]]
-em <- compute_metrics(fits, preds, y_star)
-rtables <- format_results(em, SCALES, NBFS)
-print(rtables$mlpd)
-# Exact
-# fe <- fits[["exact"]]
-# pe <- preds[["exact"]]
-# mu <- colMeans(pe@y_mean) # mean estimates
-# y_std_e <- colMeans(pe@y_std) # variance estimates
-# y_std_e <- sqrt(sig2)
-# sig <- lgpr::get_draws(fe, pars="sigma")
-# sig <- fe@model@var_scalings$y@scale * sig
+  # Summarize results
+  fits <- c(afits, list(efit))
+  names(fits)[length(fits)] <- "exact"
+  sumr <- summarize_results(fits)
 
-# Approx
-# fa <- fits[[8]]
-# pa <- preds[[8]]
-# sf <- get_cmdstanfit(fa)
-# y_scl <- fa@model@exact_model@var_scalings$y
-# s_draws <- as.vector(posterior::merge_chains(sf$draws("sigma")))
-# s_draws <- s_draws * y_scl@scale
-# h_mean <- colMeans(pa@h)
-# h_std <- apply(pa@h, 2, stats::sd)
-# y_std_a <- sqrt(h_std**2 + mean(s_draws)**2)
-# lpd <- compute_lpd.sampled_gaussian(pa, y_star, s_draws)[["way2"]]
-# plot(y_std_a, ylim=c(0,1.5))
-# lines(y_std_e, col="red")
+  # Predict
+  preds_train <- compute_predictions(fits, train_dat)
+  preds_test <- compute_predictions(fits, test_dat)
 
-
-# Plot denser predictions
-x_dense <- create_x_dense(train_dat, test_dat)
-preds_dense <- compute_predictions(fits, x_dense)
-
-# Plots
-plt1 <- plot_against_exact(1:5, train_dat, test_dat, preds_dense)
-plt2 <- plot_against_exact(6:10, train_dat, test_dat, preds_dense)
-plt3 <- plot_against_exact(11:15, train_dat, test_dat, preds_dense)
-
-# Save plot
-j <- 0
-for (pp in pred_plots) {
-  j <- j + 1
-  nam <- names(pred_plots)[j]
-  np <- gsub("=", "_", gsub("[.]", "-", gsub(" ", "_", nam)))
-  fn <- file.path(outdir, paste0("preds_", N, "_", np, ".pdf"))
-  cat("Saving", fn, "\n")
-  ggsave(fn, plot = pp, width = 5.28, height = 4.75)
+  # Save results to RDS file
+  all_results <- list(
+    train_dat = train_dat,
+    test_dat = test_dat,
+    summary = sumr,
+    preds_train = preds_train,
+    preds_test = preds_test,
+    fits = fits
+  )
+  fn <- file.path(outdir, paste0("res_", N_train, ".rds"))
+  cat(" * Saving to", fn, "\n")
+  saveRDS(all_results, file = fn)
 }
-
-# Runtimes plot
-# rt <- plot_runtimes_wrt_N(PRES, NUM_BF, N_sizes, scale_bf)
-# ggsave("res/exp3/times3.pdf", plot = rt, width = 5.5, height = 4.3)
-
-# Save results in Rdata
-res_to_save <- results[c("runtimes", "num_div")]
-res_to_save$metrics <- em
-
-# Create latex table
-library(xtable)
-c1 <- paste0("exact = ", rtables$elpds_w1$exact)
-c2 <- paste0("exact = ", rtables$elpds_w2$exact)
-c3 <- paste0("exact = ", rtables$rmses$exact)
-xtable(rtables$elpds_w1$approx, digits = 4, caption = c1)
-xtable(rtables$elpds_w2$approx, digits = 4, caption = c2)
-xtable(rtables$rmses$approx, digits = 4, caption = c3)

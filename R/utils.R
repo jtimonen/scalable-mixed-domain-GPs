@@ -31,7 +31,7 @@ check_lgpr_version <- function() {
 }
 
 # Startup for all experiments
-startup <- function() {
+startup <- function(replication_idx) {
   library(lgpr)
   check_lgpr_version()
   library(ggplot2)
@@ -42,7 +42,8 @@ startup <- function() {
   rstan::rstan_options(javascript = FALSE)
   rstan::rstan_options(auto_write = TRUE)
   library(cmdstanr)
-  outdir <- file.path("results")
+  outdir <- file.path("results", paste0("repl_", replication_idx))
+  if (!dir.exists("results")) dir.create("results")
   if (!dir.exists(outdir)) dir.create(outdir)
   return(outdir)
 }
@@ -186,7 +187,6 @@ summarize_results <- function(fits) {
   colnames(p_means) <- names(fits)
   colnames(p_sds) <- names(fits)
   list(
-    draws = draws,
     p_means = p_means,
     p_sds = p_sds,
     runtimes = sapply(fits, get_runtimes),
