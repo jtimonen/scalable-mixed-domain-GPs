@@ -5,8 +5,10 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
     stan_dir <- getOption("stan_dir")
     cat("model_file =", MODEL_FILE, "\n")
     cat("include_paths =", stan_dir, "\n")
-    sm <- cmdstanr::cmdstan_model(MODEL_FILE, include_paths = stan_dir,
-                                  dir = stan_dir)
+    sm <- cmdstanr::cmdstan_model(MODEL_FILE,
+      include_paths = stan_dir,
+      dir = stan_dir
+    )
     fit <- sm$sample(data = stan_data, ...)
   } else {
     sm <- rstan::stan_model(MODEL_FILE)

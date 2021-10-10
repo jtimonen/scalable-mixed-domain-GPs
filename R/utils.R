@@ -97,7 +97,8 @@ expose_stanfuns <- function() {
   model_code <- paste0(header, model_code, "\n")
 
   # Write Stan code to file and expose
-  fn <- file.path(stan_dir, "all_functions.stan")
+  tfile <- tempfile()
+  fn <- paste0(tfile, ".stan")
   cat(model_code, file = fn)
   rstan::expose_stan_functions(fn, verbose = TRUE)
   file.remove(fn)
