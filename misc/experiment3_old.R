@@ -8,7 +8,7 @@ set.seed(93232) # for reproducibility of data simulation
 # Settings
 confs <- list()
 j <- 0
-for (num_bf in c(4, 8, 16, 32)) {
+for (num_bf in c(4, 8, 16, 32, 128)) {
   j <- j + 1
   confs[[j]] <- create_configuration(num_bf, 1.5)
 }

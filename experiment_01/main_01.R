@@ -7,7 +7,7 @@ for (f in dir(r_dir)) {
 source("simulate_01.R")
 source("plotting_01.R")
 outdir <- startup()
-set.seed(9262) # for reproducibility of data simulation
+set.seed(142) # for reproducibility of data simulation
 
 # Settings
 confs <- list()
@@ -60,7 +60,7 @@ preds <- compute_predictions(fits, test_dat)
 y_star <- test_dat[["y"]]
 em <- compute_metrics(fits, preds, y_star)
 rtables <- format_results(em, SCALES, NBFS)
-
+print(rtables$mlpd)
 # Exact
 # fe <- fits[["exact"]]
 # pe <- preds[["exact"]]
@@ -90,10 +90,9 @@ x_dense <- create_x_dense(train_dat, test_dat)
 preds_dense <- compute_predictions(fits, x_dense)
 
 # Plots
-plt1 <- plot_against_exact(1:4, train_dat, test_dat, preds_dense)
-plt2 <- plot_against_exact(5:8, train_dat, test_dat, preds_dense)
-plt3 <- plot_against_exact(9:12, train_dat, test_dat, preds_dense)
-plt4 <- plot_against_exact(13:16, train_dat, test_dat, preds_dense)
+plt1 <- plot_against_exact(1:5, train_dat, test_dat, preds_dense)
+plt2 <- plot_against_exact(6:10, train_dat, test_dat, preds_dense)
+plt3 <- plot_against_exact(11:15, train_dat, test_dat, preds_dense)
 
 # Save plot
 j <- 0

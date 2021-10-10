@@ -61,7 +61,7 @@ simulate_data <- function(N_train, N_test, sigma) {
 create_x_dense <- function(train_dat, test_dat) {
   dat <- rbind(train_dat, test_dat)
   arange <- range(dat$age)
-  xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.05)
+  xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.5)
   age_dense <- rep(xvals, times = 9)
   id_dense <- rep(1:9, each = length(xvals))
   z_dense <- rep(c(1, 2, 3, 1, 2, 3, 1, 2, 3), each = length(xvals))
