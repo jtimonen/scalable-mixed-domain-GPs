@@ -5,10 +5,11 @@ if (length(args) == 0) {
 } else {
   replication_idx <- as.numeric(args[1])
 }
+cat("Currently in", getwd(), "\n")
 
 # Startup
-r_dir <- "../R/"
-options(stan_dir = "../stan/")
+r_dir <- normalizePath("../R")
+options(stan_dir = normalizePath("../stan"))
 for (f in dir(r_dir)) {
   source(file.path(r_dir, f))
 }
