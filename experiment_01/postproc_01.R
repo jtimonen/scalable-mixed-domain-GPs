@@ -1,6 +1,4 @@
-y_star <- test_dat[["y"]]
-em <- compute_metrics(fits, preds, y_star)
-rtables <- format_results(em, SCALES, NBFS)
+
 
 # Plot denser predictions
 x_dense <- create_x_dense(train_dat, test_dat)

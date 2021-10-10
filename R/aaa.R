@@ -66,12 +66,14 @@ setMethod(
 #' @slot model the approximate model
 #' @slot fit fit object
 #' @slot backend used backend
+#' @slot info additional info list
 setClass(
   "ApproxModelFit",
   representation(
     model = "ApproxModel",
     fit = "list",
-    backend = "character"
+    backend = "character",
+    info = "list"
   )
 )
 

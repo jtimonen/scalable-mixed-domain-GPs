@@ -70,15 +70,23 @@ for (N_train in N_TRAIN) {
   # Predict
   preds_train <- compute_predictions(fits, train_dat)
   preds_test <- compute_predictions(fits, test_dat)
+  y_star <- test_dat[["y"]]
+
+  # Compute metrics
+  em_test <- compute_metrics(fits, preds_test, y_star)
+  rtables_test <- format_results(em_test, SCALES, NBFS)
+  em_train <- compute_metrics(fits, preds_train, train_dat$y)
+  rtables_train <- format_results(em_train, SCALES, NBFS)
+  print(rtables_train)
+  print(rtables_test)
 
   # Save results to RDS file
   all_results <- list(
     train_dat = train_dat,
     test_dat = test_dat,
     summary = sumr,
-    preds_train = preds_train,
-    preds_test = preds_test,
-    fits = fits,
+    rtables_train = rtables_train,
+    rtables_test = rtables_test,
     sess_info = sessionInfo()
   )
   fn <- file.path(outdir, paste0("res_", N_train, ".rds"))
