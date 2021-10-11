@@ -7,6 +7,7 @@ for (f in dir(r_dir)) {
 library(lgpr)
 library(ggplot2)
 library(ggpubr)
+source("plotting_01.R")
 
 # Load results
 N_TRAIN <- c(60, 90, 120, 150, 180, 210)
@@ -40,35 +41,13 @@ for (N_train in N_TRAIN) {
     res_approx[4, repl_idx, , ] <- res$rtables_test$mlpd$approx
     res_exact[4, repl_idx] <- res$rtables_test$mlpd$exact
   }
-  rownames(res_exact) <- c("time", "num_div", "mpld_train", "mpld_test")
+  rownames(res_exact) <- c("time", "num_div", "mlpd_train", "mlpd_test")
   results[[j]] <- list(exact = res_exact, approx = res_approx)
 }
 names(results) <- N_TRAIN
 
-# Plot results
-plot_res <- function(res, var_idx, scales, bfs) {
-  ra <- res$approx[var_idx,,,]
-  ra_mean <- apply(ra, c(2,3), mean)
-  ra_std <- apply(ra, c(2,3), stats::sd)
-  re <- res$exact[var_idx,]
-  vname <- rownames(res$exact)[var_idx]
-  re_mean <- mean(re)
-  re_std <- mean(re)
-  df_val_mean <- as.vector(ra_mean)
-  df_val_std <- as.vector(ra_std)
-  df_c <- rep(scales, times=length(bfs))
-  df_b <- rep(bfs, each=length(scales))
-  df <- data.frame(as.numeric(df_b), as.factor(df_c), df_val_mean, df_val_std)
-  colnames(df) <- c("B", "c", "valm", "vals")
-  plt <- ggplot(df, aes(x=B, y=valm, group=c,color=c)) +  geom_line() +
-    geom_point() + ylab(vname) + scale_x_continuous(breaks=bfs) +
-    geom_hline(yintercept = re_mean,  lty=2) +
-    theme(legend.position = "top") +
-    ylim(-5.25, -4.55)
-}
-
-plots_test_mpld <- list()
-for(j in 1:6) {
-  plots_test_mpld[[j]] <- plot_res(results[[j]], 4, used_scales, used_nbfs)
-}
-all <- ggarrange(plotlist=plots_test_mpld, labels=paste("N_train =", N_TRAIN))
+# MLPD PLOTS
+p_train <- plot_mlpd(results, used_scales, used_nbfs, train = TRUE)
+p_test <- plot_mlpd(results, used_scales, used_nbfs, train = FALSE)
+ggsave(p_train, file="mlpd_train.pdf", width = 7.58, height = 5.05)
+ggsave(p_test, file="mlpd_test.pdf", width = 7.58, height = 5.05)

@@ -109,3 +109,87 @@ plot_against_exact <- function(inds, train_dat, test_dat, preds) {
   plot_preds(train_dat, test_dat, pd) + theme_bw() +
     theme(legend.position = "top") + ylab("")
 }
+
+
+# Plot results
+plot_results_cb <- function(res, var_idx, scales, bfs) {
+  ra <- res$approx[var_idx, , , ]
+  ra_mean <- apply(ra, c(2, 3), mean)
+  ra_std <- apply(ra, c(2, 3), stats::sd)
+  re <- res$exact[var_idx, ]
+  vname <- rownames(res$exact)[var_idx]
+  re_mean <- mean(re)
+  re_std <- mean(re)
+  df_val_mean <- as.vector(ra_mean)
+  df_val_std <- as.vector(ra_std)
+  df_c <- rep(scales, times = length(bfs))
+  df_b <- rep(bfs, each = length(scales))
+  df <- data.frame(as.numeric(df_b), as.factor(df_c), df_val_mean, df_val_std)
+  colnames(df) <- c("B", "c", "valm", "vals")
+  aesth <- aes(
+    x = B, y = valm, ymin = valm - vals, ymax = valm + vals,
+    group = c, color = c, pch = c
+  )
+  plt <- ggplot(df, aesth) +
+    geom_line() +
+    geom_point() +
+    ylab(vname) +
+    scale_x_continuous(breaks = bfs) +
+    geom_hline(yintercept = re_mean, lty = 2) +
+    # geom_errorbar() +
+    xlab("Number of basis functions (B)") +
+    theme_bw() +
+    labs(color = "Domain scale (c)", pch = "Domain scale (c)")
+  return(plt)
+}
+
+# Plot MLPD results
+plot_mlpd <- function(results, used_scales, used_nbfs, train = FALSE) {
+  titles <- list(
+    expression(paste("", "N", phantom()[{
+      paste("train")
+    }], " = 60", "")),
+    expression(paste("", "N", phantom()[{
+      paste("train")
+    }], " = 90", "")),
+    expression(paste("", "N", phantom()[{
+      paste("train")
+    }], " = 120", "")),
+    expression(paste("", "N", phantom()[{
+      paste("train")
+    }], " = 150", "")),
+    expression(paste("", "N", phantom()[{
+      paste("train")
+    }], " = 180", "")),
+    expression(paste("", "N", phantom()[{
+      paste("train")
+    }], " = 210", ""))
+  )
+  if (train) {
+    dname <- "train"
+    var_idx <- 3
+  } else {
+    var_idx <- 4
+    dname <- "test"
+  }
+  plots_mlpd <- list()
+  var_idx <- 4
+  for (j in 1:6) {
+    plt_j <- plot_results_cb(results[[j]], var_idx, used_scales, used_nbfs)
+    if (j %in% c(2, 3, 5, 6)) {
+      plt_j <- plt_j + ylab(" ")
+    } else {
+      plt_j <- plt_j + ylab(paste0("MLPD (", dname, " data)"))
+    }
+    if (j != 5) {
+      plt_j <- plt_j + xlab(" ")
+    }
+    plots_mlpd[[j]] <- plt_j + ylim(-5.25, -4.55) + ggtitle(titles[[j]])
+  }
+
+  # Return
+  ggarrange(
+    plotlist = plots_mlpd, nrow = 2, ncol = 3,
+    common.legend = TRUE, label.y = 1.05
+  )
+}
