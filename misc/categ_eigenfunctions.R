@@ -1,42 +1,4 @@
-# lgpr
-library(lgpr)
-if (packageVersion("lgpr") != "1.1.4") {
-  stop("lgpr 1.1.4 is required!")
-}
-
-# Other requirements
 library(rstan)
-library(ggplot2)
-library(ggpubr)
-rstan_options(javascript = FALSE)
-rstan_options(auto_write = TRUE)
-
-
-# Simulate data using lgpr
-n_per_N <- 13
-sd <- simulate_data(
-  N = 4, t_data = seq(1, 5, length.out = n_per_N),
-  relevances = c(0, 1, 1),
-  covariates = c(2),
-  lengthscales = c(1, 0.5, 0.5), t_jitter = 0.5
-)
-dat <- sd@data
-
-
-# Create model using lgpr
-model <- create_model(y ~ zs(z) + gp(age) * zs(id), dat, sample_f = TRUE)
-
-# Source all R files
-for (f in dir("R")) {
-  path <- file.path("R", f)
-  source(path)
-}
-
-# Create additional Stan input
-num_bf <- 25
-scale_bf <- 1.5
-stan_data <- setup_approx(model, num_bf = num_bf, scale_bf = scale_bf)
-
 
 # Function
 create_C_matrix_zs <- function(num_cat) {
@@ -44,5 +6,28 @@ create_C_matrix_zs <- function(num_cat) {
   lgpr:::STAN_kernel_const(z, z, 0, num_cat, get_stream())
 }
 
-NC <- 5
-V <- eigen(create_C_matrix_zs(NC), symmetric = T)$vectors
+# Eigendecomposition for zs kernel
+decompose_zs <- function(n_cat) {
+  evals <- rep(0.0, n_cat)
+  evecs <- matrix(0.0, n_cat, n_cat)
+  evals[1] <- 0.0
+  evals[2:n_cat] <- n_cat/(n_cat-1.0)
+  ev1 <- rep(1.0, n_cat)
+  evecs[,1] <- ev1
+  evecs[,2:n_cat] <- pracma::nullspace(t(ev1))
+  list(
+    values = evals,
+    vectors = evecs
+  )
+}
+
+# Check eigedecomposition correctness
+check_decomp <- function(eig) {
+  eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+}
+
+NC <- 4
+K <- create_C_matrix_zs(NC)
+V <- eigen(K, symmetric = T)
+V2 <- decompose_zs(NC)
+print(check_decomp(V2))
