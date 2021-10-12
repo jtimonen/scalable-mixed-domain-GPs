@@ -87,6 +87,73 @@ pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
   )
 }
 
+# Draw exact predictions
+pred_exact <- function(fit, x_star) {
+  x <- fit@model@data
+  alpha <- lgpr::get_draws(fit, pars = "alpha")
+  ell <- lgpr::get_draws(fit, pars = "ell")
+  sig <- lgpr::get_draws(fit, pars = "sigma")
+  S <- nrow(alpha)
+  x_scl <- fit@model@var_scalings$x_cont$age
+  y_scl <- fit@model@var_scalings$y
+  age <- lgpr:::apply_scaling(x_scl, x$age)
+  ages <- lgpr:::apply_scaling(x_scl, x_star$age)
+  z <- x$z
+  zs <- x_star$z
+  y_norm <- lgpr:::apply_scaling(y_scl, x$y)
+  compute_kernels <- function(alpha, ell, x1, x2, K_zs) {
+    K1 <- alpha[1]^2 * lgpr:::kernel_eq(x1, x2, ell = ell[1])
+    K2_b <- lgpr:::kernel_eq(x1, x2, ell = ell[2])
+    K2 <- alpha[2]^2 * K_zs * K2_b
+    return(list(K1, K2))
+  }
+  draw_f <- function(K, Ks, Kss, sigma, y_norm) {
+    N <- nrow(K)
+    K_y <- K + sigma**2 * diag(N)
+    mu <- Ks %*% solve(K_y, y_norm)
+    Sigma <- Kss - Ks %*% solve(K_y, t(Ks))
+    MASS::mvrnorm(n = 1, mu, Sigma)
+  }
+  N <- length(age)
+  P <- length(ages)
+  f1_draws <- matrix(0.0, S, P)
+  f2_draws <- matrix(0.0, S, P)
+  f_draws <- matrix(0.0, S, P)
+  h_draws <- f_draws
+  K_zs <- lgpr:::kernel_zerosum(z, z, 3)
+  K_zs_s <- lgpr:::kernel_zerosum(zs, z, 3)
+  K_zs_ss <- lgpr:::kernel_zerosum(zs, zs, 3)
+  for (s in 1:S) {
+    alpha_s <- alpha[s, ]
+    ell_s <- ell[s, ]
+    K <- compute_kernels(alpha_s, ell_s, age, age, K_zs)
+    Ks <- compute_kernels(alpha_s, ell_s, ages, age, K_zs_s)
+    Kss <- compute_kernels(alpha_s, ell_s, ages, ages, K_zs_ss)
+    sig_s <- sig[s, 1]
+    K_sum <- K[[1]] + K[[2]]
+    Ks_sum <- Ks[[1]] + Ks[[2]]
+    Kss_sum <- Kss[[1]] + Kss[[2]]
+    f1_draws[s, ] <- draw_f(K_sum, Ks[[1]], Kss[[1]], sig_s, y_norm)
+    f2_draws[s, ] <- draw_f(K_sum, Ks[[2]], Kss[[2]], sig_s, y_norm)
+    f_draws[s, ] <- draw_f(K_sum, Ks_sum, Kss_sum, sig_s, y_norm)
+    h_draws[s, ] <- lgpr:::apply_scaling(y_scl, f_draws[s, ], inverse = TRUE)
+    if (s %% 400 == 0) {
+      cat(s, " ")
+    }
+  }
+  cat("\n")
+  # Return
+  fc <- list(f_draws)
+  names(fc) <- "one"
+  new("Prediction",
+    f_comp = fc,
+    f = f_draws,
+    h = h_draws,
+    x = x_star,
+    extrapolated = FALSE
+  )
+}
+
 # Compute predictions using several fitted models
 compute_predictions <- function(fits, x_star) {
   preds <- list()

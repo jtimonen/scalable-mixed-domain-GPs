@@ -1,4 +1,6 @@
 #!/usr/bin/env Rscript
+
+# Main R script for simstudy_twocomp
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   replication_idx <- 0

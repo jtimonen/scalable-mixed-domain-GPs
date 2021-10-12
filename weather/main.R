@@ -1,4 +1,6 @@
 #!/usr/bin/env Rscript
+
+# Main R script for the weather data experiment
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   array_idx <- 0
@@ -8,37 +10,10 @@ if (length(args) == 0) {
 cat("Currently in", getwd(), "\n")
 
 # Startup
-r_dir <- normalizePath("../R")
-options(stan_dir = normalizePath("../stan"))
-for (f in dir(r_dir)) {
-  source(file.path(r_dir, f))
-}
-source("plotting_02.R")
-source("predict_02.R")
+source(normalizePath(file.path("..", "common.R")))
 outdir <- startup()
-cat("\n * Results will be saved to:", outdir, "\n")
-
-library(fda)
-library(lgpr)
-temp <- CanadianWeather$dailyAv[, , 1]
-precip <- CanadianWeather$dailyAv[, , 3]
-n_days <- nrow(temp)
-n_stations <- ncol(temp)
-regions <- rep(as.factor(CanadianWeather$region), each = n_days)
-stations <- rep(as.factor(CanadianWeather$place), each = n_days)
-day <- rep(c(1:n_days), times = n_stations)
-dat <- data.frame(day, as.vector(temp), as.vector(precip), stations, regions)
-colnames(dat) <- c("day", "temperature", "precipitation", "station", "region")
-dat$day <- as.numeric(dat$day)
-
-# Plot
-p1 <- plot_data(dat,
-  y_name = "temperature", group_by = "station",
-  color_by = "station",
-  x_name = "day", facet_by = "region",
-  main = "Temperature"
-)
-
+dat <- load_weather_data()
+stop("Moi")
 
 # Settings
 chains <- 2
