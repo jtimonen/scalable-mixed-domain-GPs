@@ -39,13 +39,6 @@ p1 <- plot_data(dat,
   main = "Temperature"
 )
 
-p2 <- plot_data(dat,
-  y_name = "precipitation", group_by = "station",
-  color_by = "station",
-  x_name = "day", facet_by = "region",
-  main = "Precipitation (log10)"
-)
-
 
 # Settings
 chains <- 2
@@ -54,7 +47,7 @@ refresh <- 5
 confs <- list(create_configuration(num_bf = 20, scale_bf = 1.5))
 
 # Create model using lgpr
-model_formula <- temperature ~ day + day | region
+model_formula <- temperature ~ day + day | region + day | station
 exact_model <- lgpr::create_model(model_formula, dat)
 
 # Fit approximate model
@@ -70,7 +63,7 @@ fa <- afits[[1]]
 pa <- pred_approx(fa, dat)
 
 # Plot f or it's component
-plot_f <- function(pred, idx = 0) {
+plot_f <- function(pred, idx = 0, aesth) {
   if (idx == 0) {
     f <- pred@h
     ylab <- "h"
@@ -81,16 +74,28 @@ plot_f <- function(pred, idx = 0) {
   f_mean <- colMeans(f)
   f_std <- apply(f, 2, stats::sd)
   df <- cbind(dat, f_mean, f_std)
-  plt <- ggplot(df, aes(
-    x = day, y = f_mean, ymin = f_mean - 2 * f_std,
-    ymax = f_mean + 2 * f_std, group = region, color = region,
-    fill = region
-  )) +
+  plt <- ggplot(df, aesth) +
     geom_line() +
-    geom_ribbon(alpha = 0.3) +
     ylab(ylab)
 }
 
-pf1 <- plot_f(pa, 1)
-pf2 <- plot_f(pa, 2)
-ph <- plot_f(pa, 0)
+
+aes1 <- aes(
+  x = day, y = f_mean, ymin = f_mean - 2 * f_std,
+  ymax = f_mean + 2 * f_std
+)
+aes2 <- aes(
+  x = day, y = f_mean, ymin = f_mean - 2 * f_std,
+  ymax = f_mean + 2 * f_std, group = region, color = region,
+  fill = region
+)
+aes3 <- aes(
+  x = day, y = f_mean, ymin = f_mean - 2 * f_std,
+  ymax = f_mean + 2 * f_std, group = station, color = station,
+  fill = station
+)
+
+pf1 <- plot_f(pa, 1, aes1) + geom_ribbon(alpha = 0.3)
+pf2 <- plot_f(pa, 2, aes2) + geom_ribbon(alpha = 0.3)
+pf3 <- plot_f(pa, 3, aes3)
+ph <- plot_f(pa, 0, aes3)

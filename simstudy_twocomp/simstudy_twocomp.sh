@@ -6,5 +6,5 @@
 #SBATCH --mem=3000
 #SBATCH -o out/repl-%a.out
 module load r/4.0.3-python3
-srun Rscript --vanilla main_01.R $SLURM_ARRAY_TASK_ID
+srun Rscript --vanilla main.R $SLURM_ARRAY_TASK_ID
 

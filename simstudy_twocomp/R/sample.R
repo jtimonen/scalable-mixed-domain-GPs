@@ -70,22 +70,3 @@ sample_approx <- function(exact_model, confs, ...) {
 create_fitname <- function(num_bf, scale_bf) {
   paste0("B = ", formatC(num_bf, width = 3))
 }
-
-# Sample exact model(s) for comparison
-sample_exact <- function(model, latent = FALSE, marginal = TRUE,
-                         backend = "rstan", ...) {
-  stopifnot(is(model, "lgpmodel"))
-  fits <- list()
-  nams <- c()
-  if (latent) {
-    fit <- run_sampling("stan/lgp_latent.stan", model@stan_input, backend, ...)
-    nams <- c(nams, "latent")
-    fits <- c(fits, list(fit))
-  }
-  if (marginal) {
-    nams <- c(nams, "marginal")
-    fits <- c(fits, list(fit))
-  }
-  names(fits) <- nams
-  return(fits)
-}

@@ -1,13 +1,13 @@
 # Compute the C x C matrix for each term
 create_C_matrices <- function(si) {
   STREAM <- get_stream()
-  comp <- getElement(si, "components") # changes in 2.0
-  Z <- getElement(si, "x_cat") # changes in 2.0
-  Z_M <- getElement(si, "x_cat_num_levels") # changes in 2.0
+  comp <- getElement(si, "components")
+  Z <- getElement(si, "x_cat")
+  Z_M <- getElement(si, "x_cat_num_levels")
   C_matrices <- list()
   J <- nrow(comp)
-  iz <- comp[, 8] # changes in 2.0
-  kz <- comp[, 2] # changes in 2.0
+  iz <- comp[, 8]
+  kz <- comp[, 2]
   for (j in seq_len(J)) {
     idx <- iz[j]
     if (idx != 0) {
@@ -21,6 +21,7 @@ create_C_matrices <- function(si) {
   }
   return(C_matrices)
 }
+
 
 # Compute the eigendecompositions for the C x C matrices for each term
 decompose_C_matrices <- function(C_matrices) {
@@ -139,11 +140,7 @@ additional_stan_input <- function(model, num_bf, scale_bf, decs) {
 create_approx_model <- function(model, num_bf, scale_bf) {
   stan_dir <- getOption("stan_dir")
   om <- lgpr:::get_obs_model(model)
-  if (om == "gaussian") {
-    stan_file <- file.path(stan_dir, "lgp_latent_gaussian_approx.stan")
-  } else {
-    stan_file <- file.path(stan_dir, "lgp_latent_nongaussian_approx.stan")
-  }
+  stan_file <- file.path(stan_dir, "agp_approx.stan")
   decs <- categorical_kernel_decompositions(model)
   si_add <- additional_stan_input(
     model, num_bf, scale_bf,

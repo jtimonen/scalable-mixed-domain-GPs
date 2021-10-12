@@ -8,16 +8,8 @@ if (length(args) == 0) {
 cat("Currently in", getwd(), "\n")
 
 # Startup
-r_dir <- normalizePath("../R")
-options(stan_dir = normalizePath("../stan"))
-for (f in dir(r_dir)) {
-  source(file.path(r_dir, f))
-}
-source("simulate_01.R")
-source("plotting_01.R")
-source("predict_01.R")
+source(normalizePath(file.path("..", "common.R")))
 outdir <- startup(replication_idx)
-cat("\n * Results will be saved to:", outdir, "\n")
 
 # Settings
 confs <- list()
