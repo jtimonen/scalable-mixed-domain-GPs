@@ -15,10 +15,10 @@ outdir <- startup()
 dat <- load_weather_data()
 
 # Settings
-chains <- 2
-iter <- 60
-refresh <- 5
-confs <- list(create_configuration(num_bf = 20, scale_bf = 1.5))
+chains <- 4
+iter <- 2000
+refresh <- 10
+confs <- list(create_configuration(num_bf = 12, scale_bf = 1.5))
 
 # Create model using lgpr
 model_formula <- temperature ~ day + day | region
@@ -71,5 +71,11 @@ aes3 <- aes(
 
 pf1 <- plot_f(pa, 1, aes1) + geom_ribbon(alpha = 0.3)
 pf2 <- plot_f(pa, 2, aes2) + geom_ribbon(alpha = 0.3)
-pf3 <- plot_f(pa, 3, aes3)
-ph <- plot_f(pa, 0, aes3)
+pf3 <- plot_f(pa, 3, aes3) + geom_ribbon(alpha = 0.3)
+ph <- plot_f(pa, 0, aes3) +
+  geom_point(
+    data = dat,
+    inherit.aes = FALSE,
+    aes(x = day, y = temperature, group = station),
+    pch = ".", alpha = 0.6,
+  ) + facet_wrap(. ~ station)
