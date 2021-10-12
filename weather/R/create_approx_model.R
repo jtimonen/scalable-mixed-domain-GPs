@@ -137,8 +137,9 @@ additional_stan_input <- function(model, num_bf, scale_bf, decs) {
 }
 
 # Create approximate model similar to exact model
-create_approx_model <- function(model, num_bf, scale_bf) {
+create_approx_model <- function(model, num_bf, scale_bf, id_var) {
   stan_dir <- getOption("stan_dir")
+  num_obs <- lgpr:::get_num_obs(model)
   om <- lgpr:::get_obs_model(model)
   stan_file <- file.path(stan_dir, "agp_approx_with_intercepts.stan")
   decs <- categorical_kernel_decompositions(model)
@@ -146,9 +147,29 @@ create_approx_model <- function(model, num_bf, scale_bf) {
     model, num_bf, scale_bf,
     decs$decompositions
   )
+
+  # Add input related to intercepts
+  z_names <- lgpr:::covariate_info(model)$categorical[, 1]
+  id <- as.numeric(model@data[[id_var]])
+  if (length(id) == 0) {
+    stop("id_var not found in data!")
+  }
+  si <- lgpr:::get_stan_input(model)
+  num_ids <- length(unique(id))
+  idx_expand_intercepts <- rep(0, num_obs)
+  for (uid in 1:num_ids) {
+    inds <- which(id == uid)
+    idx_expand_intercepts[inds] <- uid
+  }
+  si_add_add <- list(
+    idx_expand_intercepts = idx_expand_intercepts,
+    num_ids = num_ids
+  )
+
+  # Return
   new("ApproxModel",
     exact_model = model,
-    added_stan_input = si_add,
+    added_stan_input = c(si_add, si_add_add),
     stan_file = stan_file,
     obs_model = om
   )

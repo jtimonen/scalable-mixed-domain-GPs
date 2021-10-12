@@ -13,7 +13,6 @@ cat("Currently in", getwd(), "\n")
 source(normalizePath(file.path("..", "common.R")))
 outdir <- startup()
 dat <- load_weather_data()
-stop("Moi")
 
 # Settings
 chains <- 2
@@ -22,11 +21,11 @@ refresh <- 5
 confs <- list(create_configuration(num_bf = 20, scale_bf = 1.5))
 
 # Create model using lgpr
-model_formula <- temperature ~ day + day | region + day | station
+model_formula <- temperature ~ day + day | region
 exact_model <- lgpr::create_model(model_formula, dat)
 
-# Fit approximate model
-afits <- sample_approx(exact_model, confs,
+# Sample approximate model
+afits <- sample_approx(exact_model, confs, "station",
   refresh = refresh,
   chains = chains,
   adapt_delta = 0.95,

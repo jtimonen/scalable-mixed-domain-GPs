@@ -36,7 +36,7 @@ run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
 }
 
 # Sample approximate model
-sample_approx <- function(exact_model, confs, ...) {
+sample_approx <- function(exact_model, confs, id_var, ...) {
   fits <- list()
   J <- length(confs)
   backend <- "cmdstanr"
@@ -46,7 +46,7 @@ sample_approx <- function(exact_model, confs, ...) {
     print(cf)
     stopifnot(is(cf, "ExperimentConfiguration"))
     approx_model <- create_approx_model(
-      exact_model, cf@num_bf, cf@scale_bf
+      exact_model, cf@num_bf, cf@scale_bf, id_var
     )
     stan_data <- get_full_stan_input(approx_model)
     sfit <- run_sampling(
