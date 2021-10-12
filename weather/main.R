@@ -18,7 +18,7 @@ source(normalizePath(file.path("..", "common.R")))
 outdir <- startup()
 dat <- load_weather_data()
 fn_out <- file.path(outdir, paste0("res_", array_idx, ".rds"))
-cat(" * results will be saved to file:", fn_out)
+cat(" * results will be saved to file:", fn_out, "\n")
 
 # Settings
 chains <- 4
