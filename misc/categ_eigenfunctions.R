@@ -35,8 +35,9 @@ check_decomp <- function(eig) {
   eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
 }
 
-NC <- 6
+NC <- 3
 K <- create_C_matrix_zs(NC)
-V <- eigen(K, symmetric = T)
+V1 <- eigen(K, symmetric = T)
 V2 <- decompose_zs(NC)
+print(check_decomp(V1))
 print(check_decomp(V2))
