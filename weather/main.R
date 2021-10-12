@@ -4,50 +4,30 @@
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   array_idx <- 0
+  num_bf <- 12
 } else {
   array_idx <- as.numeric(args[1])
+  num_bf <- array_idx
 }
 cat("Currently in", getwd(), "\n")
+cat("num_bf =", num_bf, "\n")
 
 # Startup
 source(normalizePath(file.path("..", "common.R")))
 outdir <- startup()
 dat <- load_weather_data()
-
-# Split data
-N <- nrow(dat)
-# inds <-  sample.int(100, size=101, replace = FALSE)
-#i_test <- which((dat$day > 180) & (dat$day <= 250))
-rn <- CanadianWeather$region
-i1 <- which(rn == "Atlantic")[1]
-i2 <- which(rn == "Arctic")[2]
-i3 <- which(rn == "Continental")[3]
-i4 <- which(rn == "Pacific")[4]
-test_stations <- names(c(i1, i2, i3, i4))
-i_test <- which((dat$day > 100) & (dat$station %in% test_stations))
-split <- lgpr:::split_data(dat, i_test = i_test)
-train_dat <- split$train
-test_dat <- split$test
-print(nrow(train_dat))
-print(nrow(test_dat))
+fn_out <- file.path(outdir, paste0("res_", array_idx, ".rds"))
+cat(" * results will be saved to file:", fn_out)
 
 # Settings
-chains <- 1
-iter <- 60
-refresh <- 1
-confs <- list(create_configuration(num_bf = 12, scale_bf = 1.5))
+chains <- 4
+iter <- 2000
+refresh <- 5
+confs <- list(create_configuration(num_bf = num_bf, scale_bf = 1.5))
 
 # Create model using lgpr
 model_formula <- temperature ~ day + day | region + day | station
-exact_model <- lgpr::create_model(model_formula, train_dat)
-
-# Needs a bit of editing
-# n_stat <- 35
-# z_stat <- exact_model@stan_input$x_cat[2, ]
-# miss <- c(1:n_stat) %in% unique(z_stat)
-# i_missing <- which(miss == FALSE)
-# z_stat[which(z_stat == n_stat)] <- i_missing
-# exact_model@stan_input$x_cat[2, ] <- z_stat
+exact_model <- lgpr::create_model(model_formula, dat)
 
 # Sample approximate model
 afits <- sample_approx(exact_model, confs, NULL,
@@ -55,11 +35,14 @@ afits <- sample_approx(exact_model, confs, NULL,
   chains = chains,
   adapt_delta = 0.95,
   iter_warmup = iter / 2,
-  iter_sampling = iter / 2
+  iter_sampling = iter / 2,
+  parallel_chains = 4
 )
 
 fa <- afits[[1]]
 pa <- pred_approx(fa, dat)
+results <- list(fit = fa, pred = pa)
+saveRDS(results, file = fn_out)
 
 # Plot f or it's component
 plot_f <- function(pred, idx = 0, aesth) {
