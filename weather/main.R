@@ -9,6 +9,7 @@ if (length(args) == 0) {
   array_idx <- as.numeric(args[1])
   num_bf <- array_idx
 }
+parallel_chains <- 1
 cat("Currently in", getwd(), "\n")
 cat("num_bf =", num_bf, "\n")
 
@@ -36,7 +37,7 @@ afits <- sample_approx(exact_model, confs, NULL,
   adapt_delta = 0.95,
   iter_warmup = iter / 2,
   iter_sampling = iter / 2,
-  parallel_chains = 4
+  parallel_chains = parallel_chains
 )
 
 fa <- afits[[1]]
