@@ -1,4 +1,4 @@
-# Scalable mixed domain Gaussian processes
+# Scalable mixed-domain Gaussian processes
 
 Using kernel decompositions.
 
