@@ -14,18 +14,43 @@ source(normalizePath(file.path("..", "common.R")))
 outdir <- startup()
 dat <- load_weather_data()
 
+# Split data
+N <- nrow(dat)
+# inds <-  sample.int(100, size=101, replace = FALSE)
+#i_test <- which((dat$day > 180) & (dat$day <= 250))
+rn <- CanadianWeather$region
+i1 <- which(rn == "Atlantic")[1]
+i2 <- which(rn == "Arctic")[2]
+i3 <- which(rn == "Continental")[3]
+i4 <- which(rn == "Pacific")[4]
+test_stations <- names(c(i1, i2, i3, i4))
+i_test <- which((dat$day > 100) & (dat$station %in% test_stations))
+split <- lgpr:::split_data(dat, i_test = i_test)
+train_dat <- split$train
+test_dat <- split$test
+print(nrow(train_dat))
+print(nrow(test_dat))
+
 # Settings
-chains <- 4
-iter <- 2000
-refresh <- 10
+chains <- 1
+iter <- 60
+refresh <- 1
 confs <- list(create_configuration(num_bf = 12, scale_bf = 1.5))
 
 # Create model using lgpr
-model_formula <- temperature ~ day + day | region
-exact_model <- lgpr::create_model(model_formula, dat)
+model_formula <- temperature ~ day + day | region + day | station
+exact_model <- lgpr::create_model(model_formula, train_dat)
+
+# Needs a bit of editing
+# n_stat <- 35
+# z_stat <- exact_model@stan_input$x_cat[2, ]
+# miss <- c(1:n_stat) %in% unique(z_stat)
+# i_missing <- which(miss == FALSE)
+# z_stat[which(z_stat == n_stat)] <- i_missing
+# exact_model@stan_input$x_cat[2, ] <- z_stat
 
 # Sample approximate model
-afits <- sample_approx(exact_model, confs, "station",
+afits <- sample_approx(exact_model, confs, NULL,
   refresh = refresh,
   chains = chains,
   adapt_delta = 0.95,
@@ -71,11 +96,11 @@ aes3 <- aes(
 
 pf1 <- plot_f(pa, 1, aes1) + geom_ribbon(alpha = 0.3)
 pf2 <- plot_f(pa, 2, aes2) + geom_ribbon(alpha = 0.3)
-pf3 <- plot_f(pa, 3, aes3) + geom_ribbon(alpha = 0.3)
+pf3 <- plot_f(pa, 3, aes3) + facet_wrap(. ~ region)
 ph <- plot_f(pa, 0, aes3) +
   geom_point(
     data = dat,
     inherit.aes = FALSE,
     aes(x = day, y = temperature, group = station),
     pch = ".", alpha = 0.6,
-  ) + facet_wrap(. ~ station)
+  ) + facet_wrap(. ~ station) + geom_ribbon()

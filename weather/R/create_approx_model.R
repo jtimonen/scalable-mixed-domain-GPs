@@ -141,7 +141,12 @@ create_approx_model <- function(model, num_bf, scale_bf, id_var) {
   stan_dir <- getOption("stan_dir")
   num_obs <- lgpr:::get_num_obs(model)
   om <- lgpr:::get_obs_model(model)
-  stan_file <- file.path(stan_dir, "agp_approx_with_intercepts.stan")
+  if (is.null(id_var)) {
+    code_file <- "agp_approx.stan"
+  } else {
+    code_file <- "agp_approx_with_intercepts.stan"
+  }
+  stan_file <- file.path(stan_dir, code_file)
   decs <- categorical_kernel_decompositions(model)
   si_add <- additional_stan_input(
     model, num_bf, scale_bf,
@@ -149,22 +154,26 @@ create_approx_model <- function(model, num_bf, scale_bf, id_var) {
   )
 
   # Add input related to intercepts
-  z_names <- lgpr:::covariate_info(model)$categorical[, 1]
-  id <- as.numeric(model@data[[id_var]])
-  if (length(id) == 0) {
-    stop("id_var not found in data!")
+  if (!is.null(id_var)) {
+    z_names <- lgpr:::covariate_info(model)$categorical[, 1]
+    id <- as.numeric(model@data[[id_var]])
+    if (length(id) == 0) {
+      stop("id_var not found in data!")
+    }
+    si <- lgpr:::get_stan_input(model)
+    num_ids <- length(unique(id))
+    idx_expand_intercepts <- rep(0, num_obs)
+    for (uid in 1:num_ids) {
+      inds <- which(id == uid)
+      idx_expand_intercepts[inds] <- uid
+    }
+    si_add_add <- list(
+      idx_expand_intercepts = idx_expand_intercepts,
+      num_ids = num_ids
+    )
+  } else {
+    si_add_add <- list()
   }
-  si <- lgpr:::get_stan_input(model)
-  num_ids <- length(unique(id))
-  idx_expand_intercepts <- rep(0, num_obs)
-  for (uid in 1:num_ids) {
-    inds <- which(id == uid)
-    idx_expand_intercepts[inds] <- uid
-  }
-  si_add_add <- list(
-    idx_expand_intercepts = idx_expand_intercepts,
-    num_ids = num_ids
-  )
 
   # Return
   new("ApproxModel",

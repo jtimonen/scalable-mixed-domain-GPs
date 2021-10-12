@@ -67,16 +67,19 @@ pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
     f_comp[[j]] <- fj
     f_sum <- f_sum + fj
   }
+  names(f_comp) <- component_names(emodel)
 
-  # Intercept component
+  # Possible intercept component
   ix <- fit@model@added_stan_input$idx_expand_intercepts
-  sf <- get_cmdstanfit(fit)
-  ics <- posterior::merge_chains(sf$draws("id_intercepts"))
-  ics <- ics[, 1, , drop = T]
-  f_intercept <- as.matrix(ics[, ix])
-  f_comp[[J + 1]] <- f_intercept
-  names(f_comp) <- c(component_names(emodel), "group_intercept")
-  f_sum <- f_sum + f_intercept
+  if (!is.null(ix)) {
+    sf <- get_cmdstanfit(fit)
+    ics <- posterior::merge_chains(sf$draws("id_intercepts"))
+    ics <- ics[, 1, , drop = T]
+    f_intercept <- as.matrix(ics[, ix])
+    f_comp[[J + 1]] <- f_intercept
+    names(f_comp) <- c(component_names(emodel), "group_intercept")
+    f_sum <- f_sum + f_intercept
+  }
 
   if (om == "gaussian") {
     yscl <- emodel@var_scalings$y
