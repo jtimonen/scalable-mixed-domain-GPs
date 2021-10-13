@@ -204,7 +204,7 @@ plot_runtimes_create_df <- function(res, scales, bfs, shown_c) {
   re <- res$exact[var_idx, ]
   vname <- rownames(res$exact)[var_idx]
   re_mean <- mean(re)
-  re_std <- mean(re)
+  re_std <- stats::sd(re)
   t_mean <- c(as.vector(ra_mean), re_mean)
   t_std <- c(as.vector(ra_std), re_std)
   df_c <- c(rep(scales, times = length(bfs)), shown_c)
@@ -229,11 +229,12 @@ plot_runtimes <- function(results, scales, bfs, N_TRAIN, shown_scale) {
   }
   colnames(df)[ncol(df)] <- "n_train"
   plt <- ggplot(df, aes(
-    x = n_train, y = t_mean, group = B, color = B,
-    pch = B
+    x = n_train, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std,
+    group = B, color = B, pch = B
   )) +
     scale_x_continuous(breaks = N_TRAIN) +
     geom_line() +
+    geom_errorbar(alpha=0.6) +
     geom_point() +
     ylab("Average runtime per chain (s)") +
     facet_wrap(. ~ is_exact, scales = "free_y") +
