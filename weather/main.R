@@ -9,7 +9,9 @@ if (length(args) == 0) {
   array_idx <- as.numeric(args[1])
   num_bf <- array_idx
 }
-parallel_chains <- 1
+available_cores <- as.integer(Sys.getenv('SLURM_JOB_CPUS_PER_NODE', 
+                                         parallel::detectCores()))
+parallel_chains <- available_cores
 cat("Currently in", getwd(), "\n")
 cat("num_bf =", num_bf, "\n")
 
@@ -21,7 +23,7 @@ fn_out <- file.path(outdir, paste0("res_", array_idx, ".rds"))
 cat(" * results will be saved to file:", fn_out, "\n")
 
 # Settings
-chains <- 1
+chains <- 4
 iter <- 60
 refresh <- 5
 confs <- list(create_configuration(num_bf = num_bf, scale_bf = 1.5))
@@ -37,7 +39,9 @@ afits <- sample_approx(exact_model, confs, NULL,
   adapt_delta = 0.95,
   iter_warmup = iter / 2,
   iter_sampling = iter / 2,
-  parallel_chains = parallel_chains
+  parallel_chains = parallel_chains,
+  show_messages = FALSE,
+  output_dir = outdir
 )
 
 fa <- afits[[1]]
