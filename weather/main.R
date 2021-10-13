@@ -48,46 +48,16 @@ afits <- sample_approx(exact_model, confs, NULL,
 
 fa <- afits[[1]]
 pa <- pred_approx(fa, dat)
+
+# Save to file
 results <- list(fit = fa, pred = pa)
 saveRDS(results, file = fn_out)
 
-# Plot f or it's component
-plot_f <- function(pred, idx = 0, aesth) {
-  if (idx == 0) {
-    f <- pred@h
-    ylab <- "h"
-  } else {
-    f <- pred@f_comp[[idx]]
-    ylab <- names(pred@f_comp)[idx]
-  }
-  f_mean <- colMeans(f)
-  f_std <- apply(f, 2, stats::sd)
-  df <- cbind(dat, f_mean, f_std)
-  plt <- ggplot(df, aesth) +
-    geom_line() +
-    ylab(ylab)
-}
-
-
-aes1 <- aes(
-  x = day, y = f_mean, ymin = f_mean - 2 * f_std,
-  ymax = f_mean + 2 * f_std
-)
-aes2 <- aes(
-  x = day, y = f_mean, ymin = f_mean - 2 * f_std,
-  ymax = f_mean + 2 * f_std, group = region, color = region,
-  fill = region
-)
-aes3 <- aes(
-  x = day, y = f_mean, ymin = f_mean - 2 * f_std,
-  ymax = f_mean + 2 * f_std, group = station, color = station,
-  fill = station
-)
-
-pf1 <- plot_f(pa, 1, aes1) + geom_ribbon(alpha = 0.3)
-pf2 <- plot_f(pa, 2, aes2) + geom_ribbon(alpha = 0.3)
-pf3 <- plot_f(pa, 3, aes3) + facet_wrap(. ~ region)
-ph <- plot_f(pa, 0, aes3) +
+# Plot
+pf1 <- plot_f(pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
+pf2 <- plot_f(pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
+pf3 <- plot_f(pa, 3, aes3()) + facet_wrap(. ~ region)
+ph <- plot_f(pa, 0, aes3()) +
   geom_point(
     data = dat,
     inherit.aes = FALSE,

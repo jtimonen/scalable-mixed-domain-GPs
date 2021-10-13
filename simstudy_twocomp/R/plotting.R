@@ -234,7 +234,7 @@ plot_runtimes <- function(results, scales, bfs, N_TRAIN, shown_scale) {
   )) +
     scale_x_continuous(breaks = N_TRAIN) +
     geom_line() +
-    geom_errorbar(alpha=0.6) +
+    geom_errorbar(alpha = 0.6) +
     geom_point() +
     ylab("Average runtime per chain (s)") +
     facet_wrap(. ~ is_exact, scales = "free_y") +
