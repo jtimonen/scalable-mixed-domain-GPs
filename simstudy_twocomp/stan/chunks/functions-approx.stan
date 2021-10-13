@@ -202,3 +202,34 @@
     }
     return(F_PRED);
   }
+  
+  // Build the regression coefficients for linear regression
+  vector STAN_build_glm_b(data int[,] components, 
+      data int[] num_xi, data int[] C_ranks, data vector seq_B, 
+      data vector L, real[] alpha, real[] ell, vector xi)
+  {
+    int J = size(components);
+    int B = num_elements(seq_B);
+    vector[sum(num_xi)] weights;
+    int idx_ell = 0;
+
+    // Build the components
+    for(j in 1:J) {
+      int is = sum(num_xi[1:(j-1)])+1;
+      int ie = sum(num_xi[1:j]);
+      int ctype = components[j, 1];
+      int idx_x = components[j, 9];
+      int R = C_ranks[j];
+      vector[num_xi[j]] dj;
+      if(ctype==0) {
+        dj = rep_vector(alpha[j], R);
+      } else {
+        idx_ell += 1;
+        dj = STAN_basisfun_eq_multipliers(alpha[j], ell[idx_ell], 
+          STAN_rep_vector_times(seq_B, R), L[idx_x]);
+      }
+      weights[is:ie] = dj;
+    }
+    return(weights .* xi);
+  }
+  
