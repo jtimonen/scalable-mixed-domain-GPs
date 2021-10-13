@@ -2,7 +2,7 @@
 #SBATCH -p batch
 #SBATCH -t 02-00:00:00
 #SBATCH -n 1
-#SBATCH --array=8,12,16,24,32,48,64
+#SBATCH --array=16,24
 #SBATCH --mem=4000
 #SBATCH --constraint="skl|csl"
 #SBATCH -o weather-%a.out
