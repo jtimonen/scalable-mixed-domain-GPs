@@ -48,5 +48,6 @@ p_test <- plot_mlpd(results, used_scales, used_nbfs, train = FALSE)
 ggsave(p_train, file = "mlpd_train.pdf", width = 7.58, height = 5.05)
 ggsave(p_test, file = "mlpd_test.pdf", width = 7.58, height = 5.05)
 
-# RUNTIME PLOTS
-#rt <- plot_runtimes(results, used_scales, used_nbfs)
+# RUNTIME PLOT
+rt <- plot_runtimes(results, used_scales, used_nbfs, N_TRAIN, 1.5)
+ggsave(rt, file = "runtimes-c1_5.pdf", width = 5.5, height = 2.3)

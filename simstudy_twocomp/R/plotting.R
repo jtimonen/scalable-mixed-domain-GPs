@@ -193,3 +193,53 @@ plot_mlpd <- function(results, used_scales, used_nbfs, train = FALSE) {
     common.legend = TRUE, label.y = 1.05
   )
 }
+
+
+# Plot runtime results
+plot_runtimes_create_df <- function(res, scales, bfs, shown_c) {
+  var_idx <- 1
+  ra <- res$approx[var_idx, , , ]
+  ra_mean <- apply(ra, c(2, 3), mean)
+  ra_std <- apply(ra, c(2, 3), stats::sd)
+  re <- res$exact[var_idx, ]
+  vname <- rownames(res$exact)[var_idx]
+  re_mean <- mean(re)
+  re_std <- mean(re)
+  t_mean <- c(as.vector(ra_mean), re_mean)
+  t_std <- c(as.vector(ra_std), re_std)
+  df_c <- c(rep(scales, times = length(bfs)), shown_c)
+  df_b <- c(rep(bfs, each = length(scales)), 0)
+  ie <- as.factor(c(rep("Approximate", length(ra_mean)), "Exact"))
+  df <- data.frame(as.factor(df_b), as.factor(df_c), t_mean, t_std, ie)
+  colnames(df) <- c("B", "c", "t_mean", "t_std", "is_exact")
+  inds_shown <- which(df$c == shown_c)
+  return(df[inds_shown, ])
+}
+
+
+# Plot runtime results
+plot_runtimes <- function(results, scales, bfs, N_TRAIN, shown_scale) {
+  df <- NULL
+  J <- length(N_TRAIN)
+  for (j in 1:J) {
+    df_j <- plot_runtimes_create_df(results[[j]], scales, bfs, shown_scale)
+    n_train <- rep(N_TRAIN[j], nrow(df_j))
+    df_j <- cbind(df_j, n_train)
+    df <- rbind(df, df_j)
+  }
+  colnames(df)[ncol(df)] <- "n_train"
+  plt <- ggplot(df, aes(
+    x = n_train, y = t_mean, group = B, color = B,
+    pch = B
+  )) +
+    scale_x_continuous(breaks = N_TRAIN) +
+    geom_line() +
+    geom_point() +
+    ylab("Average runtime per chain (s)") +
+    facet_wrap(. ~ is_exact, scales = "free_y") +
+    xlab(expression(paste("", "N", phantom()[{
+      paste("train")
+    }], ""))) +
+    theme_bw()
+  return(plt)
+}
