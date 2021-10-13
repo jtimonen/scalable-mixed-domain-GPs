@@ -21,8 +21,8 @@ fn_out <- file.path(outdir, paste0("res_", array_idx, ".rds"))
 cat(" * results will be saved to file:", fn_out)
 
 # Settings
-chains <- 4
-iter <- 2000
+chains <- 1
+iter <- 60
 refresh <- 5
 confs <- list(create_configuration(num_bf = num_bf, scale_bf = 1.5))
 
