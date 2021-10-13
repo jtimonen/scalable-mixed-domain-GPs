@@ -1,30 +1,26 @@
 # Startup
-r_dir <- normalizePath("../R")
-options(stan_dir = normalizePath("../stan"))
-for (f in dir(r_dir)) {
-  source(file.path(r_dir, f))
-}
-library(lgpr)
-library(ggplot2)
-library(ggpubr)
-source("plotting_01.R")
+source(normalizePath(file.path("..", "common.R")))
+startup(create_dir = FALSE)
+res_dir <- "results"
 
 # Load results
-N_TRAIN <- c(60, 90, 120, 150, 180, 210)
+N_TRAIN <- c(60, 90, 120)#, 150, 180, 210)
 results <- list()
 j <- 0
 used_scales <- c(1.5, 2.5, 4.0)
 used_nbfs <- c(4, 8, 16, 32, 64)
 N_S <- length(used_scales)
 N_B <- length(used_nbfs)
-num_repl <- 30
+num_repl <- 3
 num_chains <- 4
 for (N_train in N_TRAIN) {
   j <- j + 1
   res_approx <- array(0.0, dim = c(4, num_repl, N_S, N_B))
   res_exact <- array(0.0, dim = c(4, num_repl))
   for (repl_idx in 1:num_repl) {
-    fn <- paste0("res_01_triton/repl_", repl_idx, "/res_", N_train, ".rds")
+    #ri_fn <- repl_idx
+    ri_fn <- 0
+    fn <- file.path(res_dir, paste0("repl_", ri_fn, "/res_", N_train, ".rds"))
     res <- readRDS(fn)
     mpld <- res$rtables_test$mlpd
     total_time <- colSums(res$summary$runtimes)
@@ -49,5 +45,5 @@ names(results) <- N_TRAIN
 # MLPD PLOTS
 p_train <- plot_mlpd(results, used_scales, used_nbfs, train = TRUE)
 p_test <- plot_mlpd(results, used_scales, used_nbfs, train = FALSE)
-ggsave(p_train, file = "mlpd_train.pdf", width = 7.58, height = 5.05)
-ggsave(p_test, file = "mlpd_test.pdf", width = 7.58, height = 5.05)
+#ggsave(p_train, file = "mlpd_train.pdf", width = 7.58, height = 5.05)
+#ggsave(p_test, file = "mlpd_test.pdf", width = 7.58, height = 5.05)

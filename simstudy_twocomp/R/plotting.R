@@ -174,7 +174,7 @@ plot_mlpd <- function(results, used_scales, used_nbfs, train = FALSE) {
   }
   plots_mlpd <- list()
   var_idx <- 4
-  for (j in 1:6) {
+  for (j in 1:3) {
     plt_j <- plot_results_cb(results[[j]], var_idx, used_scales, used_nbfs)
     if (j %in% c(2, 3, 5, 6)) {
       plt_j <- plt_j + ylab(" ")
