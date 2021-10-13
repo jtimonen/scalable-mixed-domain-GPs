@@ -9,8 +9,10 @@ if (length(args) == 0) {
   array_idx <- as.numeric(args[1])
   num_bf <- array_idx
 }
-available_cores <- as.integer(Sys.getenv('SLURM_JOB_CPUS_PER_NODE', 
-                                         parallel::detectCores()))
+available_cores <- as.integer(Sys.getenv(
+  "SLURM_JOB_CPUS_PER_NODE",
+  parallel::detectCores()
+))
 parallel_chains <- available_cores
 cat("Currently in", getwd(), "\n")
 cat("num_bf =", num_bf, "\n")
@@ -24,7 +26,7 @@ cat(" * results will be saved to file:", fn_out, "\n")
 
 # Settings
 chains <- 4
-iter <- 60
+iter <- 2000
 refresh <- 5
 confs <- list(create_configuration(num_bf = num_bf, scale_bf = 1.5))
 
