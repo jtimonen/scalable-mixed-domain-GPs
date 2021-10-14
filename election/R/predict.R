@@ -76,17 +76,19 @@ pred_approx <- function(fit, x_star) {
   f_sum <- f_sum + f_comp_mu
   names(f_comp) <- c(component_names(emodel), "mu")
   c_hat_pred <- rep(0.0, P)
-  nu <- as.vector(posterior::merge_chains(get_cmdstanfit(fit)$draws("nu")))
+  gam <- as.vector(posterior::merge_chains(get_cmdstanfit(fit)$draws("gamma")))
   h <- exp(f_sum) / (1 + exp(f_sum))
+  tgam <- 1.0 / gam - 1.0
+
 
   # Draws of y
   cat(" * drawing y\n")
   y_rng <- matrix(0.0, S, P)
   for (s in 1:S) {
-    mu_obs <- nu[s] * h[s, ]
+    aa <- h[s, ] * tgam[s]
+    bb <- (1.0 - h[s, ]) * tgam[s]
     for (p in 1:P) {
-      bb <- mu_obs[p]
-      y_rng[s, p] <- stats::rbeta(n = 1, shape1 = bb, shape2 = nu[s] - bb)
+      y_rng[s, p] <- stats::rbeta(1, aa[p], bb[p])
     }
   }
 

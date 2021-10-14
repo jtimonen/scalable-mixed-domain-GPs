@@ -23,20 +23,27 @@ transformed data{
 parameters {
 #include chunks/parameters-common.stan
   vector[sum(num_xi)] xi;
-  real<lower=0> nu;
+  real<lower=0.000000001> gamma;
   real mu;
 }
 
 model {
   vector[sum(num_xi)] glm_b = STAN_build_glm_b(components,
     num_xi, C_ranks, seq_B, L, alpha, ell, xi);
-  vector[num_obs] obs_mu = nu*inv_logit(mu + PSI_mats *  glm_b);
+  //vector[num_obs] obs_mu = nu*inv_logit(mu + PSI_mats *  glm_b);
   xi ~ normal(0, 1);
-  nu ~ gamma(5, 0.01);
+  gamma ~ lognormal(1.0, 1.0);
   mu ~ normal(0, 0.5);
 #include chunks/model-priors_common.stan
-  // target += normal_lpdf(y_norm | MU, sigma);
-  rep_share ~ beta(obs_mu, nu-obs_mu);
+  //rep_share ~ beta(obs_mu, nu-obs_mu);
+  {
+    real tgam = inv(gamma) - 1.0;
+    vector[num_obs] P = inv_logit(mu + PSI_mats *  glm_b); // p success
+    vector[num_obs] aa = P * tgam;
+    vector[num_obs] bb = (1.0 - P) * tgam;
+    target += beta_binomial_lpmf(votes_rep | votes_total, aa, bb);
+  }
+
 }
 
 //generated quantities {

@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 library(dplyr)
+library(readr)
 
 # Main R script for the vote share data experiment
 args <- commandArgs(trailingOnly = TRUE)
@@ -76,9 +77,12 @@ pf2 <- plot_f(x_star, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
 y_mean <- colMeans(y_rng)
 y_std <- apply(y_rng, 2, stats::sd)
 df <- cbind(x_star, y_mean, y_std)
+
+# Plot predictions
+dat2020 <- read_data_2020()
 py <- ggplot(df, aes(
   x = year, y = y_mean, ymin = y_mean - 2 * y_std,
-  ymax = y_mean - 2 * y_std, group = state
+  ymax = y_mean + 2 * y_std, group = state
 )) +
   geom_line() +
   ylab("Republican vote share") +
@@ -86,13 +90,22 @@ py <- ggplot(df, aes(
   theme(panel.grid.minor = element_blank()) +
   theme(axis.text.x = element_text(angle = 90)) +
   xlab("") +
+  geom_hline(yintercept = 0.5, lty=1, col="steelblue") + 
   geom_point(
     data = dat,
     inherit.aes = FALSE,
     aes(x = year, y = rep_share, group = state),
-    pch = 20, alpha = 0.6, color = "red"
+    pch = 20, alpha = 1, color = "steelblue"
   ) +
   facet_wrap(. ~ state) +
-  geom_ribbon()
+  geom_ribbon(alpha=0.4) +
+  geom_point(
+    data = dat2020,
+    inherit.aes = FALSE,
+    aes(x = year, y = rep_share, group = state),
+    pch = 4, alpha = 1, color = "red"
+  ) +
+  theme(strip.text.x = element_text(size = 7))
 
 ggsave("full.pdf", py, width = 12, height = 10)
+fit <- get_cmdstanfit(fa)
