@@ -54,10 +54,10 @@ results <- list(fit = fa, pred = pa)
 saveRDS(results, file = fn_out)
 
 # Plot
-pf1 <- plot_f(pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
-pf2 <- plot_f(pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
-pf3 <- plot_f(pa, 3, aes3()) + facet_wrap(. ~ region)
-ph <- plot_f(pa, 0, aes3()) +
+pf1 <- plot_f(dat, pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
+pf2 <- plot_f(dat, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
+pf3 <- plot_f(dat, pa, 3, aes3()) + facet_wrap(. ~ region)
+ph <- plot_f(dat, pa, 0, aes3()) +
   geom_point(
     data = dat,
     inherit.aes = FALSE,
