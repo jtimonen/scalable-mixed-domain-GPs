@@ -33,9 +33,9 @@ plt <- lgpr::plot_data(dat,
 )
 
 # Create model
-exact_model <- lgpr::create_model(rep_share ~ year + year | region +
-  year | state, dat,
-sample_f = TRUE
+form <- rep_share ~ year + year | region #+ year | state
+exact_model <- lgpr::create_model(form, dat,
+  sample_f = TRUE
 )
 
 # Settings
@@ -58,7 +58,7 @@ afits <- sample_approx_beta(exact_model, confs, dat,
 fa <- afits[[1]]
 
 # Create test points and predict
-x_star <- create_test_x(dat, seq(1970, 2024, by = 4))
+x_star <- create_test_x(dat, seq(1976, 2024, by = 1))
 
 pa <- pred_approx(fa, x_star)
 y_rng <- pa$y_rng
