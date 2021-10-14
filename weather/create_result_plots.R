@@ -62,5 +62,33 @@ for (b in 1:length(NUM_BF)) {
   fn_out_comp <- file.path("figures", paste0("components_", num_bf, ".pdf"))
   fn_out_sum <- file.path("figures", paste0("sum_", num_bf, ".pdf"))
   ggsave(full_plt, file = fn_out_comp, width = 6.9, height = 6.7)
-  ggsave(ph, file = fn_out_sum, width = 12, height = 16)
+  ggsave(ph, file = fn_out_sum, width = 12, height = 13)
 }
+names(R_HATS) <- NUM_BF
+names(F_SUM) <- NUM_BF
+# Create runtimes result table
+df_times <- rbind(as.integer(NUM_BF), TIMES / 3600)
+rownames(df_times) <- c("B", "Time (hours)")
+library(xtable)
+xtab <- xtable(df_times)
+
+# Plot total comparison
+f16 <- F_SUM[["16"]]
+f32 <- F_SUM[["32"]]
+df16 <- cbind(dat, f16, rep(16, nrow(dat)))
+df32 <- cbind(dat, f32, rep(32, nrow(dat)))
+colnames(df16) <- c(colnames(dat), "f", "B")
+colnames(df32) <- c(colnames(dat), "f", "B")
+df <- rbind(df16, df32)
+df$B <- as.factor(df$B)
+plt <- ggplot(df, aes(x = day, y = f, group = station, color = B)) +
+  geom_line(alpha = 0.7) +
+  ylab("Temperature (C)") +
+  theme_bw() +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  theme(panel.grid.minor = element_blank(), legend.position = "top") +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("") +
+  facet_wrap(. ~ station)
+fn <- file.path("figures", "comparison.pdf")
+ggsave(plt, file = fn, width = 8, height = 6.5)
