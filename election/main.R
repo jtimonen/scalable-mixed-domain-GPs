@@ -33,11 +33,9 @@ plt <- lgpr::plot_data(dat,
 )
 
 # Create model
-exact_model <- lgpr::create_model(rinc ~ year + year | region + year | state,
-  dat,
-  likelihood = "binomial"
+exact_model <- lgpr::create_model(rep_share ~ year + year | region, dat,
+  sample_f = TRUE
 )
-
 
 # Settings
 chains <- 4
@@ -46,7 +44,7 @@ refresh <- 5
 confs <- list(create_configuration(num_bf = num_bf, scale_bf = 1.5))
 
 # Sample approximate model
-afits <- sample_approx(exact_model, confs, NULL,
+afits <- sample_approx_beta(exact_model, confs, dat,
   refresh = refresh,
   chains = chains,
   adapt_delta = 0.95,
@@ -66,11 +64,13 @@ results <- list(fit = fa, pred = pa)
 # Plot
 pf1 <- plot_f(dat, pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
 pf2 <- plot_f(dat, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
-pf3 <- plot_f(dat, pa, 3, aes3()) + facet_wrap(. ~ region)
+# pf3 <- plot_f(dat, pa, 3, aes3()) + facet_wrap(. ~ region)
 ph <- plot_f(dat, pa, 0, aes3()) +
   geom_point(
     data = dat,
     inherit.aes = FALSE,
-    aes(x = year, y = rinc, group = state),
-    pch = 20, alpha = 0.6,
+    aes(x = year, y = rep_share, group = state),
+    pch = 20, alpha = 0.6, color = "red"
   ) + facet_wrap(. ~ state) + geom_ribbon()
+
+ggsave("full.pdf", ph, width = 12, height = 10)

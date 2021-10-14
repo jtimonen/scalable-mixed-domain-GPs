@@ -137,15 +137,11 @@ additional_stan_input <- function(model, num_bf, scale_bf, decs) {
 }
 
 # Create approximate model similar to exact model
-create_approx_model <- function(model, num_bf, scale_bf, id_var) {
+create_approx_beta_model <- function(model, num_bf, scale_bf, dat) {
   stan_dir <- getOption("stan_dir")
   num_obs <- lgpr:::get_num_obs(model)
-  om <- lgpr:::get_obs_model(model)
-  if (is.null(id_var)) {
-    code_file <- "agp_approx_bernoulli.stan"
-  } else {
-    stop("id_var should be NULL")
-  }
+  om <- "beta"
+  code_file <- "agp_approx_beta.stan"
   stan_file <- file.path(stan_dir, code_file)
   decs <- categorical_kernel_decompositions(model)
   si_add <- additional_stan_input(
@@ -153,23 +149,13 @@ create_approx_model <- function(model, num_bf, scale_bf, id_var) {
     decs$decompositions
   )
 
-  # Add input related to intercepts
-  if (!is.null(id_var)) {
-    z_names <- lgpr:::covariate_info(model)$categorical[, 1]
-    id <- as.numeric(model@data[[id_var]])
-    if (length(id) == 0) {
-      stop("id_var not found in data!")
-    }
-    si <- lgpr:::get_stan_input(model)
-    num_ids <- length(unique(id))
-    idx_expand_intercepts <- rep(0, num_obs)
-    for (uid in 1:num_ids) {
-      inds <- which(id == uid)
-      idx_expand_intercepts[inds] <- uid
-    }
+  # Add input related to beta model
+  if (!is.null(dat)) {
     si_add_add <- list(
-      idx_expand_intercepts = idx_expand_intercepts,
-      num_ids = num_ids
+      votes_rep = dat$rep,
+      votes_dem = dat$dem,
+      votes_total = dat$total,
+      rep_share = dat$rep_share
     )
   } else {
     si_add_add <- list()

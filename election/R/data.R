@@ -42,6 +42,6 @@ load_election_data <- function() {
     regions[inds] <- state_region_map$region[j]
   }
   dat$region <- as.factor(regions)
-  dat$rinc <- as.integer(dat$incumbent == "R")
+  # dat$rinc <- as.integer(dat$incumbent == "R")
   return(dat)
 }

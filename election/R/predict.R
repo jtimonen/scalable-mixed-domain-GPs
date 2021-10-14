@@ -60,22 +60,22 @@ pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
   P <- length(fp[[1]][[1]])
   f_comp <- list()
   f_sum <- matrix(0.0, S, P)
+
+  # GP components
   for (j in seq_len(J)) {
     fj <- get_approx_component(fp, j)
     f_comp[[j]] <- fj
     f_sum <- f_sum + fj
   }
-  names(f_comp) <- component_names(emodel)
-  if (om == "gaussian") {
-    yscl <- emodel@var_scalings$y
-    h <- f_sum
-    for (r in seq_len(nrow(h))) {
-      h[r, ] <- lgpr:::apply_scaling(yscl, h[r, ], inverse = TRUE)
-    }
-  } else {
-    c_hat_pred <- lgpr:::set_c_hat_pred(emodel, f_sum, c_hat_pred, TRUE)
-    h <- lgpr:::map_f_to_h(emodel, f_sum, c_hat_pred, reduce = NULL)
-  }
+
+  # Other
+  mu <- posterior::merge_chains(get_cmdstanfit(fit)$draws("mu"))
+  f_comp_mu <- matrix(rep(mu[, 1, , drop = T], P), S, P, byrow = FALSE)
+  f_comp[[J + 1]] <- f_comp_mu
+  f_sum <- f_sum + f_comp_mu
+  names(f_comp) <- c(component_names(emodel), "mu")
+  c_hat_pred <- rep(0.0, P)
+  h <- exp(f_sum) / (1 + exp(f_sum))
 
   # Return
   new("Prediction",

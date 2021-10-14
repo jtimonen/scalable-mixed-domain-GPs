@@ -19,8 +19,7 @@ aes2 <- function() {
 aes3 <- function() {
   aes(
     x = year, y = f_mean, ymin = f_mean - 2 * f_std,
-    ymax = f_mean + 2 * f_std, group = state, color = state,
-    fill = state
+    ymax = f_mean + 2 * f_std, group = state
   )
 }
 
