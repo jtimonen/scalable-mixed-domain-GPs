@@ -71,16 +71,18 @@ create_test_x <- function(dat, years) {
 
 # 2020 data
 read_data_2020 <- function() {
-  dat2020 <- read.csv(file="dataverse_files/1976-2020-president.csv")
-  inds <- which(dat2020$year==2020)
+  dat2020 <- read.csv(file = "dataverse_files/1976-2020-president.csv")
+  inds <- which(dat2020$year == 2020)
   dat2020 <- dat2020[inds, ]
-  rep_inds <- which(dat2020$party_simplified=="REPUBLICAN")
-  dem_inds <- which(dat2020$party_simplified=="DEMOCRAT")
+  rep_inds <- which(dat2020$party_simplified == "REPUBLICAN")
+  dem_inds <- which(dat2020$party_simplified == "DEMOCRAT")
   cols <- c("year", "state_po", "candidatevotes")
   rep2020 <- dat2020[rep_inds, cols]
   dem2020 <- dat2020[dem_inds, cols]
-  df2020 <- data.frame(rep2020$year, rep2020$state_po, rep2020$candidatevotes, 
-                       dem2020$candidatevotes)
+  df2020 <- data.frame(
+    rep2020$year, rep2020$state_po, rep2020$candidatevotes,
+    dem2020$candidatevotes
+  )
   colnames(df2020) <- c("year", "state", "rep", "dem")
   df2020$rep_share <- df2020$rep / (df2020$dem + df2020$rep)
   df2020 <- df2020 %>% filter(state != "DC")

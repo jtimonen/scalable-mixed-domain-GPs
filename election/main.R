@@ -34,7 +34,7 @@ plt <- lgpr::plot_data(dat,
 )
 
 # Create model
-form <- rep_share ~ year + year | region #+ year | state
+form <- rep_share ~ year + year | region + year | state
 exact_model <- lgpr::create_model(form, dat,
   sample_f = TRUE
 )
@@ -90,7 +90,7 @@ py <- ggplot(df, aes(
   theme(panel.grid.minor = element_blank()) +
   theme(axis.text.x = element_text(angle = 90)) +
   xlab("") +
-  geom_hline(yintercept = 0.5, lty=1, col="steelblue") + 
+  geom_hline(yintercept = 0.5, lty = 1, col = "steelblue") +
   geom_point(
     data = dat,
     inherit.aes = FALSE,
@@ -98,7 +98,7 @@ py <- ggplot(df, aes(
     pch = 20, alpha = 1, color = "steelblue"
   ) +
   facet_wrap(. ~ state) +
-  geom_ribbon(alpha=0.4) +
+  geom_ribbon(alpha = 0.4) +
   geom_point(
     data = dat2020,
     inherit.aes = FALSE,
