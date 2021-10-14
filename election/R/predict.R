@@ -50,7 +50,7 @@ get_approx_component <- function(fp, j) {
 }
 
 # Predict with approximate model
-pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
+pred_approx <- function(fit, x_star) {
   stopifnot(is(fit, "ApproxModelFit"))
   om <- fit@model@obs_model
   fp <- posterior_f_approx(fit, x_star)
@@ -75,14 +75,25 @@ pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
   f_sum <- f_sum + f_comp_mu
   names(f_comp) <- c(component_names(emodel), "mu")
   c_hat_pred <- rep(0.0, P)
+  nu <- as.vector(posterior::merge_chains(get_cmdstanfit(fit)$draws("nu")))
   h <- exp(f_sum) / (1 + exp(f_sum))
 
+  # Draws of y
+  y_rng <- matrix(0.0, S, P)
+  for (s in 1:S) {
+    mu_obs <- nu[s] * h[s, ]
+    for (p in 1:P) {
+      y_rng[s, p] <- stats::rbeta(n = 1, shape1 = mu_obs, shape2 = nu[s] - mu_obs)
+    }
+  }
+
   # Return
-  new("Prediction",
+  pred <- new("Prediction",
     f_comp = f_comp,
     f = f_sum,
     h = h,
     x = x_star,
     extrapolated = FALSE
   )
+  list(pred = pred, y_rng = y_rng)
 }

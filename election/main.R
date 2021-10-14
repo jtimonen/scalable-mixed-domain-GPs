@@ -5,7 +5,7 @@ library(dplyr)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   array_idx <- 0
-  num_bf <- 12
+  num_bf <- 24
 } else {
   array_idx <- as.numeric(args[1])
   num_bf <- array_idx
@@ -33,8 +33,9 @@ plt <- lgpr::plot_data(dat,
 )
 
 # Create model
-exact_model <- lgpr::create_model(rep_share ~ year + year | region, dat,
-  sample_f = TRUE
+exact_model <- lgpr::create_model(rep_share ~ year + year | region +
+  year | state, dat,
+sample_f = TRUE
 )
 
 # Settings
@@ -56,6 +57,8 @@ afits <- sample_approx_beta(exact_model, confs, dat,
 
 fa <- afits[[1]]
 pa <- pred_approx(fa, dat)
+y_rng <- pa$y_rng
+pa <- pa$pred
 
 # Save to file
 results <- list(fit = fa, pred = pa)
@@ -65,12 +68,27 @@ results <- list(fit = fa, pred = pa)
 pf1 <- plot_f(dat, pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
 pf2 <- plot_f(dat, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
 # pf3 <- plot_f(dat, pa, 3, aes3()) + facet_wrap(. ~ region)
-ph <- plot_f(dat, pa, 0, aes3()) +
+
+y_mean <- colMeans(y_rng)
+y_std <- apply(y_rng, 2, stats::sd)
+df <- cbind(dat, y_mean, y_std)
+py <- ggplot(df, aes(
+  x = year, y = y_mean, ymin = y_mean - 2 * y_std,
+  ymax = y_mean - 2 * y_std, group = state
+)) +
+  geom_line() +
+  ylab("Republican vote share") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank()) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("") +
   geom_point(
     data = dat,
     inherit.aes = FALSE,
     aes(x = year, y = rep_share, group = state),
     pch = 20, alpha = 0.6, color = "red"
-  ) + facet_wrap(. ~ state) + geom_ribbon()
+  ) +
+  facet_wrap(. ~ state) +
+  geom_ribbon()
 
-ggsave("full.pdf", ph, width = 12, height = 10)
+ggsave("full.pdf", py, width = 12, height = 10)
