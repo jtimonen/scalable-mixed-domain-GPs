@@ -197,6 +197,7 @@
     int P = rows(PSI);
     vector[P] F_PRED[S, J];
     for(s in 1:S) {
+      print("s = ", s, "/", S);
       F_PRED[s] = STAN_build_f(components, num_xi, C_ranks, seq_B, L, PSI, 
         to_array_1d(alpha[s]), to_array_1d(ell[s]), xi[s]);
     }

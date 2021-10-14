@@ -5,7 +5,7 @@ library(dplyr)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   array_idx <- 0
-  num_bf <- 24
+  num_bf <- 16
 } else {
   array_idx <- as.numeric(args[1])
   num_bf <- array_idx
@@ -56,7 +56,11 @@ afits <- sample_approx_beta(exact_model, confs, dat,
 )
 
 fa <- afits[[1]]
-pa <- pred_approx(fa, dat)
+
+# Create test points and predict
+x_star <- create_test_x(dat, seq(1970, 2024, by = 4))
+
+pa <- pred_approx(fa, x_star)
 y_rng <- pa$y_rng
 pa <- pa$pred
 
@@ -65,13 +69,13 @@ results <- list(fit = fa, pred = pa)
 # saveRDS(results, file = fn_out)
 
 # Plot
-pf1 <- plot_f(dat, pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
-pf2 <- plot_f(dat, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
+pf1 <- plot_f(x_star, pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
+pf2 <- plot_f(x_star, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
 # pf3 <- plot_f(dat, pa, 3, aes3()) + facet_wrap(. ~ region)
 
 y_mean <- colMeans(y_rng)
 y_std <- apply(y_rng, 2, stats::sd)
-df <- cbind(dat, y_mean, y_std)
+df <- cbind(x_star, y_mean, y_std)
 py <- ggplot(df, aes(
   x = year, y = y_mean, ymin = y_mean - 2 * y_std,
   ymax = y_mean - 2 * y_std, group = state

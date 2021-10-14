@@ -33,7 +33,7 @@ model {
   vector[num_obs] obs_mu = nu*inv_logit(mu + PSI_mats *  glm_b);
   xi ~ normal(0, 1);
   nu ~ gamma(5, 0.01);
-  mu ~ normal(0, .5);
+  mu ~ normal(0, 0.5);
 #include chunks/model-priors_common.stan
   // target += normal_lpdf(y_norm | MU, sigma);
   rep_share ~ beta(obs_mu, nu-obs_mu);

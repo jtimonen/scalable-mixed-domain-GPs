@@ -53,6 +53,7 @@ get_approx_component <- function(fp, j) {
 pred_approx <- function(fit, x_star) {
   stopifnot(is(fit, "ApproxModelFit"))
   om <- fit@model@obs_model
+  cat(" * calling posterior_f_approx\n")
   fp <- posterior_f_approx(fit, x_star)
   emodel <- fit@model@exact_model
   S <- length(fp)
@@ -79,6 +80,7 @@ pred_approx <- function(fit, x_star) {
   h <- exp(f_sum) / (1 + exp(f_sum))
 
   # Draws of y
+  cat(" * drawing y\n")
   y_rng <- matrix(0.0, S, P)
   for (s in 1:S) {
     mu_obs <- nu[s] * h[s, ]
