@@ -23,7 +23,7 @@ transformed data{
 parameters {
 #include chunks/parameters-common.stan
   vector[sum(num_xi)] xi;
-  real<lower=0.000000001> gamma;
+  real<lower=0.0000000001> gamma;
   real mu;
 }
 
@@ -35,6 +35,10 @@ model {
   gamma ~ lognormal(1.0, 1.0);
   mu ~ normal(0, 0.5);
 #include chunks/model-priors_common.stan
+  //alpha ~ normal(0, 1.0);
+  //ell[1] ~ weibull(30, 8);
+  //ell[2] ~ weibull(30, 8);
+  //ell[3] ~ weibull(30, 3);
   //rep_share ~ beta(obs_mu, nu-obs_mu);
   {
     real tgam = inv(gamma) - 1.0;

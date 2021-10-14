@@ -6,7 +6,7 @@ library(readr)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   array_idx <- 0
-  num_bf <- 16
+  num_bf <- 24
 } else {
   array_idx <- as.numeric(args[1])
   num_bf <- array_idx
@@ -38,12 +38,13 @@ form <- rep_share ~ year + year | region + year | state
 exact_model <- lgpr::create_model(form, dat,
   sample_f = TRUE
 )
+# exact_model@stan_input$x_cont <- exact_model@stan_input$x_cont_unnorm
 
 # Settings
 chains <- 4
 iter <- 2000
 refresh <- 5
-confs <- list(create_configuration(num_bf = num_bf, scale_bf = 1.5))
+confs <- list(create_configuration(num_bf = num_bf, scale_bf = 2.0))
 
 # Sample approximate model
 afits <- sample_approx_beta(exact_model, confs, dat,
@@ -59,7 +60,7 @@ afits <- sample_approx_beta(exact_model, confs, dat,
 fa <- afits[[1]]
 
 # Create test points and predict
-x_star <- create_test_x(dat, seq(1976, 2024, by = 1))
+x_star <- create_test_x(dat, seq(1976, 2024, by = 0.5))
 
 pa <- pred_approx(fa, x_star)
 y_rng <- pa$y_rng

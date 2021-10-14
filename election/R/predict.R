@@ -26,6 +26,7 @@ posterior_f_approx <- function(fit, x_star) {
   S <- dim(alpha)[1]
   P <- nrow(x_star)
   si <- create_pred_stan_input(amodel, x_star)
+  # si[["x_cont"]] <- si[["x_cont_unnorm"]] # hack
   J <- length(component_names(emodel))
   F_PRED <- array(0.0, dim = c(S, J, P))
   tdata <- do_transformed_data(si)
