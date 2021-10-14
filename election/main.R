@@ -70,10 +70,25 @@ pa <- pa$pred
 results <- list(fit = fa, pred = pa)
 # saveRDS(results, file = fn_out)
 
+# Create y-axis labels for plots
+ylab1 <- expression(paste("", "f", phantom()^{
+  paste("", "(", "1", ")", "")
+}, "(", "", "year", ")", "", ""))
+ylab2 <- expression(paste("", "f", phantom()^{
+  paste("", "(", "2", ")", "")
+}, "(", "", "year", ",", "region", ")", "", ""))
+ylab3 <- expression(paste("", "f", phantom()^{
+  paste("", "(", "3", ")", "")
+}, "(", "", "year", ",", "state", ")", "", ""))
+
 # Plot
-pf1 <- plot_f(x_star, pa, 1, aes1()) + geom_ribbon(alpha = 0.3)
-pf2 <- plot_f(x_star, pa, 2, aes2()) + geom_ribbon(alpha = 0.3)
-# pf3 <- plot_f(dat, pa, 3, aes3()) + facet_wrap(. ~ region)
+scc <- scale_x_continuous(breaks = c(unique(dat$year), 2020, 2024))
+pf1 <- plot_f(x_star, pa, 1, aes1()) + geom_ribbon(alpha = 0.3) + scc +
+  ylab(ylab1)
+pf2 <- plot_f(x_star, pa, 2, aes2()) + scc + ylab(ylab2)
+pf3 <- plot_f(x_star, pa, 3, aes3()) + facet_wrap(. ~ region) + scc +
+  ylab(ylab3)
+
 
 y_mean <- colMeans(y_rng)
 y_std <- apply(y_rng, 2, stats::sd)
@@ -108,5 +123,23 @@ py <- ggplot(df, aes(
   ) +
   theme(strip.text.x = element_text(size = 7))
 
-ggsave("full.pdf", py, width = 12, height = 10)
+ggsave("all_states_large.pdf", py, width = 12, height = 10)
 fit <- get_cmdstanfit(fa)
+
+# Save
+total_time <- fit$time()$total
+cat(total_time, file = "runtime.txt")
+fit$save_object(fn_out)
+
+# Full components plot
+plt12 <- ggarrange(pf1, pf2,
+  nrow = 1, ncol = 2, labels = c("a", "b"),
+  widths = c(0.7, 1.0)
+)
+
+plt_full <- ggarrange(plt12, pf3,
+  heights = c(0.53, 1.0),
+  labels = c("", "c"), nrow = 2, ncol = 1
+)
+
+ggsave(file = "components.pdf", plt_full, width = 7.65, height = 7.88)
