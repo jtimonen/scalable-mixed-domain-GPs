@@ -83,7 +83,8 @@ pred_approx <- function(fit, x_star) {
   for (s in 1:S) {
     mu_obs <- nu[s] * h[s, ]
     for (p in 1:P) {
-      y_rng[s, p] <- stats::rbeta(n = 1, shape1 = mu_obs, shape2 = nu[s] - mu_obs)
+      bb <- mu_obs[p]
+      y_rng[s, p] <- stats::rbeta(n = 1, shape1 = bb, shape2 = nu[s] - bb)
     }
   }
 
