@@ -1,0 +1,88 @@
+# Create Stan input for pred
+create_pred_stan_input <- function(amodel, x_star) {
+  emodel <- amodel@exact_model
+  xs_parsed <- lgpr:::kernelcomp.input_x(emodel, x_star)
+
+  # Replace parts of  original Stan input according to test points
+  si <- emodel@stan_input
+  to_replace <- c(
+    "num_obs", "x_cont", "x_cont_unnorm", "x_cont_mask",
+    "x_cat", "idx_expand"
+  )
+  names(xs_parsed) <- to_replace
+  si[to_replace] <- xs_parsed
+  si_add <- amodel@added_stan_input
+  si <- c(si, si_add)
+}
+
+# Like  lgpr:::posterior_f but with approximate model fit
+posterior_f_approx <- function(fit, x_star) {
+  amodel <- fit@model
+  emodel <- amodel@exact_model
+  fit <- get_cmdstanfit(fit)
+  xi <- posterior::merge_chains(fit$draws("xi"))
+  alpha <- posterior::merge_chains(fit$draws("alpha"))
+  ell <- posterior::merge_chains(fit$draws("ell"))
+  S <- dim(alpha)[1]
+  P <- nrow(x_star)
+  si <- create_pred_stan_input(amodel, x_star)
+  J <- length(component_names(emodel))
+  F_PRED <- array(0.0, dim = c(S, J, P))
+  tdata <- do_transformed_data(si)
+  as <- alpha[, 1, , drop = T]
+  es <- ell[, 1, , drop = T]
+  xis <- xi[, 1, , drop = T]
+  as <- matrix_to_list(as)
+  es <- matrix_to_list(es)
+  xis <- matrix_to_list(xis)
+  build_f_draws(si, tdata, as, es, xis)
+}
+
+# Extract draws of one component
+get_approx_component <- function(fp, j) {
+  S <- length(fp)
+  P <- length(fp[[1]][[1]])
+  fc <- matrix(0.0, S, P)
+  for (s in seq_len(S)) {
+    fc[s, ] <- fp[[s]][[j]]
+  }
+  return(fc)
+}
+
+# Predict with approximate model
+pred_approx <- function(fit, x_star, c_hat_pred = NULL) {
+  stopifnot(is(fit, "ApproxModelFit"))
+  om <- fit@model@obs_model
+  fp <- posterior_f_approx(fit, x_star)
+  emodel <- fit@model@exact_model
+  S <- length(fp)
+  J <- length(fp[[1]])
+  P <- length(fp[[1]][[1]])
+  f_comp <- list()
+  f_sum <- matrix(0.0, S, P)
+  for (j in seq_len(J)) {
+    fj <- get_approx_component(fp, j)
+    f_comp[[j]] <- fj
+    f_sum <- f_sum + fj
+  }
+  names(f_comp) <- component_names(emodel)
+  if (om == "gaussian") {
+    yscl <- emodel@var_scalings$y
+    h <- f_sum
+    for (r in seq_len(nrow(h))) {
+      h[r, ] <- lgpr:::apply_scaling(yscl, h[r, ], inverse = TRUE)
+    }
+  } else {
+    c_hat_pred <- lgpr:::set_c_hat_pred(emodel, f_sum, c_hat_pred, TRUE)
+    h <- lgpr:::map_f_to_h(emodel, f_sum, c_hat_pred, reduce = NULL)
+  }
+
+  # Return
+  new("Prediction",
+    f_comp = f_comp,
+    f = f_sum,
+    h = h,
+    x = x_star,
+    extrapolated = FALSE
+  )
+}
