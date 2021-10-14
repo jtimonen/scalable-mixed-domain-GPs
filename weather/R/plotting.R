@@ -25,7 +25,7 @@ aes3 <- function() {
 }
 
 # Plot f or it's component
-plot_f <- function(pred, idx = 0, aesth) {
+plot_f <- function(dat, pred, idx = 0, aesth) {
   if (idx == 0) {
     f <- pred@h
     ylab <- "h"
@@ -42,5 +42,6 @@ plot_f <- function(pred, idx = 0, aesth) {
     theme_bw() +
     scale_x_date(date_breaks = "1 month", date_labels = "%b") +
     theme(panel.grid.minor = element_blank()) +
-    theme(axis.text.x=element_text(angle=90))
+    theme(axis.text.x = element_text(angle = 90)) +
+    xlab("")
 }
