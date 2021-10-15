@@ -16,7 +16,7 @@ outdir <- startup(replication_idx)
 # Settings
 confs <- list()
 j <- 0
-SCALES <- c(1.5)#, 2.5, 4)
+SCALES <- c(1.5) # , 2.5, 4)
 NBFS <- c(4, 8, 16, 32, 64)
 for (scale_bf in SCALES) {
   for (num_bf in NBFS) {
@@ -42,10 +42,10 @@ for (N_train in N_TRAIN) {
 
   # Create and fit exact model using lgpr
   exact_model <- lgpr::create_model(model_formula, train_dat)
-  #efit <- lgpr::sample_model(exact_model,
+  # efit <- lgpr::sample_model(exact_model,
   #  chains = chains, refresh = refresh,
   #  iter = iter
-  #)
+  # )
 
   # Fit approximate model with different configurations
   afits <- sample_approx(exact_model, confs,
@@ -58,30 +58,30 @@ for (N_train in N_TRAIN) {
   )
 
   # Summarize results
-  fits <- afits #c(afits, list(efit))
-  #names(fits)[length(fits)] <- "exact"
+  fits <- afits # c(afits, list(efit))
+  # names(fits)[length(fits)] <- "exact"
   sumr <- summarize_results(fits)
 
   # Predict
-  #preds_train <- compute_predictions(fits, train_dat)
-  #preds_test <- compute_predictions(fits, test_dat)
-  #y_star <- test_dat[["y"]]
+  # preds_train <- compute_predictions(fits, train_dat)
+  # preds_test <- compute_predictions(fits, test_dat)
+  # y_star <- test_dat[["y"]]
 
   # Compute metrics
-  #em_test <- compute_metrics(fits, preds_test, y_star)
-  #rtables_test <- format_results(em_test, SCALES, NBFS)
-  #em_train <- compute_metrics(fits, preds_train, train_dat$y)
-  #rtables_train <- format_results(em_train, SCALES, NBFS)
-  #print(rtables_train)
-  #print(rtables_test)
+  # em_test <- compute_metrics(fits, preds_test, y_star)
+  # rtables_test <- format_results(em_test, SCALES, NBFS)
+  # em_train <- compute_metrics(fits, preds_train, train_dat$y)
+  # rtables_train <- format_results(em_train, SCALES, NBFS)
+  # print(rtables_train)
+  # print(rtables_test)
 
   # Save results to RDS file
   all_results <- list(
     train_dat = train_dat,
     test_dat = test_dat,
     summary = sumr,
-    #rtables_train = rtables_train,
-    #rtables_test = rtables_test,
+    # rtables_train = rtables_train,
+    # rtables_test = rtables_test,
     sess_info = sessionInfo()
   )
   fn <- file.path(outdir, paste0("res_", N_train, ".rds"))
