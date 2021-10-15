@@ -1,7 +1,7 @@
 # Startup
 source(normalizePath(file.path("..", "common.R")))
 startup(create_dir = FALSE)
-res_dir <- "res_01"
+res_dir <- "res_to_210"
 
 # Load results
 N_TRAIN <- c(60, 90, 120, 150, 180, 210)
@@ -50,4 +50,4 @@ ggsave(p_test, file = "mlpd_test.pdf", width = 7.58, height = 5.05)
 
 # RUNTIME PLOT
 rt <- plot_runtimes(results, used_scales, used_nbfs, N_TRAIN, 1.5)
-ggsave(rt, file = "runtimes-c1_5.pdf", width = 5.8, height = 2.5)
+ggsave(rt, file = "runtimes-c1_5_to_210.pdf", width = 5.8, height = 2.5)
