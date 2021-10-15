@@ -41,7 +41,7 @@ for (N_train in N_TRAIN) {
   test_dat <- sd$test_dat
 
   # Create and fit exact model using lgpr
-  #exact_model <- lgpr::create_model(model_formula, train_dat)
+  exact_model <- lgpr::create_model(model_formula, train_dat)
   #efit <- lgpr::sample_model(exact_model,
   #  chains = chains, refresh = refresh,
   #  iter = iter
