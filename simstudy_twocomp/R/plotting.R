@@ -208,7 +208,7 @@ plot_runtimes_create_df <- function(res, scales, bfs, shown_c) {
   t_mean <- c(as.vector(ra_mean), re_mean)
   t_std <- c(as.vector(ra_std), re_std)
   df_c <- c(rep(scales, times = length(bfs)), shown_c)
-  df_b <- c(rep(bfs, each = length(scales)), 0)
+  df_b <- c(rep(bfs, each = length(scales)), 12000)
   ie <- as.factor(c(rep("Approximate", length(ra_mean)), "Exact"))
   df <- data.frame(as.factor(df_b), as.factor(df_c), t_mean, t_std, ie)
   colnames(df) <- c("B", "c", "t_mean", "t_std", "is_exact")
@@ -228,19 +228,5 @@ plot_runtimes <- function(results, scales, bfs, N_TRAIN, shown_scale) {
     df <- rbind(df, df_j)
   }
   colnames(df)[ncol(df)] <- "n_train"
-  plt <- ggplot(df, aes(
-    x = n_train, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std,
-    group = B, color = B, pch = B
-  )) +
-    scale_x_continuous(breaks = N_TRAIN) +
-    geom_line() +
-    geom_errorbar(alpha = 0.6) +
-    geom_point() +
-    ylab("Average runtime per chain (s)") +
-    facet_wrap(. ~ is_exact, scales = "free_y") +
-    xlab(expression(paste("", "N", phantom()[{
-      paste("train")
-    }], ""))) +
-    theme_bw()
-  return(plt)
+  return(df)
 }

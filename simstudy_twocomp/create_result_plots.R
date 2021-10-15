@@ -49,5 +49,56 @@ ggsave(p_train, file = "mlpd_train.pdf", width = 7.58, height = 5.05)
 ggsave(p_test, file = "mlpd_test.pdf", width = 7.58, height = 5.05)
 
 # RUNTIME PLOT
-rt <- plot_runtimes(results, used_scales, used_nbfs, N_TRAIN, 1.5)
+plt <- ggplot(df, aes(
+  x = n_train, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std,
+  group = B, color = B, pch = B
+)) +
+  scale_x_continuous(breaks = N_TRAIN) +
+  geom_line() +
+  geom_errorbar(alpha = 0.6) +
+  geom_point() +
+  ylab("Average runtime per chain (s)") +
+  facet_wrap(. ~ is_exact, scales = "free_y") +
+  xlab(expression(paste("", "N", phantom()[{
+    paste("train")
+  }], ""))) +
+  theme_bw()
+return(plt)
+
+
+df <- plot_runtimes(results, used_scales, used_nbfs, N_TRAIN, 1.5)
+rt1 <- ggplot(df, aes(
+  x = n_train, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std,
+  group = B, color = B, pch = B
+)) +
+  scale_x_continuous(breaks = N_TRAIN) +
+  geom_line() +
+  geom_errorbar(alpha = 0.6) +
+  geom_point() +
+  ylab("Average runtime per chain (s)") +
+  # facet_wrap(. ~ is_exact, scales = "free_y") +
+  xlab(expression(paste("", "N", phantom()[{
+    paste("train")
+  }], ""))) +
+  theme_bw()
+inds <- which(df$is_exact == "Approximate")
+df2 <- df[inds, ]
+
+rt2 <- ggplot(df2, aes(
+  x = n_train, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std,
+  group = B, color = B, pch = B
+)) +
+  scale_x_continuous(breaks = N_TRAIN) +
+  geom_line() +
+  geom_errorbar(alpha = 0.6) +
+  geom_point() +
+  ylab("Average runtime per chain (s)") +
+  xlab(expression(paste("", "N", phantom()[{
+    paste("train")
+  }], ""))) +
+  theme_bw()
+
+full_plt <- ggarrange(rt1, rt2, labels = c("a", "b"))
+return(plt)
+rt2 <- plot_runtimes(results, used_scales, used_nbfs, N_TRAIN, 1.5, mode = 2)
 ggsave(rt, file = "runtimes-c1_5_to_210.pdf", width = 5.8, height = 2.5)
