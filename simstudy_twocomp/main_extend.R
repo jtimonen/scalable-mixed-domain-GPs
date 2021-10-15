@@ -32,7 +32,7 @@ chains <- 4
 iter <- 2000
 refresh <- iter
 
-N_TRAIN <- c(300, 500, 1000, 2000) # , 150, 180, 210)
+N_TRAIN <- c(4000, 8000) # , 150, 180, 210)
 for (N_train in N_TRAIN) {
 
   # Generate data
