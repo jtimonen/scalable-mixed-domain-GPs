@@ -58,10 +58,10 @@ simulate_data <- function(N_train, N_test, sigma) {
 }
 
 # Denser set of prediction points for visualization
-create_x_dense <- function(train_dat, test_dat) {
+create_x_dense <- function(train_dat, test_dat, by = 0.2) {
   dat <- rbind(train_dat, test_dat)
   arange <- range(dat$age)
-  xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, 0.5)
+  xvals <- seq(arange[1] - 0.5, arange[2] + 0.5, by)
   age_dense <- rep(xvals, times = 9)
   id_dense <- rep(1:9, each = length(xvals))
   z_dense <- rep(c(1, 2, 3, 1, 2, 3, 1, 2, 3), each = length(xvals))
