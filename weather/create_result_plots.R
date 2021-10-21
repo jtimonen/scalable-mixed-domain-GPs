@@ -91,4 +91,4 @@ plt <- ggplot(df, aes(x = day, y = f, group = station, color = B)) +
   xlab("") +
   facet_wrap(. ~ station)
 fn <- file.path("figures", "comparison.pdf")
-ggsave(plt, file = fn, width = 8, height = 6.5)
+# ggsave(plt, file = fn, width = 8, height = 6.5)
