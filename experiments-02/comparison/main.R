@@ -17,7 +17,7 @@ message("OM = ", OM)
 CHAINS <- 1
 ITER <- 1000
 f_var <- 16
-N_indiv <- 12
+N_indiv <- 40
 if (idx <= 40) {
   n_unrel <- 6
 } else if (idx <= 80) {
@@ -31,14 +31,14 @@ message("n_unrel = ", n_unrel)
 
 # Simulate data
 t_seq <- seq(3, 96, by = 3)
-snr <- 0.2
+snr <- 0.25
 data_new <- simulate_gaussian(N_indiv, n_unrel, snr, t_seq)
 true_snr <- compute_snr(data_new$components)
 message("true_snr = ", true_snr)
 
 
 # Create and compile reference model
-B <- 30
+B <- 20
 scale_bf <- 1.5
 full_form <- create_full_formula(data_new$xn, data_new$zn)
 model <- lgpr2::LonModel$new(formula = full_form)
@@ -62,8 +62,8 @@ D <- length(r) - 1
 rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
 path <- names(rels$x)
 path <- rm$covar_names_to_covar_inds(path)
-search_pp_fs <- selection_pp(rm, path = NULL)
-search_pp_dir <- selection_pp(rm, path = path)
+# pp <- pp_forward_search(fit, path = NULL)
+pp_dir <- pp_forward_search(rm, path = path)
 
 
 # Results list
