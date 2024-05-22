@@ -49,7 +49,7 @@ fit <- model$fit(
   iter_sampling = ITER, iter_warmup = ITER, chains = CHAINS,
   adapt_delta = 0.99, init = 0.1
 )
-diag <- diagnose(fit)
+diag <- fit$diagnose()
 
 # Run selection with projection predictive method
 r <- fit$relevances() # id, age, x..., z...
