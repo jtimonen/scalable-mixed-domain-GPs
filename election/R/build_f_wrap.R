@@ -1,4 +1,3 @@
-
 # Wraps STAN_build_f_latent
 build_f <- function(stan_data, tdata, alpha, ell, xi) {
   expose_stanfuns()

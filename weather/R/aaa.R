@@ -1,4 +1,3 @@
-
 #' Model class for approximate models
 #'
 #' @slot exact_model the corresponding exact model

@@ -34,7 +34,6 @@ refresh <- iter
 
 N_TRAIN <- c(60, 90, 120) # , 150, 180, 210)
 for (N_train in N_TRAIN) {
-
   # Generate data
   sd <- simulate_data(N_train, N_test, 0.5)
   train_dat <- sd$train_dat

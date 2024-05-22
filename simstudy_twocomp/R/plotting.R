@@ -1,4 +1,3 @@
-
 # Create data frame for ggplot
 create_pred_plot_df <- function(preds) {
   J <- length(preds)

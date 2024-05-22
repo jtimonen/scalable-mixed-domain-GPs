@@ -1,4 +1,3 @@
-
 # Run sampling in either backend
 run_sampling <- function(MODEL_FILE, stan_data, backend, ...) {
   if (backend == "cmdstanr") {
