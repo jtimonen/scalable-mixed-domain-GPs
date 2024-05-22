@@ -38,7 +38,7 @@ message("true_snr = ", true_snr)
 
 
 # Create and compile reference model
-B <- 20
+B <- 30
 scale_bf <- 1.5
 full_form <- create_full_formula(data_new$xn, data_new$zn)
 model <- lgpr2::LonModel$new(formula = full_form)

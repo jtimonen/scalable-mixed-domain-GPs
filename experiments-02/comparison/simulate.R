@@ -14,7 +14,7 @@ simulate_gaussian <- function(N_indiv, n_unrel, snr, t_seq) {
     noise_type = "gaussian",
     c_hat = 0,
     f_var = 16,
-    snr = 0.25
+    snr = snr
   )
   data_new <- add_unrelated(
     simdat@data,
