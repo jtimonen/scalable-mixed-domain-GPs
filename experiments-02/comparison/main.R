@@ -32,7 +32,7 @@ message("n_unrel = ", n_unrel)
 # Simulate data
 t_seq <- seq(3, 96, by = 3)
 snr <- 0.2
-data_new <- simulate_gaussian(N_indiv, n_unrel, snr, t)
+data_new <- simulate_gaussian(N_indiv, n_unrel, snr, t_seq)
 true_snr <- compute_snr(data_new$components)
 message("true_snr = ", true_snr)
 

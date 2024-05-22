@@ -15,13 +15,3 @@ compute_snr <- function(components) {
   h <- components$h
   var(h) / (var(y - h))
 }
-
-# Diagnose the fit
-diagnose <- function(fit) {
-  sf <- fit$get_stan_fit()
-  rhat <- sf$summary()$rhat
-  diag <- unlist(sf$diagnostic_summary())
-  out <- c(diag, max(rhat))
-  names(out)[length(out)] <- "max_rhat"
-  out
-}
