@@ -6,32 +6,37 @@ args <- commandArgs(trailingOnly = TRUE)
 if (interactive()) {
   idx <- 0
   OM <- 1
+  N_indiv <- 20
+  snr <- 0.25
 } else {
   idx <- as.numeric(args[1])
-  OM <- as.numeric(args[2])
+  N_indiv <- as.numeric(args[2])
+  snr <- as.numeric(args[3])
+  OM <- as.numeric(args[4])
 }
 message("idx = ", idx)
+message("N_indiv = ", N_indiv)
+message("snr = ", snr)
 message("OM = ", OM)
 
 # Setup depending on idx
 CHAINS <- 1
 ITER <- 1000
 f_var <- 16
-N_indiv <- 40
-if (idx <= 40) {
+
+if (idx <= 10) {
+  n_unrel <- 4
+} else if (idx <= 20) {
   n_unrel <- 6
-} else if (idx <= 80) {
+} else if (idx <= 30) {
   n_unrel <- 8
-} else if (idx <= 120) {
-  n_unrel <- 10
 } else {
   stop("too large idx!")
 }
 message("n_unrel = ", n_unrel)
 
 # Simulate data
-t_seq <- seq(3, 96, by = 3)
-snr <- 0.25
+t_seq <- seq(6, 96, by = 6)
 data_new <- simulate_gaussian(N_indiv, n_unrel, snr, t_seq)
 true_snr <- compute_snr(data_new$components)
 message("true_snr = ", true_snr)
@@ -53,17 +58,17 @@ diag <- fit$diagnose()
 
 # Run selection with projection predictive method
 r <- fit$relevances() # id, age, x..., z...
+r <- mean(r)
 r_path <- cumsum(sort(r, decreasing = TRUE))
-sel_95 <- get_selected(r_path, 0.95)
-sel_90 <- get_selected(r_path, 0.90)
-sel_85 <- get_selected(r_path, 0.85)
-names(r) <- c("id", "age", xn, zn, "noise")
+# sel_95 <- get_selected(r_path, 0.95)
+# sel_90 <- get_selected(r_path, 0.90)
+# sel_85 <- get_selected(r_path, 0.85)
+names(r) <- c("id", "age", data_new$xn, data_new$zn, "noise")
 D <- length(r) - 1
 rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
-path <- names(rels$x)
-path <- rm$covar_names_to_covar_inds(path)
-# pp <- pp_forward_search(fit, path = NULL)
-pp_dir <- pp_forward_search(rm, path = path)
+path <- rels$ix
+search_pp_fs <- pp_forward_search(fit, path = NULL, num_steps = 6)
+search_pp_dir <- pp_forward_search(fit, path = path, num_steps = 6)
 
 
 # Results list
@@ -76,7 +81,8 @@ res <- list(
   sel_pp_fs = results_pp(search_pp_fs, tr),
   sel_pp_dir = results_pp(search_pp_dir, tr),
   dat = dat,
-  snr = true_snr
+  snr = true_snr,
+  N_indiv = N_indiv
 )
 
 # Save results

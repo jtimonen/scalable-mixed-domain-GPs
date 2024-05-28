@@ -20,7 +20,7 @@ simulate_gaussian <- function(N_indiv, n_unrel, snr, t_seq) {
     simdat@data,
     n_x = n_unrel,
     n_z = n_unrel,
-    n_flip_z = 10
+    n_flip_z = 5
   )
   data_new$components <- simdat@components
   data_new
@@ -82,7 +82,7 @@ create_new_z <- function(bn, dat, n) {
 
 # Add unrelated variables
 add_unrelated <- function(dat, n_x = 4, n_z = 4, n_flip_z = 4) {
-  p_x <- seq(0.75, 1.0, length.out = n_x)
+  p_x <- rep(0.8, n_x)
   n_z_edit <- rep(n_flip_z, n_z)
   dat <- create_new_x("x", dat, p_x)
   dat <- create_new_z("z", dat, n_z_edit)
