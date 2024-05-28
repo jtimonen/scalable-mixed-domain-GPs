@@ -1,4 +1,5 @@
 library(lgpr2)
+library(ggplot2)
 source("simulate.R")
 source("utils.R")
 
@@ -77,17 +78,17 @@ res <- list(
   r_path = r_path,
   search_pp_fs = search_pp_fs,
   search_pp_dir = search_pp_dir,
-  sel_dir = results_dir(r_path, tr),
-  sel_pp_fs = results_pp(search_pp_fs, tr),
-  sel_pp_dir = results_pp(search_pp_dir, tr),
-  dat = dat,
+  dat = data_new,
   snr = true_snr,
-  N_indiv = N_indiv
+  N_indiv = N_indiv,
+  relevances = r,
+  term_names = model$term_names(),
+  diag = diag
 )
 
 # Save results
-res_dir <- paste0("res-", likelihood)
-fig_dir <- paste0("figs-", likelihood)
+res_dir <- paste0("res-", N_indiv, "-", snr, "-", OM)
+fig_dir <- paste0("figs-", N_indiv, "-", snr, "-", OM)
 if (!dir.exists(res_dir)) {
   dir.create(res_dir)
 }
@@ -97,4 +98,4 @@ if (!dir.exists(fig_dir)) {
 fn <- paste0(res_dir, "/res-", idx, ".rds")
 fn_fig <- paste0(fig_dir, "/fit-", idx, ".pdf")
 saveRDS(res, file = fn)
-ggsave(rm$plot_by_id(), width = 10, height = 7, file = fn_fig)
+ggsave(fit$plot(), width = 10, height = 7, file = fn_fig)
