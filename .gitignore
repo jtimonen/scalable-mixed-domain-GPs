@@ -16,5 +16,5 @@
 *.out
 *.rds
 *.pdf
-
+*.csv
 .Rproj.user
