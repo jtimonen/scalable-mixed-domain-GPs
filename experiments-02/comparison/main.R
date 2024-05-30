@@ -7,8 +7,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (interactive()) {
   idx <- 0
   OM <- 1
-  N_indiv <- 20
-  snr <- 0.25
+  N_indiv <- 30
+  snr <- 0.5
 } else {
   idx <- as.numeric(args[1])
   N_indiv <- as.numeric(args[2])
@@ -87,8 +87,11 @@ res <- list(
 )
 
 # Save results
-res_dir <- paste0("res-", N_indiv, "-", snr, "-", OM)
-fig_dir <- paste0("figs-", N_indiv, "-", snr, "-", OM)
+res_dir <- paste0("res/res-", N_indiv, "-", snr, "-", OM)
+fig_dir <- paste0("res/figs-", N_indiv, "-", snr, "-", OM)
+if (!dir.exists("res")) {
+  dir.create("res")
+}
 if (!dir.exists(res_dir)) {
   dir.create(res_dir)
 }
