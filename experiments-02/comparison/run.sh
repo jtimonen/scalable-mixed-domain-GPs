@@ -5,5 +5,5 @@
 #SBATCH --mem=3000
 #SBATCH --array=1-3
 #SBATCH -o out/run-%a.out
-
-srun Rscript --vanilla main.R $SLURM_ARRAY_TASK_ID 20 0.25 1
+unset LC_ALL
+srun Rscript --vanilla --verbose main.R $SLURM_ARRAY_TASK_ID 20 0.25 1
