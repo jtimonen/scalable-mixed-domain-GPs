@@ -47,7 +47,10 @@ message("true_snr = ", true_snr)
 B <- 20
 scale_bf <- 1.5
 full_form <- create_full_formula(data_new$xn, data_new$zn)
+message("compiling")
 model <- lgpr2::LonModel$new(formula = full_form)
+
+message("fitting")
 
 # Fit reference model
 fit <- model$fit(
@@ -55,7 +58,10 @@ fit <- model$fit(
   iter_sampling = ITER, iter_warmup = ITER, chains = CHAINS,
   adapt_delta = 0.99, init = 0.1
 )
+message("diagnosing")
 diag <- fit$diagnose()
+
+message("relevance")
 
 # Run selection with projection predictive method
 r <- fit$relevances() # id, age, x..., z...
