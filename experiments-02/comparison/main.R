@@ -25,12 +25,10 @@ CHAINS <- 1
 ITER <- 1000
 f_var <- 16
 
-if (idx <= 10) {
-  n_unrel <- 4
-} else if (idx <= 20) {
+if (idx <= 50) {
   n_unrel <- 6
-} else if (idx <= 30) {
-  n_unrel <- 8
+} else if (idx <= 100) {
+  n_unrel <- 12
 } else {
   stop("too large idx!")
 }
@@ -44,7 +42,7 @@ message("true_snr = ", true_snr)
 
 
 # Create and compile reference model
-B <- 20
+B <- 24
 scale_bf <- 1.5
 full_form <- create_full_formula(data_new$xn, data_new$zn)
 message("compiling")
@@ -67,9 +65,6 @@ message("relevance")
 r <- fit$relevances() # id, age, x..., z...
 r <- mean(r)
 r_path <- cumsum(sort(r, decreasing = TRUE))
-# sel_95 <- get_selected(r_path, 0.95)
-# sel_90 <- get_selected(r_path, 0.90)
-# sel_85 <- get_selected(r_path, 0.85)
 names(r) <- c("id", "age", data_new$xn, data_new$zn, "noise")
 D <- length(r) - 1
 rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
@@ -79,7 +74,6 @@ search_pp_dir <- pp_forward_search(fit, path = path, num_steps = 6)
 
 
 # Results list
-tr <- c(0.85, 0.9, 0.95)
 res <- list(
   r_path = r_path,
   search_pp_fs = search_pp_fs,
@@ -108,3 +102,4 @@ fn <- paste0(res_dir, "/res-", idx, ".rds")
 fn_fig <- paste0(fig_dir, "/fit-", idx, ".pdf")
 saveRDS(res, file = fn)
 ggsave(fit$plot(), width = 10, height = 7, file = fn_fig)
+

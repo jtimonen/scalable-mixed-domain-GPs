@@ -1,9 +1,11 @@
 #!/bin/bash
 #SBATCH -p batch
-#SBATCH -t 03:00:00
+#SBATCH -t 08:00:00
 #SBATCH -n 1
 #SBATCH --mem=3000
-#SBATCH --array=1-3
+#SBATCH --array=1-100
 #SBATCH -o out/run-%a.out
 unset LC_ALL
-srun Rscript --vanilla --verbose main.R $SLURM_ARRAY_TASK_ID 20 0.25 1
+export CXX=/home/timonej3/.conda/envs/rstan-env/bin/g++
+srun Rscript --vanilla --verbose main.R $SLURM_ARRAY_TASK_ID 40 0.25 1
+
