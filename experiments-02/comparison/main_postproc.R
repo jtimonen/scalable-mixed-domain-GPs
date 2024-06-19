@@ -82,4 +82,5 @@ plt <- ggplot(
 ) +
   geom_line() +
   geom_point() +
-  facet_wrap(. ~ setup) + geom_hline(yintercept=c(-1,1),lty=2)
+  facet_wrap(. ~ setup) +
+  geom_hline(yintercept = c(-1, 1), lty = 2)
