@@ -102,4 +102,3 @@ fn <- paste0(res_dir, "/res-", idx, ".rds")
 fn_fig <- paste0(fig_dir, "/fit-", idx, ".pdf")
 saveRDS(res, file = fn)
 ggsave(fit$plot(), width = 10, height = 7, file = fn_fig)
-
