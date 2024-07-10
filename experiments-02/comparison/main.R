@@ -69,8 +69,9 @@ names(r) <- c("id", "age", data_new$xn, data_new$zn, "noise")
 D <- length(r) - 1
 rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
 path <- rels$ix
+path_id_first <- c(1, path[which(path != 1)])
 search_pp_fs <- pp_forward_search(fit, path = NULL, num_steps = 6)
-search_pp_dir <- pp_forward_search(fit, path = path, num_steps = 6)
+search_pp_dir <- pp_forward_search(fit, path = path_id_first, num_steps = 6)
 
 
 # Results list
@@ -83,7 +84,8 @@ res <- list(
   N_indiv = N_indiv,
   relevances = r,
   term_names = model$term_names(),
-  diag = diag
+  diag = diag,
+  path_id_first = path_id_first
 )
 
 # Save results
