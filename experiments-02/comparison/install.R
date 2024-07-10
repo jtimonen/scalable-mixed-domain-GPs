@@ -4,8 +4,8 @@ repos <- 'http://cran.us.r-project.org'
 #devtools::install_github("jtimonen/lgpr2", build_vignettes=FALSE, dependencies=TRUE)
 #library(lgpr2)
 
-install.packages("cmdstanr", repos = repos) #c('https://stan-dev.r-universe.dev', getOption("repos")))
-
+#install.packages("cmdstanr", repos = repos) #c('https://stan-dev.r-universe.dev', getOption("repos")))
+remotes::install_github("stan-dev/cmdstanr")
 
 message("done")
 
