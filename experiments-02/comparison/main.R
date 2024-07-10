@@ -1,4 +1,4 @@
-library(lgpr2)
+library(lgpr2) # v0.0.2
 library(ggplot2)
 source("simulate.R")
 source("utils.R")
@@ -70,7 +70,8 @@ D <- length(r) - 1
 rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
 path <- rels$ix
 path_id_first <- c(1, path[which(path != 1)])
-search_pp_fs <- pp_forward_search(fit, path = NULL, num_steps = 6)
+path_just_id <- 1
+search_pp_fs <- pp_forward_search(fit, path = path_just_id, num_steps = 6)
 search_pp_dir <- pp_forward_search(fit, path = path_id_first, num_steps = 6)
 
 
@@ -84,8 +85,7 @@ res <- list(
   N_indiv = N_indiv,
   relevances = r,
   term_names = model$term_names(),
-  diag = diag,
-  path_id_first = path_id_first
+  diag = diag
 )
 
 # Save results
