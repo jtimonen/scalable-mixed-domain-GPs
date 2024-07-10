@@ -5,16 +5,20 @@ library(lgpr) # used only for data simulation
 simulate_gaussian <- function(N_indiv, n_unrel, snr, t_seq) {
   N <- N_indiv * length(t_seq)
   message("N = ", N)
+  covariates <- c(1, 2)
+  lengthscales <- rep(12, 2 + sum(covariates %in% c(0, 1, 2)))
+  lengthscales[1] <- 10^5 # effectively make id*age effect be constant
   simdat <- lgpr::simulate_data(
     N = N_indiv,
     t_data = t_seq,
-    covariates = c(1, 2),
+    covariates = covariates,
     relevances = c(1, 1, 1, 1),
     t_jitter = 1,
     noise_type = "gaussian",
     c_hat = 0,
     f_var = 16,
-    snr = snr
+    snr = snr,
+    lengthscales = lengthscales
   )
   data_new <- add_unrelated(
     simdat@data,
