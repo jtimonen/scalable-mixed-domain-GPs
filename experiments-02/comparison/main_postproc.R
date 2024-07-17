@@ -107,14 +107,15 @@ df_sum <- df %>%
     upper = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.95),
     .groups = "drop"
   )
-plt1 <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
+plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   facet_wrap(. ~ setup) +
   geom_line() +
   geom_point() +
   geom_hline(yintercept = c(-1, 1), lty = 2) +
-  theme_minimal() +
+  theme_bw() +
   ylab("LOO-ELPD relative diff") +
-  xlab("Number of terms")
+  xlab("Number of terms") +
+  scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
 
 
 # Mst common first selection
@@ -126,3 +127,27 @@ most_common <- df_path_char_freq %>%
   arrange(setup, method, desc(frequency)) %>%
   group_by(setup, method) %>%
   slice(1)
+
+
+# Proportion of correct
+correct <- c("f_baseline_id", "f_gp_age", "f_gp_ageXz", "f_gp_x")
+
+df_cor <- NULL
+for (j in 1:6) {
+  df_j <- df %>%
+    filter(num_sub_terms <= j) %>%
+    filter(path_char %in% correct) %>%
+    group_by(setup, method) %>%
+    summarize(frequency = n(), .groups = "drop")
+  df_j$num_terms <- j
+  df_j <- df_j %>% mutate(percentage = frequency / (50 * num_terms))
+  df_cor <- rbind(df_cor, df_j)
+}
+plt_cor <- ggplot(df_cor, aes(x = num_terms, y = percentage, color = method)) +
+  facet_wrap(. ~ setup) +
+  geom_line() +
+  geom_point() +
+  xlab("Number of terms in model") +
+  ylab("Percentage of correct terms") +
+  theme_bw() +
+  scale_x_continuous(breaks = unique(df_cor$num_terms))
