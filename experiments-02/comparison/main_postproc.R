@@ -43,15 +43,21 @@ scalar_res_to_df <- function(fn) {
   x
 }
 
-get_elpd_df <- function(search) {
+get_elpd_df <- function(search, term_names) {
   df <- search$history[c("elpd_loo", "elpd_loo_rel_diff")]
+  path <- search$path
+  path_char <- term_names[path]
+  path <- c(0, path)
+  path_char <- c(NA, path_char)
   df$num_sub_terms <- 0:(nrow(df) - 1)
+  df$path <- path
+  df$path_char <- path_char
   df
 }
 
 get_both_elpd_dfs <- function(r) {
-  df1 <- get_elpd_df(r$search_pp_fs)
-  df2 <- get_elpd_df(r$search_pp_dir)
+  df1 <- get_elpd_df(r$search_pp_fs, r$term_names)
+  df2 <- get_elpd_df(r$search_pp_dir, r$term_names)
   df1$method <- "forward search"
   df2$method <- "predefined path"
   tibble::as_tibble(rbind(df1, df2))
@@ -76,12 +82,47 @@ for (d in ls) {
 
 df <- df_p %>% left_join(df_s, by = "file")
 df$experim <- paste(df$file, df$method)
-df$setup <- paste(df$num_terms, "_", df$N_indiv, "_", df$snr)
+df$setup <- paste0(df$num_terms, "_", df$N_indiv, "_", df$snr)
+df$method_in_setup <- paste0(df$method, "-", df$setup)
 plt <- ggplot(
   df,
-  aes(x = num_sub_terms, y = elpd_loo_rel_diff, color = method, group = experim)
+  aes(
+    x = num_sub_terms, y = elpd_loo_rel_diff, color = method,
+    fill = method, group = method_in_setup
+  )
 ) +
   geom_line() +
   geom_point() +
-  facet_wrap(. ~ setup) +
+  facet_wrap(. ~ method_in_setup) +
   geom_hline(yintercept = c(-1, 1), lty = 2)
+
+
+# Summary plot
+df_sum <- df %>%
+  group_by(method, setup, num_sub_terms) %>%
+  summarize(
+    med = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.5),
+    mean = mean(elpd_loo_rel_diff, na.rm = TRUE),
+    lower = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.05),
+    upper = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.95),
+    .groups = "drop"
+  )
+plt1 <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
+  facet_wrap(. ~ setup) +
+  geom_line() +
+  geom_point() +
+  geom_hline(yintercept = c(-1, 1), lty = 2) +
+  theme_minimal() +
+  ylab("LOO-ELPD relative diff") +
+  xlab("Number of terms")
+
+
+# Mst common first selection
+df_path_char_freq <- df %>%
+  filter(num_sub_terms == 1) %>%
+  group_by(setup, method) %>%
+  summarize(frequency = n(), .groups = "drop")
+most_common <- df_path_char_freq %>%
+  arrange(setup, method, desc(frequency)) %>%
+  group_by(setup, method) %>%
+  slice(1)
