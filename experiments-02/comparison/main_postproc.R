@@ -1,17 +1,31 @@
 library(lgpr2)
 library(tidyverse)
 
-ls <- dir("res")
+parent_res_dir <- "res-tri"
+ls <- dir(parent_res_dir)
 ls <- ls[grepl(pattern = "res-", ls)]
 
 # Get scalar results
 get_scalar_res <- function(dir) {
-  rdir <- file.path("res", dir)
+  rdir <- file.path(parent_res_dir, dir)
   files <- dir(rdir)
   out <- NULL
   for (j in seq_len(length(files))) {
     fn <- file.path(rdir, files[j])
     out <- rbind(out, scalar_res_to_df(fn))
+  }
+  tibble::as_tibble(out)
+}
+
+
+# Get path results
+get_path_res <- function(dir) {
+  rdir <- file.path(parent_res_dir, dir)
+  files <- dir(rdir)
+  out <- NULL
+  for (j in seq_len(length(files))) {
+    fn <- file.path(rdir, files[j])
+    out <- rbind(out, path_res_to_df(fn))
   }
   tibble::as_tibble(out)
 }
@@ -50,19 +64,6 @@ path_res_to_df <- function(fn) {
   a$file <- fn
   a
 }
-
-# Get path results
-get_path_res <- function(dir) {
-  rdir <- file.path("res", dir)
-  files <- dir(rdir)
-  out <- NULL
-  for (j in seq_len(length(files))) {
-    fn <- file.path(rdir, files[j])
-    out <- rbind(out, path_res_to_df(fn))
-  }
-  tibble::as_tibble(out)
-}
-
 
 
 # Scalar results
