@@ -43,6 +43,21 @@ scalar_res_to_df <- function(fn) {
   x
 }
 
+# Term name to term description
+term_name_to_desc <- function(term_name) {
+  has_zu <- grepl(term_name, pattern = "z_u")
+  has_xu <- grepl(term_name, pattern = "x_u")
+  if (has_zu) {
+    desc <- "irrelevant categorical"
+  } else if (has_xu) {
+    desc <- "irrelevant continuous"
+  } else {
+    desc <- term_name
+  }
+  desc
+}
+
+# Get main result df for one result
 get_elpd_df <- function(search, term_names) {
   df <- search$history[c("elpd_loo", "elpd_loo_rel_diff")]
   path <- search$path
@@ -50,8 +65,8 @@ get_elpd_df <- function(search, term_names) {
   path <- c(0, path)
   path_char <- c(NA, path_char)
   df$num_sub_terms <- 0:(nrow(df) - 1)
-  df$path <- path
-  df$path_char <- path_char
+  df$term <- path
+  df$term_char <- path_char
   df
 }
 
@@ -80,15 +95,19 @@ for (d in ls) {
   df_p <- rbind(df_p, get_path_res(d))
 }
 
+# Full data frame of search paths
 df <- df_p %>% left_join(df_s, by = "file")
 df$experim <- paste(df$file, df$method)
 df$setup <- paste0(df$num_terms, "_", df$N_indiv, "_", df$snr)
 df$method_in_setup <- paste0(df$method, "-", df$setup)
+df$term_desc <- Vectorize(term_name_to_desc)(df$term_char)
+
+# Plot each elp curve
 plt <- ggplot(
   df,
   aes(
     x = num_sub_terms, y = elpd_loo_rel_diff, color = method,
-    fill = method, group = method_in_setup
+    fill = method, group = file
   )
 ) +
   geom_line() +
@@ -97,7 +116,7 @@ plt <- ggplot(
   geom_hline(yintercept = c(-1, 1), lty = 2)
 
 
-# Summary plot
+# Summary data frame of elpd
 df_sum <- df %>%
   group_by(method, setup, num_sub_terms) %>%
   summarize(
@@ -107,6 +126,8 @@ df_sum <- df %>%
     upper = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.95),
     .groups = "drop"
   )
+
+# ELPD plot
 plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   facet_wrap(. ~ setup) +
   geom_line() +
@@ -118,29 +139,63 @@ plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
 
 
-# Mst common first selection
-df_path_char_freq <- df %>%
-  filter(num_sub_terms == 1) %>%
+# Create a complete grid of all combinations
+complete_grid <- expand.grid(
+  setup = unique(df$setup),
+  method = unique(df$method),
+  term_desc = setdiff(unique(df$term_desc), c("f_baseline_id", NA))
+)
+
+# Compute total count for each setup-method combination
+total_counts <- df %>%
+  filter(num_sub_terms == 2) %>%
   group_by(setup, method) %>%
-  summarize(frequency = n(), .groups = "drop")
-most_common <- df_path_char_freq %>%
-  arrange(setup, method, desc(frequency)) %>%
-  group_by(setup, method) %>%
-  slice(1)
+  summarize(total = n(), .groups = "drop")
+
+# Most common first selection (excluding f_baseline_id)
+df_freq <- df %>%
+  filter(num_sub_terms == 2) %>%
+  group_by(setup, method, term_desc) %>%
+  summarize(count = n(), .groups = "drop") %>%
+  left_join(total_counts, by = c("setup", "method")) %>%
+  mutate(frequency = count / total) %>%
+  right_join(complete_grid, by = c("setup", "method", "term_desc")) %>%
+  replace_na(list(count = 0, total = 0, frequency = 0))
+
+# Distribution of first selected term
+plt_first <- df_freq %>% ggplot(aes(x = term_desc, y = frequency, fill = method)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  facet_wrap(. ~ setup) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
+  ggtitle("First selected term") +
+  xlab("Term") +
+  ylab("Proportion of times selected first")
 
 
 # Proportion of correct
 correct <- c("f_baseline_id", "f_gp_age", "f_gp_ageXz", "f_gp_x")
 
+
 df_cor <- NULL
+df0 <- df %>% filter(num_sub_terms > 0)
 for (j in 1:6) {
-  df_j <- df %>%
+  # Compute total count for each setup-method combination
+  tc_j <- df0 %>%
     filter(num_sub_terms <= j) %>%
-    filter(path_char %in% correct) %>%
     group_by(setup, method) %>%
-    summarize(frequency = n(), .groups = "drop")
+    summarize(total = n(), .groups = "drop")
+
+  df_j <- df0 %>%
+    filter(num_sub_terms <= j) %>%
+    filter(term_char %in% correct) %>%
+    group_by(setup, method) %>%
+    summarize(count = n(), .groups = "drop") %>%
+    left_join(tc_j, by = c("setup", "method")) %>%
+    mutate(percentage = count / total)
+
   df_j$num_terms <- j
-  df_j <- df_j %>% mutate(percentage = frequency / (50 * num_terms))
+
   df_cor <- rbind(df_cor, df_j)
 }
 plt_cor <- ggplot(df_cor, aes(x = num_terms, y = percentage, color = method)) +
