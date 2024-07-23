@@ -98,7 +98,7 @@ for (d in ls) {
 # Full data frame of search paths
 df <- df_p %>% left_join(df_s, by = "file")
 df$experim <- paste(df$file, df$method)
-df$setup <- paste0(df$num_terms, "_", df$N_indiv, "_", df$snr)
+df$setup <- paste0("N_terms = ", df$num_terms, ", SNR = ", df$snr)
 df$method_in_setup <- paste0(df$method, "-", df$setup)
 df$term_desc <- Vectorize(term_name_to_desc)(df$term_char)
 
@@ -225,3 +225,6 @@ plt_res <- ggarrange(plt_a, plt_b, plt_c,
   nrow = 3, ncol = 1, labels = "auto",
   heights = c(1, 1, 1.7)
 )
+
+# Save
+ggsave(plt_res, filename = "resplot.pdf", width = 9.5, height = 8.2)
