@@ -20,11 +20,12 @@ simulate_gaussian <- function(N_indiv, n_unrel, snr, t_seq) {
     snr = snr,
     lengthscales = lengthscales
   )
+  n_flip_z <- round(N_indiv / 4)
   data_new <- add_unrelated(
     simdat@data,
     n_x = n_unrel,
     n_z = n_unrel,
-    n_flip_z = 5
+    n_flip_z = n_flip_z
   )
   data_new$components <- simdat@components
   data_new
