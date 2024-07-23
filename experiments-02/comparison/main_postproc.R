@@ -1,7 +1,7 @@
 library(lgpr2)
 library(tidyverse)
 
-parent_res_dir <- "res-tri"
+parent_res_dir <- "res-100"
 ls <- dir(parent_res_dir)
 ls <- ls[grepl(pattern = "res-", ls)]
 
@@ -130,12 +130,13 @@ df_sum <- df %>%
 # ELPD plot
 plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   facet_wrap(. ~ setup) +
+  geom_vline(xintercept = 4, color = "orange", lty = 2) +
   geom_line() +
   geom_point() +
   geom_hline(yintercept = c(-1, 1), lty = 2) +
   theme_bw() +
-  ylab("LOO-ELPD relative diff") +
-  xlab("Number of terms") +
+  ylab("LOO-ELPD rel. diff.") +
+  xlab("Number of terms in model") +
   scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
 
 
@@ -200,9 +201,27 @@ for (j in 1:6) {
 }
 plt_cor <- ggplot(df_cor, aes(x = num_terms, y = percentage, color = method)) +
   facet_wrap(. ~ setup) +
+  geom_vline(xintercept = 4, color = "orange", lty = 2) +
   geom_line() +
   geom_point() +
   xlab("Number of terms in model") +
-  ylab("Percentage of correct terms") +
+  ylab("% of correct terms") +
   theme_bw() +
   scale_x_continuous(breaks = unique(df_cor$num_terms))
+
+# Plt setup
+refine_plot <- function(plt, pal = 6) {
+  plt + facet_grid(. ~ setup) +
+    scale_color_brewer(type = "qual", palette = pal) +
+    scale_fill_brewer(type = "qual", palette = pal)
+}
+
+# Combined result plot
+library(ggpubr)
+plt_a <- refine_plot(plt_elp)
+plt_b <- refine_plot(plt_cor)
+plt_c <- refine_plot(plt_first + ggtitle(""))
+plt_res <- ggarrange(plt_a, plt_b, plt_c,
+  nrow = 3, ncol = 1, labels = "auto",
+  heights = c(1, 1, 1.7)
+)
