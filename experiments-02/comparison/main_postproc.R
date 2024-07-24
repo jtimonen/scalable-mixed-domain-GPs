@@ -73,6 +73,8 @@ get_elpd_df <- function(search, term_names) {
 get_both_elpd_dfs <- function(r) {
   df1 <- get_elpd_df(r$search_pp_fs, r$term_names)
   df2 <- get_elpd_df(r$search_pp_dir, r$term_names)
+  df1$cum_relevance <- 0
+  df2$cum_relevance <- r$r_path[seq_len(nrow(df2))]
   df1$method <- "forward search"
   df2$method <- "predefined path"
   tibble::as_tibble(rbind(df1, df2))
@@ -131,9 +133,9 @@ df_sum <- df %>%
 plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   facet_wrap(. ~ setup) +
   geom_vline(xintercept = 4, color = "orange", lty = 2) +
+  geom_hline(yintercept = c(-1, 1), lty = 2) +
   geom_line() +
   geom_point() +
-  geom_hline(yintercept = c(-1, 1), lty = 2) +
   theme_bw() +
   ylab("LOO-ELPD rel. diff.") +
   xlab("Number of terms in model") +
@@ -228,3 +230,32 @@ plt_res <- ggarrange(plt_a, plt_b, plt_c,
 
 # Save
 ggsave(plt_res, filename = "resplot.pdf", width = 9.5, height = 8.2)
+
+
+# Summary data frame of cumulative relevance
+df_sum_cr <- df %>%
+  filter(method == "predefined path") %>%
+  group_by(method, setup, num_sub_terms) %>%
+  summarize(
+    med = quantile(cum_relevance, na.rm = TRUE, probs = 0.5),
+    mean = mean(cum_relevance, na.rm = TRUE),
+    lower = quantile(cum_relevance, na.rm = TRUE, probs = 0.05),
+    upper = quantile(cum_relevance, na.rm = TRUE, probs = 0.95),
+    .groups = "drop"
+  )
+
+# Cumulative relevance plot
+plt_cr <- ggplot(
+  df_sum_cr,
+  aes(x = num_sub_terms, y = med, ymin = lower, ymax = upper)
+) +
+  facet_wrap(. ~ setup) +
+  geom_vline(xintercept = 4, color = "orange", lty = 2) +
+  geom_hline(yintercept = c(0.95), lty = 2, color = "firebrick") +
+  geom_errorbar(width = 0.4) +
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+  ylab("Cumulative relevance") +
+  xlab("Number of terms in model") +
+  scale_x_continuous(breaks = unique(df_sum_cr$num_sub_terms))
