@@ -173,7 +173,7 @@ plt_first <- df_freq %>% ggplot(aes(x = term_desc, y = frequency, fill = method)
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
   ggtitle("First selected term") +
   xlab("Term") +
-  ylab("Proportion of times selected first")
+  ylab("Prop. of times selected first")
 
 
 # Proportion of correct
@@ -218,18 +218,7 @@ refine_plot <- function(plt, pal = 6) {
     scale_fill_brewer(type = "qual", palette = pal)
 }
 
-# Combined result plot
-library(ggpubr)
-plt_a <- refine_plot(plt_elp)
-plt_b <- refine_plot(plt_cor)
-plt_c <- refine_plot(plt_first + ggtitle(""))
-plt_res <- ggarrange(plt_a, plt_b, plt_c,
-  nrow = 3, ncol = 1, labels = "auto",
-  heights = c(1, 1, 1.7)
-)
 
-# Save
-ggsave(plt_res, filename = "resplot.pdf", width = 9.5, height = 8.2)
 
 
 # Summary data frame of cumulative relevance
@@ -259,3 +248,18 @@ plt_cr <- ggplot(
   ylab("Cumulative relevance") +
   xlab("Number of terms in model") +
   scale_x_continuous(breaks = unique(df_sum_cr$num_sub_terms))
+
+
+# Combined result plot
+library(ggpubr)
+plt_a <- refine_plot(plt_elp) + theme(legend.position = "top")
+plt_b <- refine_plot(plt_cor) + theme(legend.position = "none")
+plt_c <- refine_plot(plt_first + ggtitle("")) + theme(legend.position = "none")
+plt_d <- refine_plot(plt_cr)
+plt_res <- ggarrange(plt_a, plt_b, plt_c, plt_d,
+  nrow = 4, ncol = 1, labels = "auto",
+  heights = c(1.34, 1, 1.55, 1)
+)
+
+# Save
+ggsave(plt_res, filename = "resplot.pdf", width = 9.5, height = 11.2)

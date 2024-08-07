@@ -7,7 +7,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (interactive()) {
   idx <- 0
   OM <- 1
-  N_indiv <- 30
+  N_indiv <- 10
   snr <- 0.5
 } else {
   idx <- as.numeric(args[1])
