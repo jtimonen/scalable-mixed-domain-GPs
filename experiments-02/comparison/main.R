@@ -1,4 +1,4 @@
-library(lgpr2) # v0.0.2
+library(lgpr2) # v0.0.3
 library(ggplot2)
 source("simulate.R")
 source("utils.R")
