@@ -8,27 +8,24 @@ if (interactive()) {
   idx <- 0
   OM <- 1
   N_indiv <- 30
-  snr <- 0.5
 } else {
   idx <- as.numeric(args[1])
   N_indiv <- as.numeric(args[2])
-  snr <- as.numeric(args[3])
-  OM <- as.numeric(args[4])
+  OM <- as.numeric(args[3])
 }
 message("idx = ", idx)
 message("N_indiv = ", N_indiv)
-message("snr = ", snr)
 message("OM = ", OM)
 
 # Setup depending on idx
-CHAINS <- 1
+CHAINS <- 2
 ITER <- 1000
 f_var <- 16
-
+n_unrel <- 16
 if (idx <= 50) {
-  n_unrel <- 10
+  snr <- 0.25
 } else if (idx <= 100) {
-  n_unrel <- 20
+  snr <- 0.1
 } else {
   stop("too large idx!")
 }
@@ -71,8 +68,8 @@ rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
 path <- rels$ix
 path_id_first <- c(1, path[which(path != 1)])
 path_just_id <- 1
-search_pp_fs <- pp_forward_search(fit, path = path_just_id, num_steps = 8, B = B)
-search_pp_dir <- pp_forward_search(fit, path = path_id_first, num_steps = 8, B = B)
+search_pp_fs <- pp_forward_search(fit, path = path_just_id, num_steps = 6, B = B)
+search_pp_dir <- pp_forward_search(fit, path = path_id_first, num_steps = 6, B = B)
 
 # Results list
 res <- list(
