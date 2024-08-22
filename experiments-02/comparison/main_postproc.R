@@ -1,7 +1,7 @@
 library(lgpr2)
 library(tidyverse)
 
-parent_res_dir <- "res-half"
+parent_res_dir <- "res22"
 ls <- dir(parent_res_dir)
 ls <- ls[grepl(pattern = "res-", ls)]
 
@@ -182,7 +182,7 @@ correct <- c("f_baseline_id", "f_gp_age", "f_gp_ageXz", "f_gp_x")
 
 df_cor <- NULL
 df0 <- df %>% filter(num_sub_terms > 0)
-for (j in 1:8) {
+for (j in 1:6) {
   # Compute total count for each setup-method combination
   tc_j <- df0 %>%
     filter(num_sub_terms <= j) %>%
