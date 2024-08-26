@@ -48,9 +48,9 @@ term_name_to_desc <- function(term_name) {
   has_zu <- grepl(term_name, pattern = "z_u")
   has_xu <- grepl(term_name, pattern = "x_u")
   if (has_zu) {
-    desc <- "irrelevant categorical"
+    desc <- "irrelev. categ."
   } else if (has_xu) {
-    desc <- "irrelevant continuous"
+    desc <- "irrelev. cont."
   } else {
     desc <- term_name
   }
@@ -100,7 +100,11 @@ for (d in ls) {
 # Full data frame of search paths
 df <- df_p %>% left_join(df_s, by = "file")
 df$experim <- paste(df$file, df$method)
-df$setup <- paste0("N_terms = ", df$num_terms, ", SNR = ", df$snr)
+if (length(unique(df$num_terms)) > 1) {
+  df$setup <- paste0("N_terms = ", df$num_terms, ", SNR = ", df$snr)
+} else {
+  df$setup <- paste0("SNR = ", df$snr)
+}
 df$method_in_setup <- paste0(df$method, "-", df$setup)
 df$term_desc <- Vectorize(term_name_to_desc)(df$term_char)
 
@@ -173,7 +177,7 @@ plt_first <- df_freq %>% ggplot(aes(x = term_desc, y = frequency, fill = method)
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
   ggtitle("First selected term") +
   xlab("Term") +
-  ylab("Prop. of times selected first")
+  ylab("Selected first rate")
 
 
 # Proportion of correct
@@ -242,10 +246,11 @@ plt_cr <- ggplot(
   geom_vline(xintercept = 4, color = "orange", lty = 2) +
   geom_hline(yintercept = c(0.95), lty = 2, color = "firebrick") +
   geom_errorbar(width = 0.4) +
+  ylim(0.7, 1) +
   geom_line() +
   geom_point() +
   theme_bw() +
-  ylab("Cumulative relevance") +
+  ylab("Cumul. relevance") +
   xlab("Number of terms in model") +
   scale_x_continuous(breaks = unique(df_sum_cr$num_sub_terms))
 
@@ -253,13 +258,14 @@ plt_cr <- ggplot(
 # Combined result plot
 library(ggpubr)
 plt_a <- refine_plot(plt_elp) + theme(legend.position = "top")
-plt_b <- refine_plot(plt_cor) + theme(legend.position = "none")
-plt_c <- refine_plot(plt_first + ggtitle("")) + theme(legend.position = "none")
-plt_d <- refine_plot(plt_cr)
+plt_b <- refine_plot(plt_cr)
+plt_c <- refine_plot(plt_cor) + theme(legend.position = "none")
+plt_d <- refine_plot(plt_first + ggtitle("")) + theme(legend.position = "none")
 plt_res <- ggarrange(plt_a, plt_b, plt_c, plt_d,
   nrow = 4, ncol = 1, labels = "auto",
-  heights = c(1.34, 1, 1.55, 1)
+  heights = c(1, 1, 1, 1.4),
+  legend.grob = get_legend(plt_a)
 )
 
 # Save
-ggsave(plt_res, filename = "resplot.pdf", width = 9.5, height = 11.2)
+ggsave(plt_res, filename = "resplot.pdf", width = 8.5, height = 9.2)
