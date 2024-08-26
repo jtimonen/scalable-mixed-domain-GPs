@@ -254,6 +254,31 @@ plt_cr <- ggplot(
   xlab("Number of terms in model") +
   scale_x_continuous(breaks = unique(df_sum_cr$num_sub_terms))
 
+# Study wrong selections with snr=0.1
+find_files_with_wrong_z <- function(df) {
+  df24 <- df %>% filter(method == "forward search", num_sub_terms <= 4, num_sub_terms >= 2, snr == "0.1")
+  df24$afterX <- sapply(strsplit(df24$term_char, split = "X"), function(x) x[length(x)])
+  df24$has_zu <- grepl(df24$afterX, pattern = "z_u")
+  df24 %>%
+    filter(has_zu) %>%
+    select(c("afterX", "file"))
+}
+
+# Study wrong selections with snr=0.1
+get_data_with_wrong_z <- function(df, idx = 1) {
+  zu24 <- find_files_with_wrong_z(df)
+  f <- unique(zu24$file)[idx]
+  dfz <- zu24 %>% filter(file == f)
+  wrong <- dfz$afterX
+  res <- readRDS(f)
+  a <- res$dat$dat[, c("id", "z", wrong)]
+  a %>%
+    group_by(id) %>%
+    slice(1) %>%
+    ungroup()
+}
+zu24 <- find_files_with_wrong_z(df)
+aaa <- get_data_with_wrong_z(df, 2) # found nothing interesting
 
 # Combined result plot
 library(ggpubr)
