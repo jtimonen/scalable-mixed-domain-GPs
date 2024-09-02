@@ -1,9 +1,10 @@
 library(lgpr2) # v0.0.3
 library(ggplot2)
+library(tidyverse)
 source("utils.R")
 
 ITER <- 600
-chains <- 1
+CHAINS <- 1
 
 # Read results
 snr <- 0.5
@@ -13,6 +14,11 @@ idx <- 131
 res_dir <- paste0("res33/res-", N_indiv, "-", snr, "-", OM)
 fn <- paste0(res_dir, "/res-", idx, ".rds")
 res <- readRDS(file = fn)
+
+# Subset data
+data_refit <- res$dat$dat
+sub_ids <- unique(data_refit$id)[1:50]
+data_refit <- data_refit %>% filter(id %in% sub_ids)
 
 # Create and compile reference model
 B <- 24
@@ -25,7 +31,7 @@ message("fitting")
 
 # Fit reference model
 fit <- model$fit(
-  data = res$dat$dat, num_bf = B, scale_bf = scale_bf,
+  data = data_refit, num_bf = B, scale_bf = scale_bf,
   iter_sampling = ITER, iter_warmup = ITER, chains = CHAINS,
   adapt_delta = 0.99, init = 0.1
 )
@@ -38,7 +44,7 @@ message("relevance")
 r <- fit$relevances() # id, age, x..., z...
 r <- mean(r)
 r_path <- cumsum(sort(r, decreasing = TRUE))
-names(r) <- c("id", "age", data_new$xn, data_new$zn, "noise")
+names(r) <- c("id", "age", res$dat$xn, res$dat$zn, "noise")
 D <- length(r) - 1
 rels <- sort(r[1:D], index.return = TRUE, decreasing = TRUE)
 path <- rels$ix
