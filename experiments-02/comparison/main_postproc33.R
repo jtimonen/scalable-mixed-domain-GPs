@@ -47,10 +47,16 @@ scalar_res_to_df <- function(fn) {
 term_name_to_desc <- function(term_name) {
   has_zu <- grepl(term_name, pattern = "z_u")
   has_xu <- grepl(term_name, pattern = "x_u")
+  has_x <- grepl(term_name, pattern = "_x")
+  has_z <- grepl(term_name, pattern = "_ageXz")
   if (has_zu) {
-    desc <- "irrelev. categ."
+    desc <- "FALSE z"
   } else if (has_xu) {
-    desc <- "irrelev. cont."
+    desc <- "FALSE x"
+  } else if (has_x) {
+    desc <- "TRUE x"
+  } else if (has_z) {
+    desc <- "TRUE z"
   } else {
     desc <- term_name
   }
@@ -107,6 +113,7 @@ if (length(unique(df$num_terms)) > 1) {
 }
 df$method_in_setup <- paste0(df$method, "-", df$setup)
 df$term_desc <- Vectorize(term_name_to_desc)(df$term_char)
+df$method_x_file <- paste0(df$method, "-", df$file)
 
 # Plot each elp curve
 plt <- ggplot(
@@ -124,7 +131,7 @@ plt <- ggplot(
 
 # Summary data frame of elpd
 df_sum <- df %>%
-  group_by(method, setup, num_sub_terms) %>%
+  group_by(method, snr, setup, num_sub_terms) %>%
   summarize(
     med = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.5),
     mean = mean(elpd_loo_rel_diff, na.rm = TRUE),
@@ -144,6 +151,18 @@ plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   ylab("LOO-ELPD rel. diff.") +
   xlab("Number of terms in model") +
   scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
+
+# Plot all experiments
+plt_elp_better <- ggplot(df, aes(x = num_sub_terms, y = elpd_loo_rel_diff, group = method_x_file)) +
+  geom_vline(xintercept = 4, color = "orange", lty = 1) +
+  geom_hline(yintercept = c(-1, 1), lty = 1) +
+  geom_line(color = "gray") +
+  geom_line(data = df_sum, aes(x = num_sub_terms, y = mean, color = method), inherit.aes = FALSE) +
+  theme_bw() +
+  ylab("LOO-ELPD rel. diff.") +
+  xlab("Number of terms in model") +
+  scale_x_continuous(breaks = unique(df_sum$num_sub_terms)) +
+  facet_wrap(. ~ method + setup, labeller = "label_both")
 
 
 # Create a complete grid of all combinations
@@ -178,8 +197,8 @@ plot_sel_dist <- function(df_freq, k) {
     facet_wrap(. ~ setup) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
-    ggtitle(paste0("Term selected at step k = ", k)) +
-    xlab("Term") +
+    ggtitle(paste0("Variable selected at step k = ", k)) +
+    xlab("Variable") +
     ylab("Selection rate")
 }
 
@@ -272,22 +291,6 @@ find_files_with_wrong_z <- function(df) {
     select(c("afterX", "file"))
 }
 
-# Study wrong selections with snr=0.1
-get_data_with_wrong_z <- function(df, idx = 1) {
-  zu24 <- find_files_with_wrong_z(df)
-  f <- unique(zu24$file)[idx]
-  dfz <- zu24 %>% filter(file == f)
-  wrong <- dfz$afterX
-  res <- readRDS(f)
-  a <- res$dat$dat[, c("id", "z", wrong)]
-  a %>%
-    group_by(id) %>%
-    slice(1) %>%
-    ungroup()
-}
-zu24 <- find_files_with_wrong_z(df)
-# aaa <- get_data_with_wrong_z(df, 2) # found nothing interesting
-
 # Combined result plot
 library(ggpubr)
 plt_a <- refine_plot(plt_elp) + theme(legend.position = "top")
@@ -295,11 +298,22 @@ plt_b <- refine_plot(plt_cr)
 plt_c <- refine_plot(plt_cor) + theme(legend.position = "none")
 plt_d <- refine_plot(plt_sel3) + theme(legend.position = "none")
 plt_e <- refine_plot(plt_sel4) + theme(legend.position = "none")
-plt_res <- ggarrange(plt_a, plt_b, plt_c, plt_d, plt_e,
-  nrow = 5, ncol = 1, labels = "auto",
-  heights = c(1, 1, 1, 1.4, 1.4),
+plt_res1 <- ggarrange(plt_a, plt_b,
+  nrow = 2, ncol = 1, labels = "auto",
+  heights = c(1, 1),
   legend.grob = get_legend(plt_a)
+)
+plt_res2 <- ggarrange(plt_c, plt_d, plt_e,
+  nrow = 3, ncol = 1, labels = "auto",
+  heights = c(1, 1.4, 1.4),
+  legend.grob = get_legend(plt_c)
 )
 
 # Save
-ggsave(plt_res, filename = "resplot33.pdf", width = 8.5, height = 11.2)
+ggsave(plt_res1, filename = "fig_pred.pdf", width = 8.5, height = 4.8)
+ggsave(plt_res2, filename = "fig_sel.pdf", width = 8.5, height = 6.8)
+
+# Supplementary figures
+plt_s1 <- plt_elp_better + scale_color_brewer(type = "qual", palette = 6) +
+  scale_fill_brewer(type = "qual", palette = 6)
+ggsave(plt_s1, filename = "fig_supp_pred.pdf", width = 8, height = 4)
