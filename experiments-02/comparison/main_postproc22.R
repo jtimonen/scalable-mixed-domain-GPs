@@ -1,7 +1,7 @@
 library(lgpr2)
 library(tidyverse)
 
-parent_res_dir <- "res22"
+parent_res_dir <- "res22" # "res22"
 ls <- dir(parent_res_dir)
 ls <- ls[grepl(pattern = "res-", ls)]
 
@@ -293,4 +293,4 @@ plt_res <- ggarrange(plt_a, plt_b, plt_c, plt_d,
 )
 
 # Save
-ggsave(plt_res, filename = "resplot.pdf", width = 8.5, height = 9.2)
+ggsave(plt_res, filename = "resplot22.pdf", width = 8.5, height = 9.2)
