@@ -109,7 +109,7 @@ plot_sel_dist <- function(df_freq, k) {
     ylab("Selection rate")
 }
 
-
+# File paths
 parent_res_dir <- "res33" # "res22"
 ls <- dir(parent_res_dir)
 ls <- ls[grepl(pattern = "res-", ls)]
