@@ -1,9 +1,7 @@
 library(lgpr2)
 library(tidyverse)
+library(ggpubr)
 
-parent_res_dir <- "res33" # "res22"
-ls <- dir(parent_res_dir)
-ls <- ls[grepl(pattern = "res-", ls)]
 
 # Get scalar results
 get_scalar_res <- function(dir) {
@@ -33,6 +31,9 @@ get_path_res <- function(dir) {
 # Scalar results to data frame
 scalar_res_to_df <- function(fn) {
   r <- readRDS(fn)
+  times <- r$search_times
+  times <- data.frame(t(c(r$mcmc_time, 60 * as.numeric(times))))
+  colnames(times) <- c("time_mcmc", "time_fs", "time_dir")
   x <- unlist(r[c("N_indiv", "snr")])
   x_diag <- r[["diag"]]
   num_terms <- length(r$term_names)
@@ -40,7 +41,7 @@ scalar_res_to_df <- function(fn) {
   names(x)[length(x)] <- "num_terms"
   x <- data.frame(t(c(fn, x)))
   colnames(x)[1] <- "file"
-  x
+  cbind(x, times)
 }
 
 # Term name to term description
@@ -76,6 +77,7 @@ get_elpd_df <- function(search, term_names) {
   df
 }
 
+# Both
 get_both_elpd_dfs <- function(r) {
   df1 <- get_elpd_df(r$search_pp_fs, r$term_names)
   df2 <- get_elpd_df(r$search_pp_dir, r$term_names)
@@ -94,6 +96,23 @@ path_res_to_df <- function(fn) {
   a
 }
 
+
+# Distribution of term selection at a given step
+plot_sel_dist <- function(df_freq, k) {
+  df_freq %>% ggplot(aes(x = term_desc, y = frequency, fill = method)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    facet_wrap(. ~ setup) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
+    ggtitle(paste0("Variable selected at step k = ", k)) +
+    xlab("Variable") +
+    ylab("Selection rate")
+}
+
+
+parent_res_dir <- "res33" # "res22"
+ls <- dir(parent_res_dir)
+ls <- ls[grepl(pattern = "res-", ls)]
 
 # Scalar results
 df_s <- NULL
@@ -153,11 +172,17 @@ plt_elp <- ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
   scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
 
 # Plot all experiments
-plt_elp_better <- ggplot(df, aes(x = num_sub_terms, y = elpd_loo_rel_diff, group = method_x_file)) +
+plt_elp_better <- ggplot(
+  df,
+  aes(x = num_sub_terms, y = elpd_loo_rel_diff, group = method_x_file)
+) +
   geom_vline(xintercept = 4, color = "orange", lty = 1) +
   geom_hline(yintercept = c(-1, 1), lty = 1) +
   geom_line(color = "gray") +
-  geom_line(data = df_sum, aes(x = num_sub_terms, y = mean, color = method), inherit.aes = FALSE) +
+  geom_line(
+    data = df_sum, aes(x = num_sub_terms, y = mean, color = method),
+    inherit.aes = FALSE
+  ) +
   theme_bw() +
   ylab("LOO-ELPD rel. diff.") +
   xlab("Number of terms in model") +
@@ -190,18 +215,6 @@ selection_rate_at_step <- function(df_res, k) {
     replace_na(list(count = 0, total = 0, frequency = 0))
 }
 
-# Distribution of term selection at a given step
-plot_sel_dist <- function(df_freq, k) {
-  df_freq %>% ggplot(aes(x = term_desc, y = frequency, fill = method)) +
-    geom_bar(stat = "identity", position = position_dodge()) +
-    facet_wrap(. ~ setup) +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)) +
-    ggtitle(paste0("Variable selected at step k = ", k)) +
-    xlab("Variable") +
-    ylab("Selection rate")
-}
-
 df_freq3 <- selection_rate_at_step(df, 3)
 df_freq4 <- selection_rate_at_step(df, 4)
 
@@ -211,8 +224,6 @@ plt_sel4 <- plot_sel_dist(df_freq4, 4)
 
 # Proportion of correct
 correct <- c("f_baseline_id", "f_gp_age", "f_gp_ageXz", "f_gp_x")
-
-
 df_cor <- NULL
 df0 <- df %>% filter(num_sub_terms > 0)
 for (j in 1:6) {
@@ -234,6 +245,8 @@ for (j in 1:6) {
 
   df_cor <- rbind(df_cor, df_j)
 }
+
+# Correctness of selection
 plt_cor <- ggplot(df_cor, aes(x = num_terms, y = percentage, color = method)) +
   facet_wrap(. ~ setup) +
   geom_vline(xintercept = 4, color = "orange", lty = 2) +
@@ -283,16 +296,26 @@ plt_cr <- ggplot(
 
 # Study wrong selections with snr=0.1
 find_files_with_wrong_z <- function(df) {
-  df24 <- df %>% filter(method == "forward search", num_sub_terms <= 4, num_sub_terms >= 2, snr == "0.1")
-  df24$afterX <- sapply(strsplit(df24$term_char, split = "X"), function(x) x[length(x)])
+  df24 <- df %>% filter(
+    method == "forward search",
+    num_sub_terms <= 4,
+    num_sub_terms >= 2,
+    snr == "0.1"
+  )
+  df24$afterX <- sapply(
+    strsplit(df24$term_char, split = "X"),
+    function(x) x[length(x)]
+  )
   df24$has_zu <- grepl(df24$afterX, pattern = "z_u")
   df24 %>%
     filter(has_zu) %>%
     select(c("afterX", "file"))
 }
 
+
+
+
 # Combined result plot
-library(ggpubr)
 plt_a <- refine_plot(plt_elp) + theme(legend.position = "top")
 plt_b <- refine_plot(plt_cr)
 plt_c <- refine_plot(plt_cor) + theme(legend.position = "none")
@@ -308,6 +331,12 @@ plt_res2 <- ggarrange(plt_c, plt_d, plt_e,
   heights = c(1, 1.4, 1.4),
   legend.grob = get_legend(plt_c)
 )
+
+
+
+
+
+
 
 # Save
 ggsave(plt_res1, filename = "fig_pred.pdf", width = 8.5, height = 4.8)
