@@ -17,7 +17,7 @@ res <- readRDS(file = fn)
 
 # Subset data
 data_refit <- res$dat$dat
-sub_ids <- unique(data_refit$id)[1:50]
+sub_ids <- unique(data_refit$id)[1:30]
 data_refit <- data_refit %>% filter(id %in% sub_ids)
 
 # Create and compile reference model
