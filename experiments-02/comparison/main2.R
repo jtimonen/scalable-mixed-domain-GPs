@@ -74,10 +74,10 @@ just_idage <- c(1, 2)
 
 # Run searches
 start_time <- Sys.time()
-search_pp_fs <- pp_forward_search(fit, path = just_idage, num_steps = 6, B = B)
+search_pp_fs <- pp_forward_search(fit, path = just_idage, num_steps = 8, B = B)
 t_fs <- Sys.time() - start_time
 start_time <- Sys.time()
-search_pp_dir <- pp_forward_search(fit, path = idage_first, num_steps = 6, B = B)
+search_pp_dir <- pp_forward_search(fit, path = idage_first, num_steps = 8, B = B)
 t_dir <- Sys.time() - start_time
 search_times <- c(t_fs, t_dir)
 mcmc_time <- fit$get_stan_fit()$time()$total
