@@ -10,7 +10,7 @@ parent_res_dir <- "res44" # "res22"
 df <- create_result_df(parent_res_dir)
 df_sum <- result_summary_df(df)
 plt_elp <- plot_elp(df_sum, 6)
-plt_elp_better <- plot_elp_full(df, df_sum, 6)
+plt_elp_full <- plot_elp_full(df, df_sum, 6)
 
 # Create a complete grid of all combinations
 complete_grid <- expand.grid(

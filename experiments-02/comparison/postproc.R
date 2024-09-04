@@ -152,10 +152,14 @@ term_name_to_desc <- function(term_name) {
 
 # ELPD plot
 plot_elp <- function(df_sum, orange_line_x) {
-  ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
+  ggplot(df_sum, aes(
+    x = num_sub_terms, y = med, ymin = lower, ymax = upper,
+    color = method
+  )) +
     facet_wrap(. ~ setup) +
     geom_vline(xintercept = orange_line_x, color = "orange", lty = 2) +
     geom_hline(yintercept = c(-1, 1), lty = 2) +
+    geom_pointrange(position = position_dodge(0.25)) +
     geom_line() +
     geom_point() +
     theme_bw() +
