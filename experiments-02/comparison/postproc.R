@@ -160,9 +160,8 @@ plot_elp <- function(df_sum, orange_line_x) {
     facet_wrap(. ~ setup) +
     geom_vline(xintercept = orange_line_x, color = "orange", lty = 2) +
     geom_hline(yintercept = c(-1, 1), lty = 2) +
-    geom_pointrange(position = position_dodge(0.25)) +
     geom_line() +
-    geom_point() +
+    geom_pointrange(position = position_dodge(0.25), size = 0.2) +
     theme_bw() +
     ylab("LOO-ELPD rel. diff.") +
     xlab("Number of terms in model") +
@@ -288,12 +287,11 @@ plot_cum_rel <- function(df_sum_cr, orange_line_x) {
     color = method
   )) +
     facet_wrap(. ~ setup) +
-    geom_pointrange(position = position_dodge(0.25)) +
     geom_vline(xintercept = orange_line_x, color = "orange", lty = 2) +
-    geom_hline(yintercept = c(0.95), lty = 2, color = "firebrick") +
-    ylim(ylim_min, 1) +
+    geom_hline(yintercept = c(0.95), lty = 2) +
     geom_line() +
-    geom_point() +
+    geom_pointrange(position = position_dodge(0.25), size = 0.2) +
+    ylim(ylim_min, 1) +
     theme_bw() +
     ylab("Cumul. relevance") +
     xlab("Number of terms in model") +

@@ -67,8 +67,8 @@ plt_res2 <- ggarrange(plt_d, plt_e,
 df_diagnose <- diagnosis(df)
 
 # Save
-ggsave(plt_res1, filename = "fig_pred.pdf", width = 8.5, height = 7.5)
-ggsave(plt_res2, filename = "fig_sel.pdf", width = 8.5, height = 6)
+ggsave(plt_res1, filename = "fig_pred.pdf", width = 7.5, height = 6.5)
+ggsave(plt_res2, filename = "fig_sel.pdf", width = 7.5, height = 5)
 
 # Supplementary table
-st <- xtable::xtable(t(df_diagnose))
+st <- xtable::xtable(t(df_diagnose), digits = 3, caption = "Diagnostics 1.")
