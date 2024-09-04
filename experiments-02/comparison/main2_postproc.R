@@ -12,82 +12,24 @@ df_sum <- result_summary_df(df)
 plt_elp <- plot_elp(df_sum, 6)
 plt_elp_full <- plot_elp_full(df, df_sum, 6)
 
-# Create a complete grid of all combinations
-complete_grid <- expand.grid(
-  setup = unique(df$setup),
-  method = unique(df$method),
-  term_desc = setdiff(unique(df$term_desc), c("f_baseline_id", "f_gp_age", NA))
-)
-
-# Compute total count for each setup-method combination
-total_counts <- df %>%
-  filter(num_sub_terms == 2) %>%
-  group_by(setup, method) %>%
-  summarize(total = n(), .groups = "drop")
-
-# Most common first selection (excluding f_baseline_id and age)
-selection_rate_at_step <- function(df_res, k) {
-  df_res %>%
-    filter(num_sub_terms == k) %>%
-    group_by(setup, method, term_desc) %>%
-    summarize(count = n(), .groups = "drop") %>%
-    left_join(total_counts, by = c("setup", "method")) %>%
-    mutate(frequency = count / total) %>%
-    right_join(complete_grid, by = c("setup", "method", "term_desc")) %>%
-    replace_na(list(count = 0, total = 0, frequency = 0))
-}
-
+# Distribution of selected terms at different steps
 df_freq3 <- selection_rate_at_step(df, 3)
 df_freq4 <- selection_rate_at_step(df, 4)
-
-# Distribution of first selected term
+df_freq5 <- selection_rate_at_step(df, 5)
+df_freq6 <- selection_rate_at_step(df, 6)
 plt_sel3 <- plot_sel_dist(df_freq3, 3)
 plt_sel4 <- plot_sel_dist(df_freq4, 4)
+plt_sel5 <- plot_sel_dist(df_freq3, 5)
+plt_sel6 <- plot_sel_dist(df_freq4, 6)
+
 
 # Proportion of correct
 correct <- c(
   "f_baseline_id", "f_gp_age", "f_gp_ageXz", "f_gp_x", "f_gp_w",
   "f_gp_ageXr"
 )
-df_cor <- NULL
-df0 <- df %>% filter(num_sub_terms > 0)
-for (j in 1:8) {
-  # Compute total count for each setup-method combination
-  tc_j <- df0 %>%
-    filter(num_sub_terms <= j) %>%
-    group_by(setup, method) %>%
-    summarize(total = n(), .groups = "drop")
-
-  df_j <- df0 %>%
-    filter(num_sub_terms <= j) %>%
-    filter(term_char %in% correct) %>%
-    group_by(setup, method) %>%
-    summarize(count = n(), .groups = "drop") %>%
-    left_join(tc_j, by = c("setup", "method")) %>%
-    mutate(percentage = count / total)
-
-  df_j$num_terms <- j
-
-  df_cor <- rbind(df_cor, df_j)
-}
-
-# Correctness of selection
-plt_cor <- ggplot(df_cor, aes(x = num_terms, y = percentage, color = method)) +
-  facet_wrap(. ~ setup) +
-  geom_vline(xintercept = 6, color = "orange", lty = 2) +
-  geom_line() +
-  geom_point() +
-  xlab("Number of terms in model") +
-  ylab("% of correct terms") +
-  theme_bw() +
-  scale_x_continuous(breaks = unique(df_cor$num_terms))
-
-# Plt setup
-refine_plot <- function(plt, pal = 6) {
-  plt + facet_grid(. ~ setup) +
-    scale_color_brewer(type = "qual", palette = pal) +
-    scale_fill_brewer(type = "qual", palette = pal)
-}
+df_cor <- create_df_cor(df, 8, correct)
+plt_cor <- plot_p_correct(df_cor, 6)
 
 
 # Summary data frame of cumulative relevance
@@ -154,12 +96,6 @@ df_diagnose <- df %>%
 # Save
 ggsave(plt_res1, filename = "fig_pred2.pdf", width = 8.5, height = 4.8)
 ggsave(plt_res2, filename = "fig_sel2.pdf", width = 8.5, height = 6.8)
-
-# Supplementary figures
-plt_s1 <- plt_elp_better + scale_color_brewer(type = "qual", palette = 6) +
-  scale_fill_brewer(type = "qual", palette = 6) +
-  theme(legend.position = "top", legend.title = element_blank())
-ggsave(plt_s1, filename = "fig_supp_pred2.pdf", width = 8, height = 5.2)
 
 # Supplementary table
 st <- xtable::xtable(t(df_diagnose))

@@ -168,6 +168,32 @@ plot_elp <- function(df_sum, orange_line_x) {
     scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
 }
 
+# Most common selection at step k (excluding f_baseline_id and age)
+selection_rate_at_step <- function(df, k) {
+  # Create a complete grid of all combinations
+  complete_grid <- expand.grid(
+    setup = unique(df$setup),
+    method = unique(df$method),
+    term_desc = setdiff(unique(df$term_desc), c("f_baseline_id", "f_gp_age", NA))
+  )
+
+  # Compute total count for each setup-method combination
+  total_counts <- df %>%
+    filter(num_sub_terms == 2) %>%
+    group_by(setup, method) %>%
+    summarize(total = n(), .groups = "drop")
+
+  # Return
+  df %>%
+    filter(num_sub_terms == k) %>%
+    group_by(setup, method, term_desc) %>%
+    summarize(count = n(), .groups = "drop") %>%
+    left_join(total_counts, by = c("setup", "method")) %>%
+    mutate(frequency = count / total) %>%
+    right_join(complete_grid, by = c("setup", "method", "term_desc")) %>%
+    replace_na(list(count = 0, total = 0, frequency = 0))
+}
+
 
 # Plot all experiments
 plot_elp_full <- function(df, df_sum, orange_line_x) {
@@ -187,4 +213,47 @@ plot_elp_full <- function(df, df_sum, orange_line_x) {
     xlab("Number of terms in model") +
     scale_x_continuous(breaks = unique(df_sum$num_sub_terms)) +
     facet_wrap(. ~ method + setup, labeller = "label_both")
+}
+
+# Data frame of correct selections
+create_df_cor <- function(df, n_steps, correct) {
+  df_cor <- NULL
+  df0 <- df %>% filter(num_sub_terms > 0)
+  for (j in 1:n_steps) {
+    tc_j <- df0 %>%
+      filter(num_sub_terms <= j) %>%
+      group_by(setup, method) %>%
+      summarize(total = n(), .groups = "drop")
+    df_j <- df0 %>%
+      filter(num_sub_terms <= j) %>%
+      filter(term_char %in% correct) %>%
+      group_by(setup, method) %>%
+      summarize(count = n(), .groups = "drop") %>%
+      left_join(tc_j, by = c("setup", "method")) %>%
+      mutate(percentage = count / total)
+    df_j$num_terms <- j
+    df_cor <- rbind(df_cor, df_j)
+  }
+  df_cor
+}
+
+# Correctness of selection
+plot_p_correct <- function(df_cor, orange_line_x) {
+  ggplot(df_cor, aes(x = num_terms, y = percentage, color = method)) +
+    facet_wrap(. ~ setup) +
+    geom_vline(xintercept = orange_line_x, color = "orange", lty = 2) +
+    geom_line() +
+    geom_point() +
+    xlab("Number of terms in model") +
+    ylab("% of correct terms") +
+    theme_bw() +
+    scale_x_continuous(breaks = unique(df_cor$num_terms))
+}
+
+
+# Plt setup
+refine_plot <- function(plt, pal = 6) {
+  plt + facet_grid(. ~ setup) +
+    scale_color_brewer(type = "qual", palette = pal) +
+    scale_fill_brewer(type = "qual", palette = pal)
 }
