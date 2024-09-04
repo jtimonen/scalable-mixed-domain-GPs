@@ -1,3 +1,39 @@
+# Full data frame of search paths
+create_result_df <- function(parent_res_dir) {
+  ls <- dir(parent_res_dir)
+  ls <- ls[grepl(pattern = "res-", ls)]
+  df_s <- NULL
+  df_p <- NULL
+  for (d in ls) {
+    df_s <- rbind(df_s, get_scalar_res(d))
+    df_p <- rbind(df_p, get_path_res(d))
+  }
+  df <- df_p %>% left_join(df_s, by = "file")
+  df$experim <- paste(df$file, df$method)
+  if (length(unique(df$num_terms)) > 1) {
+    df$setup <- paste0("N_terms = ", df$num_terms, ", SNR = ", df$snr)
+  } else {
+    df$setup <- paste0("SNR = ", df$snr)
+  }
+  df$method_in_setup <- paste0(df$method, "-", df$setup)
+  df$term_desc <- Vectorize(term_name_to_desc)(df$term_char)
+  df$method_x_file <- paste0(df$method, "-", df$file)
+  df
+}
+
+# Summary
+result_summary_df <- function(df) {
+  df %>%
+    group_by(method, setup, num_sub_terms) %>%
+    summarize(
+      med = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.5),
+      mean = mean(elpd_loo_rel_diff, na.rm = TRUE),
+      lower = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.05),
+      upper = quantile(elpd_loo_rel_diff, na.rm = TRUE, probs = 0.95),
+      .groups = "drop"
+    )
+}
+
 # Get scalar results
 get_scalar_res <- function(dir) {
   rdir <- file.path(parent_res_dir, dir)
@@ -110,4 +146,41 @@ term_name_to_desc <- function(term_name) {
     desc <- term_name
   }
   desc
+}
+
+
+
+# ELPD plot
+plot_elp <- function(df_sum, orange_line_x) {
+  ggplot(df_sum, aes(x = num_sub_terms, y = mean, color = method)) +
+    facet_wrap(. ~ setup) +
+    geom_vline(xintercept = orange_line_x, color = "orange", lty = 2) +
+    geom_hline(yintercept = c(-1, 1), lty = 2) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    ylab("LOO-ELPD rel. diff.") +
+    xlab("Number of terms in model") +
+    scale_x_continuous(breaks = unique(df_sum$num_sub_terms))
+}
+
+
+# Plot all experiments
+plot_elp_full <- function(df, df_sum, orange_line_x) {
+  ggplot(
+    df,
+    aes(x = num_sub_terms, y = elpd_loo_rel_diff, group = method_x_file)
+  ) +
+    geom_vline(xintercept = orange_line_x, color = "orange", lty = 1) +
+    geom_hline(yintercept = c(-1, 1), lty = 1) +
+    geom_line(color = "gray") +
+    geom_line(
+      data = df_sum, aes(x = num_sub_terms, y = mean, color = method),
+      inherit.aes = FALSE
+    ) +
+    theme_bw() +
+    ylab("LOO-ELPD rel. diff.") +
+    xlab("Number of terms in model") +
+    scale_x_continuous(breaks = unique(df_sum$num_sub_terms)) +
+    facet_wrap(. ~ method + setup, labeller = "label_both")
 }
