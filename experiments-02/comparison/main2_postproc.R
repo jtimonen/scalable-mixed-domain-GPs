@@ -18,8 +18,8 @@ df_freq5 <- selection_rate_at_step(df, 5)
 df_freq6 <- selection_rate_at_step(df, 6)
 plt_sel3 <- plot_sel_dist(df_freq3, 3)
 plt_sel4 <- plot_sel_dist(df_freq4, 4)
-plt_sel5 <- plot_sel_dist(df_freq3, 5)
-plt_sel6 <- plot_sel_dist(df_freq4, 6)
+plt_sel5 <- plot_sel_dist(df_freq5, 5)
+plt_sel6 <- plot_sel_dist(df_freq6, 6)
 
 
 # Proportion of correct
