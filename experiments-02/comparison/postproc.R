@@ -179,7 +179,7 @@ selection_rate_at_step <- function(df, k) {
 
   # Compute total count for each setup-method combination
   total_counts <- df %>%
-    filter(num_sub_terms == 2) %>%
+    filter(num_sub_terms == k) %>%
     group_by(setup, method) %>%
     summarize(total = n(), .groups = "drop")
 
