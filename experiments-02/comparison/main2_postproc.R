@@ -312,15 +312,13 @@ plt_b <- refine_plot(plt_cr)
 plt_c <- refine_plot(plt_cor) + theme(legend.position = "none")
 plt_d <- refine_plot(plt_sel3) + theme(legend.position = "none")
 plt_e <- refine_plot(plt_sel4) + theme(legend.position = "none")
-plt_res1 <- ggarrange(plt_a, plt_b,
-  nrow = 2, ncol = 1, labels = "auto",
-  heights = c(1, 1),
+plt_res1 <- ggarrange(plt_a, plt_b, plt_c,
+  nrow = 3, ncol = 1, labels = "auto",
   legend.grob = get_legend(plt_a)
 )
-plt_res2 <- ggarrange(plt_c, plt_d, plt_e,
-  nrow = 3, ncol = 1, labels = "auto",
-  heights = c(1, 1.4, 1.4),
-  legend.grob = get_legend(plt_c)
+plt_res2 <- ggarrange(plt_d, plt_e,
+  nrow = 2, ncol = 1, labels = "auto",
+  legend.grob = get_legend(plt_d)
 )
 
 
@@ -344,8 +342,9 @@ ggsave(plt_res2, filename = "fig_sel2.pdf", width = 8.5, height = 6.8)
 
 # Supplementary figures
 plt_s1 <- plt_elp_better + scale_color_brewer(type = "qual", palette = 6) +
-  scale_fill_brewer(type = "qual", palette = 6)
-ggsave(plt_s1, filename = "fig_supp_pred2.pdf", width = 8, height = 4)
+  scale_fill_brewer(type = "qual", palette = 6) +
+  theme(legend.position = "top", legend.title = element_blank())
+ggsave(plt_s1, filename = "fig_supp_pred2.pdf", width = 8, height = 5.2)
 
 # Supplementary table
 st <- xtable::xtable(t(df_diagnose))
