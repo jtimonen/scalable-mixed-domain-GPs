@@ -92,8 +92,9 @@ get_elpd_df <- function(search, term_names) {
 get_both_elpd_dfs <- function(r) {
   df1 <- get_elpd_df(r$search_pp_fs, r$term_names)
   df2 <- get_elpd_df(r$search_pp_dir, r$term_names)
-  df1$cum_relevance <- 0
-  df2$cum_relevance <- r$r_path[seq_len(nrow(df2))]
+  r_noise <- r$r_path[1]
+  df1$cum_relevance <- r_noise + c(0, cumsum(r$relevances[r$search_pp_fs$path]))
+  df2$cum_relevance <- r_noise + c(0, cumsum(r$relevances[r$search_pp_dir$path]))
   df1$method <- "forward search"
   df2$method <- "predefined path"
   tibble::as_tibble(rbind(df1, df2))
@@ -250,6 +251,54 @@ plot_p_correct <- function(df_cor, orange_line_x) {
     scale_x_continuous(breaks = unique(df_cor$num_terms))
 }
 
+# Diagnostics (assuming 2 chains)
+diagnosis <- function(df) {
+  df %>%
+    group_by(setup) %>%
+    summarize(
+      mean_mcmc_time = mean(time_mcmc),
+      mean_forward_search_time = mean(time_fs),
+      mean_predefined_path_time = mean(time_dir),
+      mean_num_divergent = mean(num_divergent1 + num_divergent2),
+      mean_num_max_treedepth = mean(num_max_treedepth1 + num_max_treedepth2),
+      mean_max_rhat = mean(max_rhat),
+      sd_max_rhat = sd(max_rhat),
+      max_max_rhat = max(max_rhat)
+    )
+}
+
+# Summary data frame of cumulative relevance
+cumrel_summary_df <- function(df) {
+  df %>%
+    group_by(method, setup, num_sub_terms) %>%
+    summarize(
+      med = quantile(cum_relevance, na.rm = TRUE, probs = 0.5),
+      mean = mean(cum_relevance, na.rm = TRUE),
+      lower = quantile(cum_relevance, na.rm = TRUE, probs = 0.05),
+      upper = quantile(cum_relevance, na.rm = TRUE, probs = 0.95),
+      .groups = "drop"
+    )
+}
+
+# Cumulative relevance plot
+plot_cum_rel <- function(df_sum_cr, orange_line_x) {
+  ylim_min <- round(min(df_sum_cr$lower) - 0.05, digits = 1)
+  ggplot(df_sum_cr, aes(
+    x = num_sub_terms, y = med, ymin = lower, ymax = upper,
+    color = method
+  )) +
+    facet_wrap(. ~ setup) +
+    geom_pointrange(position = position_dodge(0.25)) +
+    geom_vline(xintercept = orange_line_x, color = "orange", lty = 2) +
+    geom_hline(yintercept = c(0.95), lty = 2, color = "firebrick") +
+    ylim(ylim_min, 1) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    ylab("Cumul. relevance") +
+    xlab("Number of terms in model") +
+    scale_x_continuous(breaks = unique(df_sum_cr$num_sub_terms))
+}
 
 # Plt setup
 refine_plot <- function(plt, pal = 6) {

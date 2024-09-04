@@ -23,34 +23,9 @@ correct <- c("f_baseline_id", "f_gp_age", "f_gp_ageXz", "f_gp_x")
 df_cor <- create_df_cor(df, 6, correct)
 plt_cor <- plot_p_correct(df_cor, 4)
 
-# Summary data frame of cumulative relevance
-df_sum_cr <- df %>%
-  filter(method == "predefined path") %>%
-  group_by(method, setup, num_sub_terms) %>%
-  summarize(
-    med = quantile(cum_relevance, na.rm = TRUE, probs = 0.5),
-    mean = mean(cum_relevance, na.rm = TRUE),
-    lower = quantile(cum_relevance, na.rm = TRUE, probs = 0.05),
-    upper = quantile(cum_relevance, na.rm = TRUE, probs = 0.95),
-    .groups = "drop"
-  )
-
-# Cumulative relevance plot
-plt_cr <- ggplot(
-  df_sum_cr,
-  aes(x = num_sub_terms, y = med, ymin = lower, ymax = upper)
-) +
-  facet_wrap(. ~ setup) +
-  geom_vline(xintercept = 4, color = "orange", lty = 2) +
-  geom_hline(yintercept = c(0.95), lty = 2, color = "firebrick") +
-  geom_errorbar(width = 0.4) +
-  ylim(0.5, 1) +
-  geom_line() +
-  geom_point() +
-  theme_bw() +
-  ylab("Cumul. relevance") +
-  xlab("Number of terms in model") +
-  scale_x_continuous(breaks = unique(df_sum_cr$num_sub_terms))
+# Cumulative relevance
+df_sum_cr <- cumrel_summary_df(df)
+plt_cr <- plot_cum_rel(df_sum_cr, 4)
 
 # Study wrong selections with snr=0.1
 find_files_with_wrong_z <- function(df) {
@@ -88,22 +63,12 @@ plt_res2 <- ggarrange(plt_d, plt_e,
   legend.grob = get_legend(plt_d)
 )
 
-
 # Diagnose
-df_diagnose <- df %>%
-  group_by(setup) %>%
-  summarize(
-    mean_mcmc_time = mean(time_mcmc),
-    mean_forward_search_time = mean(time_fs),
-    mean_predefined_path_time = mean(time_dir),
-    mean_num_divergent = mean(num_divergent1 + num_divergent2),
-    mean_num_max_treedepth = mean(num_max_treedepth1 + num_max_treedepth2),
-    mean_max_rhat = mean(max_rhat),
-    sd_max_rhat = sd(max_rhat),
-    max_max_rhat = max(max_rhat)
-  )
+df_diagnose <- diagnosis(df)
 
 # Save
-ggsave(plt_res1, filename = "fig_pred.pdf", width = 8.5, height = 4.8)
-ggsave(plt_res2, filename = "fig_sel.pdf", width = 8.5, height = 6.8)
+ggsave(plt_res1, filename = "fig_pred.pdf", width = 8.5, height = 7.5)
+ggsave(plt_res2, filename = "fig_sel.pdf", width = 8.5, height = 6)
 
+# Supplementary table
+st <- xtable::xtable(t(df_diagnose))
