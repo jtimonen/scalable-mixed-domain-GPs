@@ -15,4 +15,4 @@ install.packages("lgpr")
 
 ## experiments-02
 
-This part uses [lgpr2](git@github.com:jtimonen/lgpr2.git) and contains the *model reduction* experiments.
+This part uses [lgpr2](https://github.com/jtimonen/lgpr2) and contains the *model reduction* experiments.
