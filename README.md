@@ -6,7 +6,7 @@ This repo consists of two parts.
 
 ## experiments-01
 
-This part uses `lgpr` and custom Stan code. Contains experiments of *scalability*.
+This part uses [lgpr](https://github.com/jtimonen/lgpr) and custom Stan code. Contains experiments of *scalability*.
 These experiments require `lgpr` version at least 1.1.4 but less than 1.2.0.
 
 ```R
