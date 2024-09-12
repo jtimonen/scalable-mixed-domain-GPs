@@ -1,6 +1,6 @@
-# Scalable mixed-domain Gaussian processes
+# Scalable mixed-domain Gaussian process modeling and model reduction for longitudinal data
 
-Code for the experiments in the paper "Scalable mixed-domain Gaussian processes" by J. Timonen and H. Lähdesmäki.
+Code for the experiments in the paper "Scalable mixed-domain Gaussian process modeling and model reduction for longitudinal data" by J. Timonen and H. Lähdesmäki.
 
 This repo consists of two parts.
 
