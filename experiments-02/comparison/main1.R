@@ -5,7 +5,7 @@ source("utils.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 if (interactive()) {
-  idx <- 0
+  idx <- 101
   OM <- 1
   N_indiv <- 30
 } else {
