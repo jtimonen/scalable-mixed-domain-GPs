@@ -52,8 +52,21 @@ simulate_input <- function() {
   df <- data.frame(x = x, z = z, id = z)
   df <- as_tibble(df) %>% arrange(z, x)
 }
+simulate_obs <- function(df) {
+  df$y <- df$f + rnorm(n = nrow(df), mean = 0, sd = 0.1)
+  df
+}
 
 X <- simulate_input()
 df <- nonsep_kernel2(X)
+df <- simulate_obs(df)
 plt <- ggplot(df, aes(x = x, y = f, color = z)) +
-  geom_line()
+  geom_line() +
+  geom_point(mapping = aes(x = x, y = y, color = z)) +
+  facet_grid(. ~ z)
+
+
+# Fit
+model <- lgpr2:::LonModel$new(formula = y ~ gp(x, z))
+fit <- model$fit(data = df, chains = 1, iter_sampling = 600)
+plt2 <- fit$plot()
