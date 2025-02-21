@@ -1,6 +1,6 @@
 ker_eq <- function(x1, x2, z1, z2, ell) {
-  ls <- 1 #sqrt(ell[z1] * ell[z2]) + 0.3
-  dx <- (x1/ell[z1] - x2/ell[z2])^2 / ls
+  ls <- 1 # sqrt(ell[z1] * ell[z2]) + 0.3
+  dx <- (x1 / ell[z1] - x2 / ell[z2])^2 / ls
   exp(-0.5 * (dx))
 }
 
@@ -28,7 +28,7 @@ simulate_nonsep <- function(df) {
 
 # Simulating data
 simulate_input <- function() {
-  x <- seq(-1, 1, by = 0.1)
+  x <- seq(-1, 1, by = 0.05)
   N <- length(x)
   x <- c(x, x, x) + 0.02 * rnorm(3 * N)
   z <- as.factor(rep(c(1, 2, 3), each = N))
@@ -39,6 +39,17 @@ simulate_obs <- function(df) {
   df$y <- df$f + rnorm(n = nrow(df), mean = 0, sd = 0.1)
   df
 }
+split_train_test <- function(df) {
+  N <- nrow(df)
+  n <- round(N / 2)
+  idx <- sample(N, n)
+  idx <- which(df$x > -0.3 & df$x < 0.5)
+  list(
+    train = df[setdiff(1:N, idx), ],
+    test = df[idx, ]
+  )
+}
+
 create_dummy_x <- function(df, C = 0) {
   df$x1 <- df$x
   df$x2 <- df$x
