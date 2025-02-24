@@ -5,7 +5,7 @@ ker_eq <- function(x1, x2, z1, z2, ell) {
 }
 
 # Non-separable kernel
-nonsep_kernel <- function(x1, x2, z1, z2, ell = c(1, 0.7, 0.4)) {
+nonsep_kernel <- function(x1, x2, z1, z2, ell) {
   N1 <- length(x1)
   N2 <- length(x2)
   K <- matrix(0, N1, N2)
@@ -18,9 +18,9 @@ nonsep_kernel <- function(x1, x2, z1, z2, ell = c(1, 0.7, 0.4)) {
 }
 
 # True kernel function (nonseparable)
-simulate_nonsep <- function(df) {
+simulate_nonsep <- function(df, ell = c(1, 0.7, 0.4)) {
   mu0 <- rep(0, nrow(df))
-  K <- nonsep_kernel(df$x, df$x, df$z, df$z)
+  K <- nonsep_kernel(df$x, df$x, df$z, df$z, ell)
   f <- MASS::mvrnorm(n = 1, mu0, K)
   fun <- data.frame(f)
   cbind(df, fun)
@@ -35,8 +35,8 @@ simulate_input <- function() {
   df <- data.frame(x = x, z = z, id = z)
   df <- as_tibble(df) %>% arrange(z, x)
 }
-simulate_obs <- function(df) {
-  df$y <- df$f + rnorm(n = nrow(df), mean = 0, sd = 0.1)
+simulate_obs <- function(df, sigma) {
+  df$y <- df$f + rnorm(n = nrow(df), mean = 0, sd = sigma)
   df
 }
 split_train_test <- function(df, alt = TRUE, test_categ = c(1, 2, 3)) {
@@ -89,10 +89,10 @@ plot_fit <- function(r, df, df_train, df_test) {
     theme(legend.position = "none")
 }
 
-gppred <- function(df, df_pred, sigma, delta) {
-  K <- nonsep_kernel(df$x, df$x, df$z, df$z)
-  Ks <- nonsep_kernel(df$x, df_pred$x, df$z, df_pred$z)
-  Kss <- nonsep_kernel(df_pred$x, df_pred$x, df_pred$z, df_pred$z)
+gppred <- function(df, df_pred, sigma, delta, ell) {
+  K <- nonsep_kernel(df$x, df$x, df$z, df$z, ell)
+  Ks <- nonsep_kernel(df$x, df_pred$x, df$z, df_pred$z, ell)
+  Kss <- nonsep_kernel(df_pred$x, df_pred$x, df_pred$z, df_pred$z, ell)
   K <- list(hi = K)
   Ks <- list(hi = t(Ks))
   Kss_diag <- list(hi = diag(Kss))

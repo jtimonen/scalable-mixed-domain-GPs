@@ -6,13 +6,13 @@ library(ggpubr)
 ggplot2::theme_set(ggplot2::theme_bw())
 source("functions_nonsep.R")
 
+ell_true <- c(1, 0.5, 0.2)
+sigma_true <- 0.5
 
-set.seed(41323)
+set.seed(93)
 X <- simulate_input()
-K <- nonsep_kernel(X$x, X$x, X$z, X$z)
-
-df <- simulate_nonsep(X)
-df <- simulate_obs(df)
+df <- simulate_nonsep(X, ell = ell_true)
+df <- simulate_obs(df, sigma_true)
 df <- create_dummy_x(df)
 plt <- ggplot(df, aes(x = x, y = f, color = z)) +
   geom_line() +
@@ -23,7 +23,7 @@ df_train <- a$train
 df_test <- a$test
 df <- a$full
 
-y_pred <- gppred(df_train, df, 0.1, 1e-8)
+y_pred <- gppred(df_train, df, sigma_true, 1e-8, ell_true)
 df$y_pred_true <- y_pred
 
 
