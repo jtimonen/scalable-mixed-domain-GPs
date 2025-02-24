@@ -59,3 +59,31 @@ create_dummy_x <- function(df, C = 0) {
   df$x3[which(df$z != 3)] <- C
   df
 }
+
+plot_fit <- function(r, df, df_train, df_test) {
+  c1 <- "gray30"
+  r$plot(x_var = "x", color_by = NULL) +
+    geom_point(
+      data = df_train, mapping = aes(x = x, y = y),
+      inherit.aes = FALSE, color = c1
+    ) +
+    geom_line(
+      data = df, mapping = aes(x = x, y = y_pred_true), inherit.aes = F,
+      color = "black"
+    ) +
+    geom_point(
+      data = df_test, mapping = aes(x = x, y = y),
+      inherit.aes = FALSE, pch = 4, color = c1
+    ) + ylim(ymin, ymax) + theme(legend.position = "none")
+}
+
+gppred <- function(df, df_pred, sigma, delta) {
+  K <- nonsep_kernel(df$x, df$x, df$z, df$z)
+  Ks <- nonsep_kernel(df$x, df_pred$x, df$z, df_pred$z)
+  Kss <- nonsep_kernel(df_pred$x, df_pred$x, df_pred$z, df_pred$z)
+  K <- list(hi = K)
+  Ks <- list(hi = t(Ks))
+  Kss_diag <- list(hi = diag(Kss))
+  yp <- lgpr:::fp_gaussian.compute(K, Ks, Kss_diag, sigma^2, delta, df$y)
+  yp$mean[, 2]
+}
