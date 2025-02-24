@@ -32,11 +32,15 @@ f1 <- m1$fit(data = df_train, chains = 1, iter_sampling = 600)
 f2 <- m2$fit(data = df_train, chains = 1, iter_sampling = 600)
 
 r1 <- f1$predict(df)$function_draws()$get_output()
-r1 <- FunctionDraws$new(df, r1, "m1")
+r1 <- FunctionDraws$new(df, r1, "Shared kernel parameters")
 r2 <- f2$predict(df)$function_draws()$get_output()
-r2 <- FunctionDraws$new(df, r2, "m2")
-ymax <- max(df$y) + 0.5 * sd(df$y)
-ymin <- min(df$y) - 0.5 * sd(df$y)
+r2 <- FunctionDraws$new(df, r2, "Group-specific kernel parameters")
+ymax <- max(df$y) + 1.2 * sd(df$y)
+ymin <- min(df$y) - 1.2 * sd(df$y)
+
+# Add fits to df
+
+
 
 p1 <- plot_fit(r1, df, df_train, df_test)
 p2 <- plot_fit(r2, df, df_train, df_test)

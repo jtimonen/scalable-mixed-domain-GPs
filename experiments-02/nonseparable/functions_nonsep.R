@@ -28,7 +28,7 @@ simulate_nonsep <- function(df) {
 
 # Simulating data
 simulate_input <- function() {
-  x <- seq(-1, 1, by = 0.05)
+  x <- seq(-1, 1, by = 0.1)
   N <- length(x)
   x <- c(x, x, x) + 0.02 * rnorm(3 * N)
   z <- as.factor(rep(c(1, 2, 3), each = N))
@@ -61,8 +61,12 @@ create_dummy_x <- function(df, C = 0) {
 }
 
 plot_fit <- function(r, df, df_train, df_test) {
-  c1 <- "gray30"
-  r$plot(x_var = "x", color_by = NULL) +
+  c1 <- "firebrick"
+  d <- r$quantiles_df()
+  plt <- ggplot(d, aes(x = x, y = med, ymin = out_low, ymax = out_up)) +
+    geom_ribbon(fill = "steelblue", col = "steelblue", alpha = 0.6) +
+    geom_line(col = "steelblue") +
+    facet_grid(. ~ z) +
     geom_point(
       data = df_train, mapping = aes(x = x, y = y),
       inherit.aes = FALSE, color = c1
@@ -74,7 +78,9 @@ plot_fit <- function(r, df, df_train, df_test) {
     geom_point(
       data = df_test, mapping = aes(x = x, y = y),
       inherit.aes = FALSE, pch = 4, color = c1
-    ) + ylim(ymin, ymax) + theme(legend.position = "none")
+    ) +
+    ylim(ymin, ymax) +
+    theme(legend.position = "none")
 }
 
 gppred <- function(df, df_pred, sigma, delta) {
