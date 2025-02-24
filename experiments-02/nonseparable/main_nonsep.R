@@ -20,6 +20,7 @@ plt <- ggplot(df, aes(x = x, y = f, color = z)) +
 a <- split_train_test(df)
 df_train <- a$train
 df_test <- a$test
+df <- a$full
 
 y_pred <- gppred(df_train, df, 0.3, 1e-8)
 df$y_pred_true <- y_pred
@@ -38,11 +39,10 @@ r2 <- FunctionDraws$new(df, r2, "Group-specific kernel parameters")
 ymax <- max(df$y) + 1.2 * sd(df$y)
 ymin <- min(df$y) - 1.2 * sd(df$y)
 
-# Add fits to df
-
 
 
 p1 <- plot_fit(r1, df, df_train, df_test)
 p2 <- plot_fit(r2, df, df_train, df_test)
 
 plt <- ggarrange(p1, p2, nrow = 2)
+err <- compute_accuracy(df, r1, r2)

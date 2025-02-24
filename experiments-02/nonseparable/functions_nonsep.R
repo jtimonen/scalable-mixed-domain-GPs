@@ -44,9 +44,13 @@ split_train_test <- function(df) {
   n <- round(N / 2)
   idx <- sample(N, n)
   idx <- which(df$x > -0.3 & df$x < 0.5)
+  is_test <- rep(FALSE, N)
+  is_test[idx] <- TRUE
+  df$is_test <- is_test
   list(
     train = df[setdiff(1:N, idx), ],
-    test = df[idx, ]
+    test = df[idx, ],
+    full = df
   )
 }
 
@@ -92,4 +96,25 @@ gppred <- function(df, df_pred, sigma, delta) {
   Kss_diag <- list(hi = diag(Kss))
   yp <- lgpr:::fp_gaussian.compute(K, Ks, Kss_diag, sigma^2, delta, df$y)
   yp$mean[, 2]
+}
+
+# Add fits to df
+compute_rmse <- function(r) {
+  r$quantiles_df() %>%
+    mutate(sq_error = (med - y)^2) %>%
+    group_by(is_test) %>%
+    summarize(rmse = sqrt(mean(sq_error)))
+}
+
+compute_accuracy <- function(df, r1, r2) {
+  e0 <- df %>%
+    mutate(sq_error = (y_pred_true - y)^2) %>%
+    group_by(is_test) %>%
+    summarize(rmse = sqrt(mean(sq_error)))
+  e0$kernel <- "TRUE"
+  e1 <- compute_rmse(r1)
+  e1$kernel <- "K1"
+  e2 <- compute_rmse(r2)
+  e2$kernel <- "K2"
+  rbind(e0, e1, e2) %>% arrange(is_test)
 }
