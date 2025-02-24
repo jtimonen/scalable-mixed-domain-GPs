@@ -7,9 +7,9 @@ ggplot2::theme_set(ggplot2::theme_bw())
 source("functions_nonsep.R")
 
 ell_true <- c(1, 0.5, 0.2)
-sigma_true <- 0.5
+sigma_true <- 0.3
 
-set.seed(93)
+set.seed(412345)
 X <- simulate_input()
 df <- simulate_nonsep(X, ell = ell_true)
 df <- simulate_obs(df, sigma_true)
@@ -28,22 +28,27 @@ df$y_pred_true <- y_pred
 
 
 # Fit
-m1 <- lgpr2:::LonModel$new(formula = y ~ gp(x, z) + gp(x))
-m2 <- lgpr2:::LonModel$new(formula = y ~ gp(x1) + gp(x2) + gp(x3))
-f1 <- m1$fit(data = df_train, chains = 1, iter_sampling = 600)
-f2 <- m2$fit(data = df_train, chains = 1, iter_sampling = 600)
+m1 <- lgpr2:::LonModel$new(formula = y ~ gp(x, z))
+m2 <- lgpr2:::LonModel$new(formula = y ~ gp(x, z) + gp(x))
+m3 <- lgpr2:::LonModel$new(formula = y ~ gp(x1) + gp(x2) + gp(x3))
+f1 <- m1$fit(data = df_train, chains = 3, iter_sampling = 1200)
+f2 <- m2$fit(data = df_train, chains = 3, iter_sampling = 1200)
+f3 <- m3$fit(data = df_train, chains = 3, iter_sampling = 1200)
 
 r1 <- f1$predict(df)$function_draws()$get_output()
-r1 <- FunctionDraws$new(df, r1, "Shared kernel parameters")
+r1 <- FunctionDraws$new(df, r1, "Kernel 1")
 r2 <- f2$predict(df)$function_draws()$get_output()
-r2 <- FunctionDraws$new(df, r2, "Group-specific kernel parameters")
-ymax <- max(df$y) + 1.2 * sd(df$y)
-ymin <- min(df$y) - 1.2 * sd(df$y)
-
-
+r2 <- FunctionDraws$new(df, r2, "Kernel 2")
+r3 <- f3$predict(df)$function_draws()$get_output()
+r3 <- FunctionDraws$new(df, r3, "Kernel 3")
+ymax <- max(df$y) + 1.5 * sd(df$y)
+ymin <- min(df$y) - 1.5 * sd(df$y)
 
 p1 <- plot_fit(r1, df, df_train, df_test)
 p2 <- plot_fit(r2, df, df_train, df_test)
+p3 <- plot_fit(r3, df, df_train, df_test)
 
-plt <- ggarrange(p1, p2, nrow = 2)
-err <- compute_accuracy(df, r1, r2)
+plt <- ggarrange(p1, p2, p3, nrow = 3, labels = c("a)", "b)", "c)"))
+err <- compute_accuracy(df, r1, r2, r3)
+
+ggsave(plt, file = "nonsep.pdf", width = 7.73, height = 5.5)

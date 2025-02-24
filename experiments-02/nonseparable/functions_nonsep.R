@@ -1,6 +1,6 @@
 ker_eq <- function(x1, x2, z1, z2, ell) {
-  ls <- 1 # sqrt(ell[z1] * ell[z2]) + 0.3
-  dx <- (x1 / ell[z1] - x2 / ell[z2])^2 / ls
+  ls <- 1
+  dx <- (x1 / ell[z1] - x2 / ell[z2])^2 / ls^2
   exp(-0.5 * (dx))
 }
 
@@ -14,7 +14,7 @@ nonsep_kernel <- function(x1, x2, z1, z2, ell) {
       K[i, j] <- ker_eq(x1[i], x2[j], z1[i], z2[j], ell)
     }
   }
-  K
+  K * lgpr:::kernel_zerosum(z1, z2, 3)
 }
 
 # True kernel function (nonseparable)
@@ -30,7 +30,7 @@ simulate_nonsep <- function(df, ell = c(1, 0.7, 0.4)) {
 simulate_input <- function() {
   x <- seq(-1, 1, by = 0.07)
   N <- length(x)
-  x <- c(x, x, x) + 0.02 * rnorm(3 * N)
+  x <- c(x, x, x) + 0.01 * rnorm(3 * N)
   z <- as.factor(rep(c(1, 2, 3), each = N))
   df <- data.frame(x = x, z = z, id = z)
   df <- as_tibble(df) %>% arrange(z, x)
@@ -86,6 +86,7 @@ plot_fit <- function(r, df, df_train, df_test) {
       inherit.aes = FALSE, pch = 4, color = c1
     ) +
     ylim(ymin, ymax) +
+    ylab("y") +
     theme(legend.position = "none")
 }
 
@@ -108,7 +109,7 @@ compute_rmse <- function(r) {
     summarize(rmse = sqrt(mean(sq_error)))
 }
 
-compute_accuracy <- function(df, r1, r2) {
+compute_accuracy <- function(df, r1, r2, r3) {
   e0 <- df %>%
     mutate(sq_error = (y_pred_true - y)^2) %>%
     group_by(is_test) %>%
@@ -118,5 +119,7 @@ compute_accuracy <- function(df, r1, r2) {
   e1$kernel <- "K1"
   e2 <- compute_rmse(r2)
   e2$kernel <- "K2"
-  rbind(e0, e1, e2) %>% arrange(is_test)
+  e3 <- compute_rmse(r3)
+  e3$kernel <- "K3"
+  rbind(e0, e1, e2, e3) %>% arrange(is_test)
 }
