@@ -6,9 +6,10 @@ library(ggpubr)
 ggplot2::theme_set(ggplot2::theme_bw())
 source("functions_nonsep.R")
 
+
+set.seed(41323)
 X <- simulate_input()
 K <- nonsep_kernel(X$x, X$x, X$z, X$z)
-
 
 df <- simulate_nonsep(X)
 df <- simulate_obs(df)
@@ -17,12 +18,12 @@ plt <- ggplot(df, aes(x = x, y = f, color = z)) +
   geom_line() +
   geom_point(mapping = aes(x = x, y = y, color = z)) +
   facet_grid(. ~ z)
-a <- split_train_test(df)
+a <- split_train_test(df, test_categ = c(2, 3))
 df_train <- a$train
 df_test <- a$test
 df <- a$full
 
-y_pred <- gppred(df_train, df, 0.3, 1e-8)
+y_pred <- gppred(df_train, df, 0.1, 1e-8)
 df$y_pred_true <- y_pred
 
 

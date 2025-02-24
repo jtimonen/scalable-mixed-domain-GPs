@@ -28,7 +28,7 @@ simulate_nonsep <- function(df) {
 
 # Simulating data
 simulate_input <- function() {
-  x <- seq(-1, 1, by = 0.1)
+  x <- seq(-1, 1, by = 0.07)
   N <- length(x)
   x <- c(x, x, x) + 0.02 * rnorm(3 * N)
   z <- as.factor(rep(c(1, 2, 3), each = N))
@@ -39,11 +39,13 @@ simulate_obs <- function(df) {
   df$y <- df$f + rnorm(n = nrow(df), mean = 0, sd = 0.1)
   df
 }
-split_train_test <- function(df) {
+split_train_test <- function(df, alt = TRUE, test_categ = c(1, 2, 3)) {
   N <- nrow(df)
   n <- round(N / 2)
   idx <- sample(N, n)
-  idx <- which(df$x > -0.3 & df$x < 0.5)
+  if (alt) {
+    idx <- which(df$x > -0.3 & df$x < 0.5 & df$z %in% test_categ)
+  }
   is_test <- rep(FALSE, N)
   is_test[idx] <- TRUE
   df$is_test <- is_test
