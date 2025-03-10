@@ -85,28 +85,44 @@ create_dummy_x <- function(df, C = 0) {
   df
 }
 
-plot_fit <- function(r, df, df_train, df_test) {
+plot_fit <- function(r, df, df_train, df_test, has_true = TRUE, reverse = F) {
   c1 <- "firebrick"
   d <- r$quantiles_df()
   plt <- ggplot(d, aes(x = x, y = med, ymin = out_low, ymax = out_up)) +
     geom_ribbon(fill = "steelblue", col = "steelblue", alpha = 0.6) +
     geom_line(col = "steelblue") +
-    facet_grid(. ~ z) +
     geom_point(
       data = df_train, mapping = aes(x = x, y = y),
       inherit.aes = FALSE, color = c1
-    ) +
-    geom_line(
+    )
+  if (reverse) {
+    plt <- ggplot(d, aes(x = x, y = med, ymin = out_low, ymax = out_up)) +
+      geom_point(
+        data = df_train, mapping = aes(x = x, y = y),
+        inherit.aes = FALSE, color = c1
+      ) +
+      geom_ribbon(fill = "steelblue", col = "steelblue", alpha = 0.6) +
+      geom_line(col = "steelblue")
+  }
+  if (has_true) {
+    plt <- plt + geom_line(
       data = df, mapping = aes(x = x, y = y_pred_true), inherit.aes = F,
       color = "black"
-    ) +
-    geom_point(
-      data = df_test, mapping = aes(x = x, y = y),
-      inherit.aes = FALSE, pch = 4, color = c1
-    ) +
-    ylim(ymin, ymax) +
+    )
+    plt <- plt + facet_grid(. ~ z)
+  } else {
+    plt <- plt + facet_wrap(. ~ z)
+  }
+  plt <- plt + geom_point(
+    data = df_test, mapping = aes(x = x, y = y),
+    inherit.aes = FALSE, pch = 4, color = c1
+  ) +
     ylab("y") +
     theme(legend.position = "none")
+  if (exists("ymin") & exists("ymax")) {
+    plt <- plt + ylim(ymin, ymax)
+  }
+  plt
 }
 
 gppred <- function(df, df_pred, sigma, delta, ell) {
