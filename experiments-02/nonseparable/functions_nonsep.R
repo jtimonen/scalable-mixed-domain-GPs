@@ -109,7 +109,7 @@ compute_rmse <- function(r) {
     summarize(rmse = sqrt(mean(sq_error)))
 }
 
-compute_accuracy <- function(df, r1, r2, r3) {
+compute_accuracy <- function(df, r1, r2) {
   e0 <- df %>%
     mutate(sq_error = (y_pred_true - y)^2) %>%
     group_by(is_test) %>%
@@ -119,7 +119,5 @@ compute_accuracy <- function(df, r1, r2, r3) {
   e1$kernel <- "K1"
   e2 <- compute_rmse(r2)
   e2$kernel <- "K2"
-  e3 <- compute_rmse(r3)
-  e3$kernel <- "K3"
-  rbind(e0, e1, e2, e3) %>% arrange(is_test)
+  rbind(e0, e1, e2) %>% arrange(is_test)
 }
