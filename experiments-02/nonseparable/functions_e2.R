@@ -26,6 +26,14 @@ simulate_nonsep <- function(df, ell = c(1, 0.7, 0.4)) {
   cbind(df, fun)
 }
 
+# Simulate linear data
+simulate_fast <- function(df) {
+  G <- length(unique(df$z))
+  f <- (-0.5 + 0.2 * sin(6 * df$x * as.numeric(df$z) / G))
+  f <- as.data.frame(f)
+  cbind(df, f)
+}
+
 # Simulating data
 simulate_input <- function() {
   x <- seq(-1, 1, by = 0.07)
@@ -35,6 +43,17 @@ simulate_input <- function() {
   df <- data.frame(x = x, z = z, id = z)
   df <- as_tibble(df) %>% arrange(z, x)
 }
+
+# Simulating data
+simulate_input_vary <- function(N, G) {
+  x <- seq(-1, 1, length.out = N)
+  x <- rep(x, G)
+  z <- as.factor(rep(1:G, each = N))
+  df <- data.frame(x = x, z = z, id = z)
+  df <- as_tibble(df) %>% arrange(z, x)
+}
+
+
 simulate_obs <- function(df, sigma) {
   df$y <- df$f + rnorm(n = nrow(df), mean = 0, sd = sigma)
   df

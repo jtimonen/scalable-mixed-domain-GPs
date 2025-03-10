@@ -4,7 +4,7 @@ library(tidyverse)
 library(MASS)
 library(ggpubr)
 ggplot2::theme_set(ggplot2::theme_bw())
-source("functions_nonsep.R")
+source("functions_e2.R")
 
 ell_true <- c(1, 0.5, 0.2)
 sigma_true <- 0.3
