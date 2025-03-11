@@ -46,4 +46,4 @@ p2 <- plot_fit(r2, df, df_train, df_test)
 plt <- ggarrange(p1, p2, nrow = 2, labels = c("a)", "b)"))
 err <- compute_accuracy(df, r1, r2)
 
-ggsave(plt, file = "nonsep.pdf", width = 7, height = 4.5)
+ggsave(plt, file = "nonsep_suppl.pdf", width = 7, height = 4.5)
