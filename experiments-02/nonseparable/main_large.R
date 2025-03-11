@@ -61,20 +61,22 @@ get_res <- function(x) {
 out <- data.frame(t(sapply(res, get_res)))
 colnames(out) <- c("N", "t_full", "t_mcmc")
 out$prop_overhead <- (out$t_full - out$t_mcmc) / (out$t_full)
-
-plt_a <- out %>%
+out2 <- out[2:nrow(out), ]
+plt_a <- out2 %>%
   ggplot(aes(x = N, y = t_mcmc)) +
   geom_line() +
   geom_point() +
   scale_y_log10() +
   scale_x_log10() +
-  ylab("Time (seconds)")
+  ylab("MCMC time (seconds)")
 
-plt_b <- out %>%
+plt_b <- out2 %>%
   ggplot(aes(x = N, y = prop_overhead)) +
   geom_line() +
   geom_point() +
   scale_x_log10() +
-  ylab("Proportion of overhead time")
+  ylab("Proportion of overhead time") +
+  ylim(c(0.7, 1))
 
-plt <- ggarrange(plt_a, plt_b, labels = c("a)", "b)"), nrow = 2)
+plt <- ggarrange(plt_a, plt_b, labels = c("a)", "b)"), nrow = 1)
+ggsave(plt, file = "scaling_suppl.pdf", width = 8.1, height = 2.93)
