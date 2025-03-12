@@ -156,3 +156,11 @@ compute_accuracy <- function(df, r1, r2) {
   e2$kernel <- "K2"
   rbind(e0, e1, e2) %>% arrange(is_test)
 }
+
+scale_scientific <- function(l) {
+  l <- format(l, scientific = TRUE)
+  l <- gsub("^(.*)e", "'\\1'e", l)
+  l <- gsub("e", "%*%10^", l)
+  l <- gsub("e\\+", "e", l)
+  parse(text = l)
+}

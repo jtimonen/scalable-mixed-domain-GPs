@@ -56,35 +56,49 @@ for (S in c(4, 40, 400)) {
   }
   for (s in sizes_run) {
     j <- j + 1
-    message(paste0(10 * s, " obs, ", S, " iter"))
+    message(paste0(10 * s / 2, " obs, ", S, " iter"))
     res[[j]] <- run_exp(s, S)
   }
 }
 get_res <- function(x) {
-  a <- c(x$size, x$t_dur, x$t_stan)
+  a <- c(x$size, x$S, x$t_dur, x$t_stan)
   df <- data.frame(a)
-  df <- t(df)
-  colnames(df) <- c("N", "t_full", "t_mcmc")
   t(df)
 }
 out <- data.frame(t(sapply(res, get_res)))
-colnames(out) <- c("N", "t_full", "t_mcmc")
+colnames(out) <- c("N", "iter", "t_full", "t_mcmc")
+out$iter <- as.factor(out$iter)
 out$prop_overhead <- (out$t_full - out$t_mcmc) / (out$t_full)
-out2 <- out # out[2:nrow(out), ]
+out2 <- out %>% filter(N >= 1000)
+
+
 plt_a <- out2 %>%
-  ggplot(aes(x = N, y = t_mcmc)) +
+  ggplot(aes(x = N, y = t_mcmc, color = iter)) +
   geom_line() +
   geom_point() +
   scale_y_log10() +
-  scale_x_log10() +
-  ylab("MCMC time (seconds)")
+  scale_x_log10(labels = scale_scientific) +
+  ylab("MCMC time (seconds)") +
+  theme(legend.position = "top")
 
 plt_b <- out2 %>%
-  ggplot(aes(x = N, y = prop_overhead)) +
+  ggplot(aes(x = N, y = prop_overhead, color = iter)) +
   geom_line() +
   geom_point() +
-  scale_x_log10() +
+  scale_x_log10(labels = scale_scientific) +
   ylab("Proportion of overhead time")
 
-plt <- ggarrange(plt_a, plt_b, labels = c("a)", "b)"), nrow = 1)
-# ggsave(plt, file = "scaling_suppl.pdf", width = 8.1, height = 2.93)
+plt <- ggarrange(plt_a, plt_b,
+  labels = c("a)", "b)"), nrow = 1,
+  legend.grob = get_legend(plt_a)
+)
+
+df <- out2 %>% filter(iter == 400)
+k <- (df$t_mcmc[2] - df$t_mcmc[1]) / (df$N[2] - df$N[1])
+b <- df$t_mcmc[1] - df$N[1] * k
+t_est_400 <- c(10^5, 10^6) * k + b
+te_h <- t_est_400 / 3600
+cat(te_h, file = "t_est_400_at_5and6.txt")
+cat(print(xtable::xtable(out)), file = "out.txt")
+
+ggsave(plt, file = "scaling_suppl.pdf", width = 9.3, height = 3.3)
