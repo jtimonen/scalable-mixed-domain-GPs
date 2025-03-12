@@ -12,7 +12,7 @@ set.seed(123)
 m2 <- lgpr2:::LonModel$new(formula = y ~ gp(x, z) + gp(x))
 
 
-run_exp <- function(N) {
+run_exp <- function(N, S = 4) {
   X <- simulate_input_vary(N, 10)
   df <- simulate_fast(X)
   df <- simulate_obs(df, sigma_true)
@@ -29,8 +29,8 @@ run_exp <- function(N) {
   # Fit
   t_start <- Sys.time()
   f2 <- m2$fit(
-    data = df_train, chains = 1, iter_sampling = 4, iter_warmup = 4,
-    refresh = 1
+    data = df_train, chains = 1, iter_sampling = S, iter_warmup = S,
+    refresh = 10
   )
   t_end <- Sys.time()
   t_dur <- as.numeric(t_end - t_start, units = "secs")
@@ -41,15 +41,24 @@ run_exp <- function(N) {
 
   # plot <- plot_fit(r2, df, df_train, df_test, FALSE, TRUE)
   size <- nrow(df_train)
-  message(size)
-  return(lst(t_dur, t_stan, size))
+  return(lst(t_dur, t_stan, size, S))
 }
 res <- NULL
 sizes <- 2 * 10^c(1, 2, 3, 4, 5)
 j <- 0
-for (s in sizes) {
-  j <- j + 1
-  res[[j]] <- run_exp(s)
+for (S in c(4, 40, 400)) {
+  sizes_run <- sizes
+  if (S > 10) {
+    sizes_run <- sizes[1:4]
+  }
+  if (S > 100) {
+    sizes_run <- sizes[1:3]
+  }
+  for (s in sizes_run) {
+    j <- j + 1
+    message(paste0(10 * s, " obs, ", S, " iter"))
+    res[[j]] <- run_exp(s, S)
+  }
 }
 get_res <- function(x) {
   a <- c(x$size, x$t_dur, x$t_stan)
@@ -61,7 +70,7 @@ get_res <- function(x) {
 out <- data.frame(t(sapply(res, get_res)))
 colnames(out) <- c("N", "t_full", "t_mcmc")
 out$prop_overhead <- (out$t_full - out$t_mcmc) / (out$t_full)
-out2 <- out[2:nrow(out), ]
+out2 <- out # out[2:nrow(out), ]
 plt_a <- out2 %>%
   ggplot(aes(x = N, y = t_mcmc)) +
   geom_line() +
@@ -75,8 +84,7 @@ plt_b <- out2 %>%
   geom_line() +
   geom_point() +
   scale_x_log10() +
-  ylab("Proportion of overhead time") +
-  ylim(c(0.7, 1))
+  ylab("Proportion of overhead time")
 
 plt <- ggarrange(plt_a, plt_b, labels = c("a)", "b)"), nrow = 1)
-ggsave(plt, file = "scaling_suppl.pdf", width = 8.1, height = 2.93)
+# ggsave(plt, file = "scaling_suppl.pdf", width = 8.1, height = 2.93)
